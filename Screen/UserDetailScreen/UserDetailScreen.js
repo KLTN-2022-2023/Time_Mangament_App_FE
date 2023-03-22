@@ -1,12 +1,12 @@
 import * as React from "react";
 import { Center, NativeBaseProvider } from "native-base";
-import SignUpComponent from "./SignUpComponent";
+import UserDetailComponent from "./UserDetailComponent";
 
-export default ({ navigation }) => {
+export default () => {
   return (
     <NativeBaseProvider>
       <Center flex={1} px="3">
-        <SignUpComponent navigation={navigation} />
+        <UserDetailComponent />
       </Center>
     </NativeBaseProvider>
   );

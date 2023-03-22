@@ -7,9 +7,12 @@ import {
   Input,
   Button,
   Center,
+  HStack,
+  Text,
+  Link,
 } from "native-base";
 
-export default () => {
+export default ({ navigation }) => {
   return (
     <Center w="100%">
       <Box safeArea p="2" w="90%" maxW="290" py="8">
@@ -50,6 +53,27 @@ export default () => {
           <Button mt="2" colorScheme="indigo">
             Sign up
           </Button>
+          <HStack mt="6" justifyContent="center">
+            <Text
+              fontSize="sm"
+              color="coolGray.600"
+              _dark={{
+                color: "warmGray.200",
+              }}
+            >
+              Already have an account?{" "}
+            </Text>
+            <Link
+              _text={{
+                color: "indigo.500",
+                fontWeight: "medium",
+                fontSize: "sm",
+              }}
+              onPress={() => navigation.navigate("LoginScreen")}
+            >
+              Login
+            </Link>
+          </HStack>
         </VStack>
       </Box>
     </Center>

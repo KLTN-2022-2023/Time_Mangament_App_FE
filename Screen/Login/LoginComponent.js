@@ -1,4 +1,3 @@
-import * as React from "react";
 import {
   Box,
   Text,
@@ -11,10 +10,30 @@ import {
   HStack,
   Center,
 } from "native-base";
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { HandleLogin } from "../../Reducers/UserReducer";
+import { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default ({ navigation }) => {
+  const [email, setEmail] = useState("buithanhnam000@gmail.com");
+  const [password, setPassword] = useState("123456");
+
+  const Login = async () => {
+    try {
+      const value = await HandleLogin({
+        email,
+        password,
+      });
+
+      if (value) {
+        await AsyncStorage.setItem("Token", value);
+        navigation.navigate("UserDetailScreen");
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   return (
     <Center w="100%">
       <Box safeArea p="2" py="8" w="90%" maxW="290">
@@ -43,11 +62,18 @@ export default ({ navigation }) => {
         <VStack space={3} mt="5">
           <FormControl>
             <FormControl.Label>Email ID</FormControl.Label>
-            <Input />
+            <Input
+              value={email || ""}
+              onChange={(text) => setEmail(text.nativeEvent.text)}
+            />
           </FormControl>
           <FormControl>
             <FormControl.Label>Password</FormControl.Label>
-            <Input type="password" />
+            <Input
+              value={password || ""}
+              type="password"
+              onChange={(text) => setPassword(text.nativeEvent.text)}
+            />
             <Link
               _text={{
                 fontSize: "xs",
@@ -57,10 +83,10 @@ export default ({ navigation }) => {
               alignSelf="flex-end"
               mt="1"
             >
-              Forget Password?
+              Forgot Password?
             </Link>
           </FormControl>
-          <Button mt="2" colorScheme="indigo">
+          <Button mt="2" colorScheme="indigo" onPress={Login}>
             Sign in
           </Button>
           <HStack mt="6" justifyContent="center">
