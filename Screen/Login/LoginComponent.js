@@ -19,19 +19,19 @@ export default ({ navigation }) => {
   const [password, setPassword] = useState("123456");
 
   const Login = async () => {
-    try {
-      const value = await HandleLogin({
-        email,
-        password,
-      });
+    // try {
+    //   const value = await HandleLogin({
+    //     email,
+    //     password,
+    //   });
 
-      if (value) {
-        await AsyncStorage.setItem("Token", value);
-        navigation.navigate("UserDetailScreen");
-      }
-    } catch (err) {
-      console.log(err);
-    }
+    //   if (value) {
+    //     await AsyncStorage.setItem("Token", value);
+    navigation.navigate("HomeTab");
+    //   }
+    // } catch (err) {
+    //   console.log(err);
+    // }
   };
 
   return (

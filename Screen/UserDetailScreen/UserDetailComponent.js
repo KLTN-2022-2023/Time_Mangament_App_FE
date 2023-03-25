@@ -20,9 +20,9 @@ export default () => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
 
-  useEffect(() => {
-    HandleGetInfoUser();
-  }, []);
+  // useEffect(() => {
+  //   HandleGetInfoUser();
+  // }, []);
 
   const HandleGetInfoUser = async () => {
     const token = await AsyncStorage.getItem("Token");
