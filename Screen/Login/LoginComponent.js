@@ -13,29 +13,37 @@ import {
 import { HandleLogin } from "../../Reducers/UserReducer";
 import { useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Spinner from "react-native-loading-spinner-overlay";
+import { StyleSheet } from "react-native";
 
 export default ({ navigation }) => {
-  const [email, setEmail] = useState("buithanhnam000@gmail.com");
+  const [email, setEmail] = useState("h2212000@gmail.com");
   const [password, setPassword] = useState("123456");
+  const [isLoading, setIsLoading] = useState(false);
 
   const Login = async () => {
-    // try {
-    //   const value = await HandleLogin({
-    //     email,
-    //     password,
-    //   });
+    setIsLoading(true);
 
-    //   if (value) {
-    //     await AsyncStorage.setItem("Token", value);
-    navigation.navigate("HomeTab");
-    //   }
-    // } catch (err) {
-    //   console.log(err);
-    // }
+    try {
+      const value = await HandleLogin({
+        email,
+        password,
+      });
+
+      if (value) {
+        await AsyncStorage.setItem("Token", value);
+        navigation.navigate("HomeTab");
+      }
+    } catch (err) {
+      console.log(err);
+    }
+
+    setIsLoading(false);
   };
 
   return (
     <Center w="100%">
+      <Spinner visible={isLoading}></Spinner>
       <Box safeArea p="2" py="8" w="90%" maxW="290">
         <Heading
           size="lg"
@@ -115,3 +123,15 @@ export default ({ navigation }) => {
     </Center>
   );
 };
+
+const styles = StyleSheet.create({
+  spinnerTextStyle: {
+    color: "#FFF",
+  },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F5FCFF",
+  },
+});
