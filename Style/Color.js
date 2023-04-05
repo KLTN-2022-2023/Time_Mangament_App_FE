@@ -11,6 +11,7 @@ export default {
     return {
       ButtonInActive: "#818cf8",
       ButtonActive: "#4f46e5",
+      Text: "#ffffff",
     };
   },
   Header() {
@@ -25,6 +26,12 @@ export default {
       Text: "#ffffff",
       Done: "#51cf66",
       Late: "#fcc419",
+    };
+  },
+  Task() {
+    return {
+      inValid: "#e03131",
+      valid: "#818cf8",
     };
   },
 };

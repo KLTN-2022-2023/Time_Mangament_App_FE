@@ -3,6 +3,7 @@ export default {
     return {
       DateFormat: "yyyy-MM-dd",
       DateTimeFormat: "YYYY-MM-DD HH:mm:ss",
+      DateTimeFormatDateFNS: "yyyy-MM-dd HH:mm:ss",
     };
   },
   TaskStatus() {

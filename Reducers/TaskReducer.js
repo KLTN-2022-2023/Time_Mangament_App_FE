@@ -27,4 +27,30 @@ export const getListAllTasksByUserId = (req, token) => (dispatch) => {
     .catch((err) => console.log(err));
 };
 
+export const markImportant = async (id, token) => {
+  let result = null;
+  try {
+    const response = await APIService.task().markImportant(id, token);
+    if (response && response.data && response.data.data) {
+      result = response.data.data;
+    }
+  } catch (err) {
+    console.log(err.message);
+  }
+  return result;
+};
+
+export const updateStatus = async (id, token) => {
+  let result = null;
+  try {
+    const response = await APIService.task().updateStatus(id, token);
+    if (response && response.data && response.data.data) {
+      result = response.data.data;
+    }
+  } catch (err) {
+    console.log(err.message);
+  }
+  return result;
+};
+
 export default tasksSlice.reducer;

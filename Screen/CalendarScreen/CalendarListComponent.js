@@ -11,7 +11,7 @@ import {
   Link,
 } from "native-base";
 
-export default () => {
+export default ({ navigation }) => {
   return (
     <Center w="100%">
       <Box safeArea w="100%" maxW="290">

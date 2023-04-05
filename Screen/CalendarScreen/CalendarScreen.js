@@ -2,7 +2,13 @@ import { useState, useEffect } from "react";
 import { Center, NativeBaseProvider } from "native-base";
 import Spinner from "react-native-loading-spinner-overlay";
 import { Calendar, LocaleConfig, Agenda } from "react-native-calendars";
-import { SafeAreaView, StyleSheet, Text, View } from "react-native";
+import {
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+} from "react-native";
 import { format } from "date-fns";
 import CommonData from "../../CommonData/CommonData";
 import Color from "../../Style/Color";
@@ -12,7 +18,7 @@ import jwt_decode from "jwt-decode";
 import { useSelector, useDispatch } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default () => {
+export default ({ navigation }) => {
   const dispatch = useDispatch();
   const allTasks = useSelector((state) => state.task.allTasks);
   const [isLoading, setIsLoading] = useState(false);
@@ -126,6 +132,7 @@ export default () => {
           let listData = handleCustomTaskList(taskList);
           myObject[x] = [
             {
+              date: x,
               taskCount: taskList.length,
               data: [...listData],
             },
@@ -241,7 +248,12 @@ export default () => {
 
   const renderItem = (item) => {
     return (
-      <View style={styles.itemContainer}>
+      <TouchableOpacity
+        style={styles.itemContainer}
+        onPress={() =>
+          navigation.navigate("TaskListDetail", { showDate: item.date })
+        }
+      >
         {item.taskCount > 0 ? (
           item.data.map((x) => (
             <View style={getCardStyle(x)} key={x._id}>
@@ -251,7 +263,7 @@ export default () => {
         ) : (
           <Text>{`🍪`}</Text>
         )}
-      </View>
+      </TouchableOpacity>
     );
   };
 

@@ -12,6 +12,7 @@ import SignUpScreen from "./Screen/SignUp/SignUpScreen";
 import UserDetailScreen from "./Screen/UserDetailScreen/UserDetailScreen";
 import TaskListScreen from "./Screen/TaskListScreen/TaskListScreen";
 import CalendarScreen from "./Screen/CalendarScreen/CalendarScreen";
+import TaskListDetailScreen from "./Screen/TaskListDetail/TaskListDetailScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -36,6 +37,7 @@ function HomeTab() {
           } else if (route.name === "Settings") {
             iconName = focused ? "ios-settings" : "ios-settings-outline";
           }
+
           return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: Color.Button().ButtonActive,
@@ -99,6 +101,10 @@ export default function App() {
           <Stack.Screen name="LoginScreen" component={LoginScreen} />
           <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
           <Stack.Screen name="HomeTab" component={HomeTab} />
+          <Stack.Screen
+            name="TaskListDetail"
+            component={TaskListDetailScreen}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

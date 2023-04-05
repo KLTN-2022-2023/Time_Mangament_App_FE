@@ -9,30 +9,55 @@ import {
   Popover,
   Modal,
 } from "native-base";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TextInput, StyleSheet, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import IconICon from "react-native-vector-icons/Ionicons";
-import Task from "../../Component/Task/Task";
 import React from "react";
+import TasksComponent from "../../Component/Task/TasksComponent";
+import { format } from "date-fns";
+import Color from "../../Style/Color";
+import { useSelector, useDispatch } from "react-redux";
 
-export default ({ navigation }) => {
+export default ({ route, navigation }) => {
   const [showModal, setShowModal] = useState(false);
   const [showModalSort, setShowModalSort] = useState(false);
-  const [disableButton, setDisableButton] = useState(true);
+  const { showDate } = route.params;
+  const dispatch = useDispatch();
+  const allTasks = useSelector((state) => state.task.allTasks);
+
+  const getDateTitle = () => {
+    if (showDate) {
+      return (
+        format(new Date(showDate), "EE") +
+        ", " +
+        format(new Date(showDate), "yyyy MMMM dd")
+      );
+    }
+  };
 
   return (
     <Center w="100%" height="100%">
-      <Box safeArea p="2" py="2" maxW="350" height="100%">
+      <Box safeArea py="2" maxW="350" height="100%">
+        {/* Header */}
         <View style={styles.header}>
-          <IconICon size={30} name="arrow-back" />
+          <IconICon
+            size={25}
+            name="arrow-back"
+            color={Color.Header().Main}
+            onPress={() => navigation.goBack()}
+          />
           <HStack>
             <Popover
               trigger={(triggerProps) => {
                 return (
                   <View style={styles.view} marginRight={-5}>
                     <TouchableOpacity {...triggerProps}>
-                      <IconICon size={30} name="ellipsis-vertical-outline" />
+                      <IconICon
+                        size={25}
+                        color={Color.Header().Main}
+                        name="ellipsis-vertical"
+                      />
                     </TouchableOpacity>
                   </View>
                 );
@@ -41,39 +66,9 @@ export default ({ navigation }) => {
               <Popover.Content w="56">
                 <Popover.Body>
                   <TouchableOpacity onPress={() => setShowModalSort(true)}>
-                    <HStack paddingBottom={5}>
-                      <Icon name="edit" size={20} />
-                      <Text style={{ paddingLeft: 10 }}>Đổi tên danh sách</Text>
-                    </HStack>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => setShowModalSort(true)}>
-                    <HStack paddingBottom={5}>
+                    <HStack>
                       <Icon name="sort-alpha-asc" size={20} />
-                      <Text style={{ paddingLeft: 10 }}>Sắp xếp danh sách</Text>
-                    </HStack>
-                  </TouchableOpacity>
-                  <TouchableOpacity>
-                    <HStack paddingBottom={5}>
-                      <Icon name="exchange" size={20} />
-                      <Text style={{ paddingLeft: 10 }}>Thay đổi chủ đề</Text>
-                    </HStack>
-                  </TouchableOpacity>
-                  <TouchableOpacity>
-                    <HStack paddingBottom={5}>
-                      <Icon name="print" size={20} />
-                      <Text style={{ paddingLeft: 10 }}>In danh sách</Text>
-                    </HStack>
-                  </TouchableOpacity>
-                  <TouchableOpacity>
-                    <HStack paddingBottom={5}>
-                      <Icon name="trash-o" size={20} />
-                      <Text style={{ paddingLeft: 10 }}>Xóa danh sách</Text>
-                    </HStack>
-                  </TouchableOpacity>
-                  <TouchableOpacity>
-                    <HStack paddingBottom={5}>
-                      <Icon name="calendar-o" size={20} />
-                      <Text style={{ paddingLeft: 10 }}>Bật đề xuất</Text>
+                      <Text style={{ paddingLeft: 10 }}>Sort By</Text>
                     </HStack>
                   </TouchableOpacity>
                 </Popover.Body>
@@ -81,16 +76,41 @@ export default ({ navigation }) => {
             </Popover>
           </HStack>
         </View>
-        <Text style={styles.title}>Name Task</Text>
-        <Task />
-        <Task />
-        <Button
-          onPress={() => setShowModal(true)}
-          style={styles.button}
-          size={50}
-        >
-          <Text fontSize={30}>+</Text>
+
+        {/* Title */}
+        <Text style={styles.title}>{getDateTitle()}</Text>
+
+        {/* Filter */}
+        <View style={styles.filterContainer}>
+          <Button
+            rightIcon={
+              <Icon name="caret-down" size={20} as="Ionicons" color="white" />
+            }
+            small
+            colorScheme={"indigo"}
+          >
+            <Text color={Color.Button().Text}>Created Date</Text>
+          </Button>
+          <Button colorScheme={"indigo"} size={10}>
+            <Icon name="close" color={Color.Button().Text} />
+          </Button>
+        </View>
+
+        {/* Task */}
+        <TasksComponent
+          navigation={navigation}
+          listTasks={allTasks.filter((x) => !x.isDeleted && !x.parentId)}
+          date={showDate}
+        />
+
+        {/* Button plus */}
+        <Button style={styles.button} size={50}>
+          <Text fontSize={30} style={styles.buttonText}>
+            +
+          </Text>
         </Button>
+
+        {/* Modal sort */}
         <Modal
           isOpen={showModalSort}
           onClose={() => setShowModalSort(false)}
@@ -98,42 +118,37 @@ export default ({ navigation }) => {
         >
           <Modal.Content maxWidth="350">
             <Modal.CloseButton />
-            <Modal.Header>Sắp xếp theo</Modal.Header>
+            <Modal.Header>Sort By</Modal.Header>
             <Modal.Body>
               <TouchableOpacity style={styles.sort}>
                 <HStack space={3}>
-                  <Icon name="star-o" />
-                  <Text>Tầm quan trọng</Text>
+                  <Icon style={styles.iconModal} name="star-o" size={15} />
+                  <Text>Is Important</Text>
                 </HStack>
               </TouchableOpacity>
               <TouchableOpacity style={styles.sort}>
                 <HStack space={3}>
-                  <Icon name="star-o" />
-                  <Text>Ngày đến hạn</Text>
+                  <Icon style={styles.iconModal} name="calendar" size={15} />
+                  <Text>Due Date</Text>
                 </HStack>
               </TouchableOpacity>
               <TouchableOpacity style={styles.sort}>
                 <HStack space={3}>
-                  <Icon name="star-o" />
-                  <Text>Đã thêm vào ngày của Tôi</Text>
+                  <Icon style={styles.iconModal} name="pencil" size={15} />
+                  <Text>Alphabetically</Text>
                 </HStack>
               </TouchableOpacity>
               <TouchableOpacity style={styles.sort}>
                 <HStack space={3}>
-                  <Icon name="star-o" />
-                  <Text>Theo thứ tự bảng chữ cái</Text>
-                </HStack>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.sort}>
-                <HStack space={3}>
-                  <Icon name="star-o" />
-                  <Text>Ngày tạo</Text>
+                  <Icon style={styles.iconModal} name="folder-open" />
+                  <Text>Created Date</Text>
                 </HStack>
               </TouchableOpacity>
             </Modal.Body>
           </Modal.Content>
         </Modal>
-        <Modal isOpen={showModal} onClose={() => setShowModal(false)} size="lg">
+
+        {/* <Modal isOpen={showModal} onClose={() => setShowModal(false)} size="lg">
           <Modal.Content maxWidth="350">
             <Modal.CloseButton />
             <Modal.Header>Sắp xếp theo</Modal.Header>
@@ -162,7 +177,7 @@ export default ({ navigation }) => {
               </Button.Group>
             </Modal.Footer>
           </Modal.Content>
-        </Modal>
+        </Modal> */}
       </Box>
     </Center>
   );
@@ -176,17 +191,33 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   title: {
-    paddingTop: 20,
-    paddingBottom: 10,
-    fontSize: 30,
+    paddingTop: 30,
+    paddingBottom: 15,
+    fontSize: 20,
+    fontWeight: "bold",
+    color: Color.Header().Main,
   },
   button: {
     borderRadius: 30,
     position: "absolute",
-    bottom: 50,
-    right: 20,
+    bottom: 25,
+    right: 0,
+    backgroundColor: Color.Button().ButtonActive,
+  },
+  buttonText: {
+    color: Color.Button().Text,
   },
   sort: {
     paddingBottom: 20,
+  },
+  iconModal: {
+    marginTop: 3,
+  },
+  filterContainer: {
+    display: "flex",
+    flexDirection: "row",
+    width: "100%",
+    paddingBottom: 10,
+    gap: 5,
   },
 });

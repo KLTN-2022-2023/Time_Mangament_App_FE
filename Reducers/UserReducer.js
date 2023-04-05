@@ -39,7 +39,7 @@ export const HandleLogin = async (req) => {
   try {
     if (!req) return;
     const response = await APIService.user().login(req);
-    if (response && response.data && response.data) {
+    if (response && response.data && response.data.data) {
       result = response.data.data;
     }
   } catch (err) {

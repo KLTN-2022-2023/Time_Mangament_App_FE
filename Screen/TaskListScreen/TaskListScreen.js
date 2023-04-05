@@ -2,11 +2,11 @@ import * as React from "react";
 import { Center, NativeBaseProvider } from "native-base";
 import TaskListComponent from "./TaskListComponent";
 
-export default () => {
+export default ({ navigation }) => {
   return (
     <NativeBaseProvider>
       <Center flex={1} px="3">
-        <TaskListComponent />
+        <TaskListComponent navigation={navigation} />
       </Center>
     </NativeBaseProvider>
   );

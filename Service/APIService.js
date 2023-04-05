@@ -34,6 +34,18 @@ export default {
             Authorization: token,
           },
         }),
+      markImportant: (id, token) =>
+        axios.get(url + "MarkImportant/" + id, {
+          headers: {
+            Authorization: token,
+          },
+        }),
+      updateStatus: (id, token) =>
+        axios.get(url + "UpdateStatus/" + id, {
+          headers: {
+            Authorization: token,
+          },
+        }),
     };
   },
 };
