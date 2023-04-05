@@ -20,8 +20,10 @@ import Color from "../../Style/Color";
 import { useSelector, useDispatch } from "react-redux";
 
 export default ({ route, navigation }) => {
-  const [showModal, setShowModal] = useState(false);
-  const [showModalSort, setShowModalSort] = useState(false);
+  const [showModalSort, setShowModalSort] = useState({
+    data: null,
+    isShow: false,
+  });
   const { showDate } = route.params;
   const dispatch = useDispatch();
   const allTasks = useSelector((state) => state.task.allTasks);
@@ -34,6 +36,22 @@ export default ({ route, navigation }) => {
         format(new Date(showDate), "yyyy MMMM dd")
       );
     }
+  };
+
+  const handleChangeAcsSort = () => {
+    setShowModalSort((prev) => {
+      return {
+        ...prev,
+        data: {
+          name: prev.data.name,
+          asc: !prev.data.asc,
+        },
+      };
+    });
+  };
+
+  const handleClearFilter = () => {
+    setShowModalSort({ data: null, isShow: false });
   };
 
   return (
@@ -65,7 +83,13 @@ export default ({ route, navigation }) => {
             >
               <Popover.Content w="56">
                 <Popover.Body>
-                  <TouchableOpacity onPress={() => setShowModalSort(true)}>
+                  <TouchableOpacity
+                    onPress={() =>
+                      setShowModalSort((prev) => {
+                        return { ...prev, isShow: true };
+                      })
+                    }
+                  >
                     <HStack>
                       <Icon name="sort-alpha-asc" size={20} />
                       <Text style={{ paddingLeft: 10 }}>Sort By</Text>
@@ -81,26 +105,41 @@ export default ({ route, navigation }) => {
         <Text style={styles.title}>{getDateTitle()}</Text>
 
         {/* Filter */}
-        <View style={styles.filterContainer}>
-          <Button
-            rightIcon={
-              <Icon name="caret-down" size={20} as="Ionicons" color="white" />
-            }
-            small
-            colorScheme={"indigo"}
-          >
-            <Text color={Color.Button().Text}>Created Date</Text>
-          </Button>
-          <Button colorScheme={"indigo"} size={10}>
-            <Icon name="close" color={Color.Button().Text} />
-          </Button>
-        </View>
+        {showModalSort && showModalSort.data && (
+          <View style={styles.filterContainer}>
+            <Button
+              rightIcon={
+                <Icon
+                  name={showModalSort.data.asc ? "caret-down" : "caret-up"}
+                  size={20}
+                  as="Ionicons"
+                  color="white"
+                />
+              }
+              small
+              colorScheme={"indigo"}
+              onPress={handleChangeAcsSort}
+            >
+              <Text color={Color.Button().Text}>{showModalSort.data.name}</Text>
+            </Button>
+            <Button
+              colorScheme={"indigo"}
+              size={10}
+              onPress={handleClearFilter}
+            >
+              <Icon name="close" color={Color.Button().Text} />
+            </Button>
+          </View>
+        )}
 
         {/* Task */}
         <TasksComponent
           navigation={navigation}
           listTasks={allTasks.filter((x) => !x.isDeleted && !x.parentId)}
           date={showDate}
+          filter={
+            showModalSort && showModalSort.data ? showModalSort.data : null
+          }
         />
 
         {/* Button plus */}
@@ -112,33 +151,69 @@ export default ({ route, navigation }) => {
 
         {/* Modal sort */}
         <Modal
-          isOpen={showModalSort}
-          onClose={() => setShowModalSort(false)}
+          isOpen={showModalSort.isShow}
+          onClose={() =>
+            setShowModalSort((prev) => {
+              return { ...prev, isShow: false };
+            })
+          }
           size="lg"
         >
           <Modal.Content maxWidth="350">
             <Modal.CloseButton />
             <Modal.Header>Sort By</Modal.Header>
             <Modal.Body>
-              <TouchableOpacity style={styles.sort}>
+              <TouchableOpacity
+                style={styles.sort}
+                onPress={() =>
+                  setShowModalSort({
+                    data: { name: "Is Important", acs: true },
+                    isShow: false,
+                  })
+                }
+              >
                 <HStack space={3}>
                   <Icon style={styles.iconModal} name="star-o" size={15} />
                   <Text>Is Important</Text>
                 </HStack>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.sort}>
+              <TouchableOpacity
+                style={styles.sort}
+                onPress={() =>
+                  setShowModalSort({
+                    data: { name: "Due Date", acs: true },
+                    isShow: false,
+                  })
+                }
+              >
                 <HStack space={3}>
                   <Icon style={styles.iconModal} name="calendar" size={15} />
                   <Text>Due Date</Text>
                 </HStack>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.sort}>
+              <TouchableOpacity
+                style={styles.sort}
+                onPress={() =>
+                  setShowModalSort({
+                    data: { name: "Alphabetically", acs: true },
+                    isShow: false,
+                  })
+                }
+              >
                 <HStack space={3}>
                   <Icon style={styles.iconModal} name="pencil" size={15} />
                   <Text>Alphabetically</Text>
                 </HStack>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.sort}>
+              <TouchableOpacity
+                style={styles.sort}
+                onPress={() =>
+                  setShowModalSort({
+                    data: { name: "Created Date", acs: true },
+                    isShow: false,
+                  })
+                }
+              >
                 <HStack space={3}>
                   <Icon style={styles.iconModal} name="folder-open" />
                   <Text>Created Date</Text>
