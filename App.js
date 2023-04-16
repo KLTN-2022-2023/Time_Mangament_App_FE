@@ -13,6 +13,7 @@ import UserDetailScreen from "./Screen/UserDetailScreen/UserDetailScreen";
 import TaskListScreen from "./Screen/TaskListScreen/TaskListScreen";
 import CalendarScreen from "./Screen/CalendarScreen/CalendarScreen";
 import TaskListDetailScreen from "./Screen/TaskListDetail/TaskListDetailScreen";
+import AddTaskScreen from "./Screen/AddTaskScreen/AddTaskScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -105,6 +106,7 @@ export default function App() {
             name="TaskListDetail"
             component={TaskListDetailScreen}
           />
+          <Stack.Screen name="AddTaskScreen" component={AddTaskScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

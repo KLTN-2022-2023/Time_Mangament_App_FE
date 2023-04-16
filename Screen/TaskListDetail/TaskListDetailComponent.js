@@ -143,7 +143,11 @@ export default ({ route, navigation }) => {
         />
 
         {/* Button plus */}
-        <Button style={styles.button} size={50}>
+        <Button
+          style={styles.button}
+          size={50}
+          onPress={() => navigation.navigate("AddTaskScreen")}
+        >
           <Text fontSize={30} style={styles.buttonText}>
             +
           </Text>
