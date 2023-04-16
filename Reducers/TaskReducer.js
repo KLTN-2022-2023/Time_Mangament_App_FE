@@ -53,4 +53,81 @@ export const updateStatus = async (id, token) => {
   return result;
 };
 
+// Nam
+export const CreateTask = async (req, token) => {
+  let result = null;
+  try {
+    if (!req) return;
+    const response = await APIService.task().createTask(req, token);
+    if (response && response.data) {
+      result = response.data;
+    }
+  } catch (err) {
+    result = null;
+  }
+  return result;
+};
+export const MarkImportant = async (id, token) => {
+  let result = null;
+  try {
+    const response = await APIService.task().markImportant(id, token);
+    if (response && response.data) {
+      result = response.data;
+    }
+  } catch (err) {
+    result = null;
+  }
+  return result;
+};
+export const UpdateStatus = async (id, token) => {
+  let result = null;
+  try {
+    const response = await APIService.task().updateStatus(id, token);
+    if (response && response.data) {
+      result = response.data;
+    }
+  } catch (err) {
+    result = null;
+  }
+  return result;
+};
+export const DeleteTask = async (id, token) => {
+  let result = null;
+  try {
+    const response = await APIService.task().deleteTask(id, token);
+    if (response && response.data) {
+      result = response.data;
+    }
+  } catch (err) {
+    result = null;
+  }
+  return result;
+};
+
+export const UpdateTask = async (req, token) => {
+  let result = null;
+  try {
+    const response = await APIService.task().updateTask(req, token);
+    if (response && response.data) {
+      result = response.data;
+    }
+  } catch (err) {
+    result = null;
+  }
+  return result;
+};
+
+export const Upload = async (req) => {
+  let result = null;
+  try {
+    const response = await APIService.s3().upload(req);
+    if (response && response.data) {
+      result = response.data;
+    }
+  } catch (err) {
+    result = null;
+  }
+  return result;
+};
+
 export default tasksSlice.reducer;

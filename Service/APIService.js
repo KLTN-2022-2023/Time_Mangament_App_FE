@@ -46,6 +46,40 @@ export default {
             Authorization: token,
           },
         }),
+      // Nam
+      createTask: (req, token) =>
+        axios.post(url + "CreateTask/", JSON.stringify(req), {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        }),
+      updateTask: (req, token) =>
+        axios.post(url + "UpdateTask/", JSON.stringify(req), {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        }),
+      deleteTask: (id, token) =>
+        axios.delete(url + "FakeDeleteTask/" + id, {
+          headers: {
+            Authorization: token,
+          },
+        }),
+    };
+  },
+  s3(url = baseApi + "S3") {
+    return {
+      upload: (req) =>
+        axios.post(url + "Upload", req, {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "multipart/form-data",
+          },
+        }),
     };
   },
 };

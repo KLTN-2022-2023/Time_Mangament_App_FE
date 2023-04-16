@@ -200,7 +200,7 @@ export default ({ navigation }) => {
 
   const getCardStyle = (item) => {
     if (!item.isPlus) {
-      if (item && item.Status == "Done") {
+      if (item && item.status == "Done") {
         return stylesStatus.cardDone;
       } else if (item && checkTaskIsLate(item)) {
         return stylesStatus.CardLate;
