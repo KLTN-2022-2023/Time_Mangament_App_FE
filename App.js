@@ -60,11 +60,11 @@ function HomeTab() {
         ),
       })}
     >
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Calendar"
         component={CalendarScreen}
         options={{ title: "Calendar" }}
-      />
+      /> */}
       <Tab.Screen
         name="Tasks"
         component={TaskListScreen}
@@ -75,11 +75,11 @@ function HomeTab() {
         component={TaskListScreen}
         options={{ title: "Statistics" }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Notifications"
         component={TaskListScreen}
         options={{ title: "Notifications" }}
-      />
+      /> */}
       <Tab.Screen
         name="Settings"
         component={UserDetailScreen}
