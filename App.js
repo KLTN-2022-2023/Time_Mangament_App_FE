@@ -3,8 +3,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Provider } from "react-redux";
 import Store from "./Store/Store";
-import { Button } from "react-native";
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { StyleSheet } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import Color from "./Style/Color";
 import LoginScreen from "./Screen/Login/LoginScreen";
@@ -14,6 +13,7 @@ import TaskListScreen from "./Screen/TaskListScreen/TaskListScreen";
 import CalendarScreen from "./Screen/CalendarScreen/CalendarScreen";
 import TaskListDetailScreen from "./Screen/TaskListDetail/TaskListDetailScreen";
 import AddTaskScreen from "./Screen/AddTaskScreen/AddTaskScreen";
+import AddTypeScreen from "./Screen/AddTypeScreen/AddTypeScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -50,14 +50,14 @@ function HomeTab() {
         headerTitleStyle: {
           fontWeight: "bold",
         },
-        headerLeft: () => (
-          <Ionicons
-            style={styles.icon}
-            name="ios-reorder-three"
-            size={25}
-            color={Color.Header().Text}
-          />
-        ),
+        // headerLeft: () => (
+        //   <Ionicons
+        //     style={styles.icon}
+        //     name="ios-reorder-three"
+        //     size={25}
+        //     color={Color.Header().Text}
+        //   />
+        // ),
       })}
     >
       {/* <Tab.Screen
@@ -107,6 +107,7 @@ export default function App() {
             component={TaskListDetailScreen}
           />
           <Stack.Screen name="AddTaskScreen" component={AddTaskScreen} />
+          <Stack.Screen name="AddTypeScreen" component={AddTypeScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

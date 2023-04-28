@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Your IP Address
-const localApi = "http://192.168.1.6:3000/";
+const localApi = "http://192.168.1.7:3000/";
 const baseApi = localApi;
 
 export default {
@@ -46,7 +46,6 @@ export default {
             Authorization: token,
           },
         }),
-      // Nam
       createTask: (req, token) =>
         axios.post(url + "CreateTask/", JSON.stringify(req), {
           headers: {
@@ -65,6 +64,40 @@ export default {
         }),
       deleteTask: (id, token) =>
         axios.delete(url + "FakeDeleteTask/" + id, {
+          headers: {
+            Authorization: token,
+          },
+        }),
+    };
+  },
+  type(url = baseApi + "Type/") {
+    return {
+      getListAllTypes: (req, token) =>
+        axios.post(url + "GetTypesByUserId/", JSON.stringify(req), {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        }),
+      createType: (req, token) =>
+        axios.post(url + "CreateType/", JSON.stringify(req), {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        }),
+      updateType: (req, token) =>
+        axios.put(url + "UpdateType/", JSON.stringify(req), {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        }),
+      deleteType: (id, token) =>
+        axios.delete(url + "FakeDeleteType/" + id, {
           headers: {
             Authorization: token,
           },
