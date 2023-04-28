@@ -13,4 +13,12 @@ export default {
       Late: "Late",
     };
   },
+  TaskType() {
+    return {
+      AllTask: "AllTask",
+      Important: "Important",
+      MyDay: "MyDay",
+      CustomType: "CustomType",
+    };
+  },
 };

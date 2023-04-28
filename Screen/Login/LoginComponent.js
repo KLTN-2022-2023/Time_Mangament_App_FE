@@ -25,10 +25,12 @@ export default ({ navigation }) => {
     setIsLoading(true);
 
     try {
-      const value = await HandleLogin({
-        email,
-        password,
-      });
+      // const value = await HandleLogin({
+      //   email,
+      //   password,
+      // });
+      const value =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NDBkMWUzOTA0NTVmZWIwMWNiZjhmNTAiLCJlbWFpbCI6ImgyMjEyMDAwQGdtYWlsLmNvbSIsImlhdCI6MTY4MjY3MTc0NywiZXhwIjoxNjgzMDM4OTQ3fQ.KoGcLzoS7gyZ8m6ROfbXckkmY0es7Sf017fob1oid3Q";
 
       if (value) {
         await AsyncStorage.setItem("Token", value);

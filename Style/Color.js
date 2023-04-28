@@ -32,6 +32,13 @@ export default {
     return {
       inValid: "#e03131",
       valid: "#818cf8",
+      background: "#f1f3f5",
+    };
+  },
+  IconTask() {
+    return {
+      AllTasks: "#f08c00",
+      Important: "#d6336c",
     };
   },
 };

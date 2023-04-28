@@ -53,7 +53,6 @@ export const updateStatus = async (id, token) => {
   return result;
 };
 
-// Nam
 export const CreateTask = async (req, token) => {
   let result = null;
   try {
@@ -67,6 +66,7 @@ export const CreateTask = async (req, token) => {
   }
   return result;
 };
+
 export const MarkImportant = async (id, token) => {
   let result = null;
   try {
@@ -79,6 +79,7 @@ export const MarkImportant = async (id, token) => {
   }
   return result;
 };
+
 export const UpdateStatus = async (id, token) => {
   let result = null;
   try {
@@ -91,6 +92,7 @@ export const UpdateStatus = async (id, token) => {
   }
   return result;
 };
+
 export const DeleteTask = async (id, token) => {
   let result = null;
   try {
