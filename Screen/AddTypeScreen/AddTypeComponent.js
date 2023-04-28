@@ -22,12 +22,15 @@ import {
   DeleteType,
   getListAllTypesByUserId,
 } from "../../Reducers/TypeReducer";
+import { getListAllTasksByUserId } from "../../Reducers/TaskReducer";
 import { formatInTimeZone } from "date-fns-tz";
 import Spinner from "react-native-loading-spinner-overlay";
 
 export default ({ navigation, typeId }) => {
   const allTypes = useSelector((state) => state.type.allTypes);
+  const allTasks = useSelector((state) => state.task.allTasks);
   const dispatch = useDispatch();
+
   const [data, setData] = useState(null);
   const [name, setName] = useState("Untitled Type");
   const [description, setDescription] = useState("");
@@ -129,6 +132,7 @@ export default ({ navigation, typeId }) => {
 
         if (response) {
           await handleGetAllTypes();
+          await handleGetAllTasks();
 
           navigation.navigate("HomeTab", { screen: "Tasks" });
         }
@@ -145,6 +149,14 @@ export default ({ navigation, typeId }) => {
     if (token) {
       const decoded = jwt_decode(token);
       dispatch(getListAllTypesByUserId({ userId: decoded._id }, token));
+    }
+  };
+
+  const handleGetAllTasks = async () => {
+    const token = await AsyncStorage.getItem("Token");
+    if (token) {
+      const decoded = jwt_decode(token);
+      dispatch(getListAllTasksByUserId({ userId: decoded._id }, token));
     }
   };
 
