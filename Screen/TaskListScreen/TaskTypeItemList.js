@@ -17,11 +17,13 @@ import {
   DeleteType,
   getListAllTypesByUserId,
 } from "../../Reducers/TypeReducer";
+import { getListAllTasksByUserId } from "../../Reducers/TaskReducer";
 import Spinner from "react-native-loading-spinner-overlay";
 import PopupComponent from "../../Component/Common/PopupComponent";
 
 export default ({ items, navigation }) => {
   const allTypes = useSelector((state) => state.type.allTypes);
+  const allTasks = useSelector((state) => state.task.allTasks);
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,6 +50,7 @@ export default ({ items, navigation }) => {
 
         if (response) {
           await handleGetAllTypes();
+          await handleGetAllTasks();
 
           // navigation.navigate("HomeTab", { screen: "Tasks" });
           setOpen(false);
@@ -65,6 +68,14 @@ export default ({ items, navigation }) => {
     if (token) {
       const decoded = jwt_decode(token);
       dispatch(getListAllTypesByUserId({ userId: decoded._id }, token));
+    }
+  };
+
+  const handleGetAllTasks = async () => {
+    const token = await AsyncStorage.getItem("Token");
+    if (token) {
+      const decoded = jwt_decode(token);
+      dispatch(getListAllTasksByUserId({ userId: decoded._id }, token));
     }
   };
 
