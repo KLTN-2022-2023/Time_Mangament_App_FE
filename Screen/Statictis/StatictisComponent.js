@@ -83,6 +83,7 @@ const StatictisComponent = ({ navigation }) => {
   useEffect(() => {
     handleGetAllTasks();
   }, []);
+
   useEffect(() => {
     dropdownYear()
   }, [])
@@ -110,11 +111,11 @@ const StatictisComponent = ({ navigation }) => {
     const startMonth = dayStart.toString().substring(5, 7);
     const endDay = dayEnd.toString().substring(8, 10);
     const startDay = dayStart.toString().substring(8, 10);
-    if (startMonth === endMonth && endDay > startDay) {
-      setColor("#FFFFFF")
+    if (startMonth === endMonth || endDay > startDay || endDay === startDay) {
+      setColor("#FFFFFF");
     }
-    else {
-      setColor("#FF0000")
+    else if (startMonth < endMonth || startMonth > endMonth || endDay < startDay) {
+      setColor("#FF0000");
     }
   }
 
@@ -212,14 +213,16 @@ const StatictisComponent = ({ navigation }) => {
                   data={[
                     {
                       name: 'Uncomplete',
-                      population: Number(uncompleteTask),
+                      //population: Number(uncompleteTask),
+                      population: 30,
                       color: 'rgba(131, 167, 234, 1)',
                       legendFontColor: '#7F7F7F',
                       legendFontSize: 12,
                     },
                     {
                       name: 'Complete',
-                      population: Number(completeTask),
+                      //population: Number(completeTask),
+                      population: 10,
                       color: '#F00',
                       legendFontColor: '#7F7F7F',
                       legendFontSize: 12,
@@ -277,7 +280,7 @@ const StatictisComponent = ({ navigation }) => {
                       },
                     ],
                   }}
-                  width={Dimensions.get('window').width + 300}
+                  width={Dimensions.get('window').width + 350}
                   height={250}
                   yAxisLabel={'Tasks: '}
                   chartConfig={{
