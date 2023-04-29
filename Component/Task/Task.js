@@ -93,7 +93,12 @@ export default ({ navigation, item }) => {
 
   const showItemStatus = () => {
     if (item && item.dueTime) {
-      return getDateTitle(item.dueTime.split(" ").shift());
+      let dateNowString = formatInTimeZone(
+        item.dueTime,
+        "Asia/Ho_Chi_Minh",
+        "yyyy-MM-dd HH:mm:ss"
+      );
+      return getDateTitle(dateNowString.split(" ").shift());
     }
     return "";
   };
@@ -105,8 +110,14 @@ export default ({ navigation, item }) => {
         "Asia/Ho_Chi_Minh",
         CommonData.Format().DateTimeFormatDateFNS
       );
-      let startDate = new Date(Date.parse(task.startTime.split(" ").shift()));
-      let dueTime = new Date(Date.parse(task.dueTime.split(" ").shift()));
+
+      let dueTimeString = formatInTimeZone(
+        task.dueTime,
+        "Asia/Ho_Chi_Minh",
+        CommonData.Format().DateTimeFormatDateFNS
+      );
+
+      let dueTime = new Date(Date.parse(dueTimeString.split(" ").shift()));
       let dateNow = new Date(Date.parse(dateNowString.split(" ").shift()));
 
       if (dueTime < dateNow) {
@@ -119,6 +130,7 @@ export default ({ navigation, item }) => {
   const getDateTitle = (showDate) => {
     if (showDate) {
       return (
+        "Due Date: " +
         format(new Date(showDate), "EE") +
         ", " +
         format(new Date(showDate), "yyyy MMMM dd")

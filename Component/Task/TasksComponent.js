@@ -3,14 +3,15 @@ import { useState, useEffect } from "react";
 import { SectionList, SafeAreaView, StyleSheet } from "react-native";
 import { View, Text } from "native-base";
 import CommonData from "../../CommonData/CommonData";
+import NoData from "../Common/NoData";
 
-export default ({ navigation, listTasks, date, filter }) => {
+export default ({ navigation, listTasks, date, typeId, filter }) => {
   const [tasks, setTasks] = useState([]);
   const [tasksImportant, setTasksImportant] = useState([]);
 
   useEffect(() => {
     handleSplitTasks();
-  }, [listTasks, date, filter]);
+  }, [listTasks, date, typeId, filter]);
 
   const compareDateBetweenTwoDate = (date, date1, date2) => {
     if (date && date1 && date2) {
@@ -25,6 +26,7 @@ export default ({ navigation, listTasks, date, filter }) => {
   };
 
   const handleFilterTasks = (list) => {
+    // Split by date
     if (date) {
       let result = list.filter(
         (t) =>
@@ -38,6 +40,21 @@ export default ({ navigation, listTasks, date, filter }) => {
       );
       return result;
     }
+
+    // Split by type
+    if (typeId) {
+      if (typeId === CommonData.TaskType().AllTask) {
+        return list;
+      }
+
+      if (typeId === CommonData.TaskType().Important) {
+        return list.filter((t) => t.isImportant);
+      }
+
+      let result = list.filter((t) => t.typeId === typeId);
+      return result;
+    }
+
     return list;
   };
 
@@ -152,22 +169,27 @@ export default ({ navigation, listTasks, date, filter }) => {
 
   return (
     <View style={styles.safe}>
-      <SectionList
-        sections={[
-          { title: "Incomplete", data: [...tasks] },
-          {
-            title: "Completed",
-            data: [...tasksImportant],
-          },
-        ]}
-        renderItem={({ item }) => (
-          <Task navigation={navigation} item={item}></Task>
-        )}
-        renderSectionHeader={({ section }) => (
-          <Text style={styles.sectionHeader}>{section.title}</Text>
-        )}
-        keyExtractor={(item) => `basicListEntry-${item._id}`}
-      />
+      {(tasks && tasks.length > 0) ||
+      (tasksImportant && tasksImportant.length > 0) ? (
+        <SectionList
+          sections={[
+            { title: "Incomplete", data: [...tasks] },
+            {
+              title: "Completed",
+              data: [...tasksImportant],
+            },
+          ]}
+          renderItem={({ item }) => (
+            <Task navigation={navigation} item={item}></Task>
+          )}
+          renderSectionHeader={({ section }) => (
+            <Text style={styles.sectionHeader}>{section.title}</Text>
+          )}
+          keyExtractor={(item) => `basicListEntry-${item._id}`}
+        />
+      ) : (
+        <NoData></NoData>
+      )}
     </View>
   );
 };

@@ -151,6 +151,12 @@ export default ({ items, navigation }) => {
             type={CommonData.TaskType().CustomType}
             name={item.name}
             quantity={item.quantity}
+            actionFunc={() => {
+              navigation.navigate("TaskListDetail", {
+                showDate: null,
+                typeId: item._id,
+              });
+            }}
           ></TaskTypeItem>
         </Swipeable>
       </GestureHandlerRootView>
