@@ -55,7 +55,7 @@ export default {
           },
         }),
       updateTask: (req, token) =>
-        axios.post(url + "UpdateTask/", JSON.stringify(req), {
+        axios.put(url + "UpdateTask/", JSON.stringify(req), {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",

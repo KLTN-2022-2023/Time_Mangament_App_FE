@@ -1,8 +1,7 @@
 import {
   Box,
   Center,
-  Heading,
-  Input,
+  Modal,
   View,
   Text,
   Checkbox,
@@ -38,20 +37,135 @@ import { Snackbar } from "@react-native-material/core";
 import { useNavigation } from "@react-navigation/native";
 import { useSelector, useDispatch } from "react-redux";
 import { getListAllTasksByUserId } from "../../Reducers/TaskReducer.js";
+import { formatInTimeZone } from "date-fns-tz";
+import Spinner from "react-native-loading-spinner-overlay";
+import Color from "../../Style/Color";
+import CommonData from "../../CommonData/CommonData";
+import PopupComponent from "../../Component/Common/PopupComponent";
 
-const AddTaskComponent = ({ navigation }) => {
-  const navigation1 = useNavigation();
-  const [name, setName] = useState("Tieu de");
-  const [repeatTime, setRepeatTime] = useState("Nhắc tôi");
-  const [dueTime, setDueTime] = useState("Thêm ngày đến hạn");
-  const [reuse, setReuse] = useState("Lặp lại");
-  const [description, setDescription] = useState();
+export default ({ navigation, taskId }) => {
+  const [data, setData] = useState(null);
+  const [name, setName] = useState("New Task");
+  const [note, setNote] = useState("");
+  const [isDone, setIsDone] = useState(false);
+  const [isImportant, setIsImportant] = useState(false);
   const [file, setFile] = useState(null);
-  const [colorStar, setColorStar] = useState("black");
-  const [calendarRepeat, setCalendarRepeat] = useState(false);
-  const [calendarDue, setCalendarDue] = useState(false);
-  const [message, setMessage] = useState();
+  const [isLoading, setIsLoading] = useState(false);
+  const [remind, setRemind] = useState(null);
+  const [repeat, setRepeat] = useState(null);
+  const [type, setType] = useState(null);
+  const [open, setOpen] = useState(false);
+
+  // Modal
+  const [modalRepeat, setModalRepeat] = useState(false);
+  const [modalRemind, setModalRemind] = useState(false);
+  const [modalType, setModalType] = useState(false);
+
+  // Validate
+  const [errorNameRequired, setErrorNameRequired] = useState(false);
+  const [errorDates, setErrorDates] = useState(false);
+
+  // Start
+  const [startDate, setStartDate] = useState(null);
+  const [startTime, setStartTime] = useState(null);
+  const [calendarStartDate, setCalendarStartDate] = useState(false);
+  const [calendarStartTime, setCalendarStartTime] = useState(false);
+
+  // Due
+  const [dueDate, setDueDate] = useState(null);
+  const [dueTime, setDueTime] = useState(null);
+  const [calendarDueDate, setCalendarDueDate] = useState(false);
+  const [calendarDueTime, setCalendarDueTime] = useState(false);
+
+  // End Repeat
+  const [endRepeat, setEndRepeat] = useState(null);
+  const [calendarEndRepeat, setCalendarEndRepeat] = useState(false);
+
+  const dispatch = useDispatch();
   const allTasks = useSelector((state) => state.task.allTasks);
+  const allTypes = useSelector((state) => state.type.allTypes);
+  const navigation1 = useNavigation();
+  const dateTime = moment(new Date()).format("YYYY-MM-DD");
+
+  // Get Detail
+  useEffect(() => {
+    let foundItem = allTasks.find((x) => x._id === taskId);
+    if (foundItem) {
+      setData(foundItem);
+
+      //set Data
+      setName(foundItem.name);
+      setNote(foundItem.description);
+      setType(allTypes.find((x) => x._id === foundItem.typeId));
+      setRemind(foundItem.remindTime);
+      setRepeat(foundItem.repeatTime);
+      setIsImportant(foundItem.isImportant);
+      setIsDone(
+        foundItem.status === CommonData.TaskStatus().Done ? true : false
+      );
+
+      let startTimeString = formatInTimeZone(
+        foundItem.startTime,
+        "Asia/Ho_Chi_Minh",
+        "yyyy-MM-dd HH:mm"
+      );
+      let dueTimeString = formatInTimeZone(
+        foundItem.dueTime,
+        "Asia/Ho_Chi_Minh",
+        "yyyy-MM-dd HH:mm"
+      );
+      setStartDate(startTimeString.split(" ").shift());
+      setStartTime(startTimeString.split(" ")[1]);
+      setDueDate(dueTimeString.split(" ").shift());
+      setDueTime(dueTimeString.split(" ")[1]);
+
+      if (foundItem.endRepeat) {
+        let endRepeatString = formatInTimeZone(
+          foundItem.endRepeat,
+          "Asia/Ho_Chi_Minh",
+          "yyyy-MM-dd HH:mm"
+        );
+        setEndRepeat(endRepeatString.split(" ").shift());
+      }
+    } else {
+      setData(null);
+    }
+  }, [taskId]);
+
+  // Set default
+  useEffect(() => {
+    if (!taskId) {
+      let dateNowString = formatInTimeZone(
+        new Date(),
+        "Asia/Ho_Chi_Minh",
+        "yyyy-MM-dd HH:mm"
+      );
+      setStartDate(dateNowString.split(" ").shift());
+      setStartTime(dateNowString.split(" ")[1]);
+      setDueDate(dateNowString.split(" ").shift());
+      setDueTime(dateNowString.split(" ")[1]);
+      setEndRepeat(dateNowString.split(" ").shift());
+
+      setType(allTypes.filter((x) => !x.isDeleted)[0]);
+    }
+  }, []);
+
+  //Validate
+  useEffect(() => {
+    if (startDate && startTime && dueDate && dueTime) {
+      if (startDate > dueDate) {
+        setErrorDates(true);
+      } else if (startDate == dueDate) {
+        if (startTime > dueTime) {
+          setErrorDates(true);
+        } else {
+          setErrorDates(false);
+        }
+      } else {
+        setErrorDates(false);
+      }
+    }
+  }, [startDate, startTime, dueDate, dueTime]);
 
   const handleGetAllTasks = async () => {
     const token = await AsyncStorage.getItem("Token");
@@ -61,97 +175,84 @@ const AddTaskComponent = ({ navigation }) => {
     }
   };
 
-  useEffect(() => {
-    console.log(allTasks.length);
-  }, [allTasks]);
+  const inValidData = () => {
+    return errorDates || errorNameRequired;
+  };
 
-  const styles = StyleSheet.create({
-    header: {
-      alignContent: "center",
-      justifyContent: "space-between",
-    },
-    text_header: {
-      paddingLeft: 30,
-      fontSize: 20,
-      paddingBottom: 30,
-    },
-    icon: {
-      paddingBottom: 10,
-      paddingLeft: 10,
-    },
-    view: {
-      display: "flex",
-      flexDirection: "row",
-      paddingTop: 10,
-      marginTop: 10,
-      gap: 20,
-      shadowColor: "#000000",
-      borderColor: "#000000",
-      shadowOpacity: 1.0,
-      shadowRadius: 0,
-      shadowOffset: {
-        height: 3,
-        width: 5,
-      },
-      elevation: 2,
-    },
-    viewgroup: {
-      marginTop: 10,
-      borderColor: "#000000",
-      shadowColor: "#000000",
-      shadowOpacity: 1.0,
-      shadowRadius: 0,
-      shadowOffset: {
-        height: 3,
-        width: 0,
-      },
-      elevation: 2,
-    },
-    viewOnGroup: {
-      display: "flex",
-      flexDirection: "row",
-      paddingTop: 10,
-      gap: 20,
-    },
-    textAreaContainer: {
-      marginTop: 10,
-      borderColor: "grey",
-      borderWidth: 1,
-      borderRadius: 20,
-    },
-    textArea: {
-      height: 150,
-      justifyContent: "flex-start",
-      shadowColor: "black",
-    },
-    title: {
-      justifyContent: "space-between",
-      alignContent: "center",
-    },
-    header_text: {
-      fontSize: 20,
-      paddingBottom: 30,
-    },
-    footer: {
-      justifyContent: "space-between",
-      paddingTop: 20,
-    },
-    star: {
-      color: colorStar,
-    },
-  });
+  const onChangeName = (v) => {
+    if (!v || v == "") {
+      setErrorNameRequired(true);
+    } else {
+      setErrorNameRequired(false);
+    }
+    setName(v);
+  };
+
+  const handlePressStar = async () => {
+    setIsImportant((prevState) => !prevState);
+  };
+
   const hideDatePicker = () => {
-    setCalendarRepeat(false);
-    // setCalendarDue(false);
+    setCalendarStartDate(false);
+    setCalendarDueDate(false);
+    setCalendarEndRepeat(false);
   };
 
-  const confirmRepeatTime = (date) => {
-    setRepeatTime(moment(date).format("YYYY-MM-DD hh:mm:ss"));
-    hideDatePicker();
+  const hideTimePicker = () => {
+    setCalendarStartTime(false);
+    setCalendarDueTime(false);
   };
-  const confirmDueTime = (date) => {
-    setDueTime(moment(date).format("YYYY-MM-DD"));
+
+  const confirmStartDate = (date) => {
+    let dateString = formatInTimeZone(
+      date,
+      "Asia/Ho_Chi_Minh",
+      "yyyy-MM-dd HH:mm"
+    );
+    setStartDate(dateString.split(" ").shift());
+    setCalendarStartDate(false);
   };
+
+  const confirmStartTime = (time) => {
+    let dateString = formatInTimeZone(
+      time,
+      "Asia/Ho_Chi_Minh",
+      "yyyy-MM-dd HH:mm"
+    );
+    setStartTime(dateString.split(" ")[1]);
+    setCalendarStartTime(false);
+  };
+
+  const confirmDueDate = (date) => {
+    let dateString = formatInTimeZone(
+      date,
+      "Asia/Ho_Chi_Minh",
+      "yyyy-MM-dd HH:mm"
+    );
+    setDueDate(dateString.split(" ").shift());
+    setCalendarDueDate(false);
+  };
+
+  const confirmDueTime = (time) => {
+    let dateString = formatInTimeZone(
+      time,
+      "Asia/Ho_Chi_Minh",
+      "yyyy-MM-dd HH:mm"
+    );
+    setDueTime(dateString.split(" ")[1]);
+    setCalendarDueTime(false);
+  };
+
+  const confirmEndRepeat = (date) => {
+    let dateString = formatInTimeZone(
+      date,
+      "Asia/Ho_Chi_Minh",
+      "yyyy-MM-dd HH:mm"
+    );
+    setEndRepeat(dateString.split(" ").shift());
+    setCalendarEndRepeat(false);
+  };
+
   const checkPermissions = async () => {
     try {
       const result = await PermissionsAndroid.check(
@@ -187,6 +288,7 @@ const AddTaskComponent = ({ navigation }) => {
       return false;
     }
   };
+
   async function selectFile() {
     try {
       const result = await checkPermissions();
@@ -210,373 +312,689 @@ const AddTaskComponent = ({ navigation }) => {
       return false;
     }
   }
+
   const uploadFile = async () => {
     const formData = new FormData();
     formData.append("image", file);
     const response = await Upload(formData);
     // alert(response);
   };
-  const dateTime = moment(new Date()).format("YYYY-MM-DD");
-  const Important = async () => {
-    // uploadFile();
-    setColorStar("red");
-    // const id = "640d20e7efa0dc571c1277bb";
-    // const token = await AsyncStorage.getItem("Token");
-    // try {
-    //   const result = await MarkImportant(id, token);
-    //   //alert(result);
-    // } catch (err) {
-    //   alert("Error");
-    // }
+
+  const closeModal = () => {
+    setOpen(false);
   };
 
-  const AddTask = async () => {
-    const token = await AsyncStorage.getItem("Token");
-    // const token =
-    //   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NDBkMWUzOTA0NTVmZWIwMWNiZjhmNTAiLCJlbWFpbCI6ImgyMjEyMDAwQGdtYWlsLmNvbSIsImlhdCI6MTY4MDY3NjU3NSwiZXhwIjoxNjgxMDQzNzc1fQ.xUxpSX-3H8UtXKVXL2syFUtWyrzSu9ZjGISC6_0mXzE";
-    const decoded = jwt_decode(token);
-    const userId = decoded._id;
+  const openModal = () => {
+    setOpen(true);
+  };
+
+  const deleteTask = async () => {
+    setIsLoading(true);
+
     try {
-      const result = await CreateTask(
-        { name, dueTime, repeatTime, description, userId },
-        token
-      );
-      if (result && result.data) {
-        uploadFile();
-        await handleGetAllTasks();
+      // delete
+      const token = await AsyncStorage.getItem("Token");
+      if (token) {
+        const response = await DeleteTask(taskId, token);
+
+        if (response) {
+          await handleGetAllTasks();
+
+          navigation.navigate("HomeTab", { screen: "Tasks" });
+        }
       }
     } catch (err) {
-      //   alert("userId");
+      console(err);
     }
+
+    setIsLoading(false);
   };
 
-  const Delete = async () => {
-    const token = await AsyncStorage.getItem("Token");
-    //const token ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NDBkMWUzOTA0NTVmZWIwMWNiZjhmNTAiLCJlbWFpbCI6ImgyMjEyMDAwQGdtYWlsLmNvbSIsImlhdCI6MTY4MDY3NjU3NSwiZXhwIjoxNjgxMDQzNzc1fQ.xUxpSX-3H8UtXKVXL2syFUtWyrzSu9ZjGISC6_0mXzE";
-    const id = "642c6297b920b4b1e69fa3b8";
+  const save = async () => {
+    setIsLoading(true);
+
     try {
-      const result = await DeleteTask(id, token);
-      setMessage(result.message);
-      await setTimeout(() => {
-        setMessage(null);
-      }, 3000);
-      navigation1.navigate("TaskListScreen");
+      // create
+      if (!taskId) {
+        const token = await AsyncStorage.getItem("Token");
+        if (token) {
+          const decoded = jwt_decode(token);
+          let request = {
+            userId: decoded._id,
+            typeId: type._id,
+            name: name,
+            description: note,
+            startTime: new Date(startDate + " " + startTime),
+            dueTime: new Date(dueDate + " " + dueTime),
+            files: [],
+            checkList: [],
+            isImportant: isImportant,
+            status: isDone
+              ? CommonData.TaskStatus().Done
+              : CommonData.TaskStatus().New,
+            remindTime: remind,
+            repeatTime: repeat,
+            endRepeat: repeat ? new Date(endRepeat) : null,
+            isRepeatedById: null,
+            createdDate: new Date(),
+          };
+
+          const response = await CreateTask(request, token);
+
+          if (response) {
+            await handleGetAllTasks();
+
+            navigation.navigate("HomeTab", { screen: "Tasks" });
+          }
+        }
+      }
+      // Update
+      else {
+        const token = await AsyncStorage.getItem("Token");
+        if (token) {
+          let request = {
+            ...data,
+            typeId: type._id,
+            name: name,
+            description: note,
+            startTime: new Date(startDate + " " + startTime),
+            dueTime: new Date(dueDate + " " + dueTime),
+            files: [],
+            checkList: [],
+            isImportant: isImportant,
+            status: isDone
+              ? CommonData.TaskStatus().Done
+              : CommonData.TaskStatus().New,
+            remindTime: remind,
+            repeatTime: repeat,
+            endRepeat: repeat ? new Date(endRepeat) : null,
+            isRepeatedById: null,
+            updatedDate: new Date(),
+          };
+          const response = await UpdateTask(request, token);
+          console.log(response);
+          if (response) {
+            await handleGetAllTasks();
+            navigation.navigate("HomeTab", { screen: "Tasks" });
+          }
+        }
+      }
     } catch (err) {
-      //   alert(err);
+      console(err);
     }
+
+    setIsLoading(false);
   };
 
-  const updateTask = async () => {
-    const token = await AsyncStorage.getItem("Token");
-    try {
-      const response = await UpdateTask(
-        { name, dueTime, repeatTime, description, userId },
-        token
-      );
-    } catch (err) {
-      //   alert(err);
-    }
-  };
-
-  const Update = async () => {
-    const token = await AsyncStorage.getItem("Token");
-    const id = "640d20e7efa0dc571c1277bb";
-    try {
-      const response = await UpdateStatus(id, token);
-    } catch (err) {
-      //   alert(err);
-    }
-  };
   return (
-    <NativeBaseProvider>
-      <Center w="100%" paddingTop={10}>
-        <Box safeArea p="2" py="2" w="100%" maxW="350">
-          <HStack style={styles.header}>
-            <TouchableOpacity style={styles.header_text}>
+    <Center w="100%" h="100%">
+      <Spinner visible={isLoading}></Spinner>
+
+      <PopupComponent
+        title={"Delete"}
+        content={"Do you want to delete this task?"}
+        closeFunction={closeModal}
+        isOpen={open}
+        actionFunction={deleteTask}
+      ></PopupComponent>
+
+      <Box safeArea height="100%" width="100%">
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <HStack>
+              <Icon name="angle-left" size={25} style={styles.icon} />
+              <Text paddingLeft={2} fontSize={18} style={styles.textBack}>
+                Tasks List
+              </Text>
+            </HStack>
+          </TouchableOpacity>
+
+          <View style={styles.buttonContainer}>
+            {taskId && (
+              <TouchableOpacity onPress={() => openModal()}>
+                <HStack>
+                  <Text
+                    paddingLeft={2}
+                    fontSize={18}
+                    color="red.500"
+                    fontWeight={500}
+                  >
+                    Delete
+                  </Text>
+                </HStack>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity disabled={inValidData()} onPress={() => save()}>
               <HStack>
-                <Icon
-                  onPress={() => navigation.goBack()}
-                  name="angle-left"
-                  size={30}
-                />
-                <Text paddingLeft={5} fontSize={20}>
-                  List Task
-                </Text>
-              </HStack>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.header_text} onPress={AddTask}>
-              <HStack>
-                <Text paddingLeft={2} fontSize={20} color="blue.500">
+                <Text
+                  paddingLeft={2}
+                  fontSize={18}
+                  color="blue.500"
+                  fontWeight={500}
+                >
                   Save
                 </Text>
               </HStack>
             </TouchableOpacity>
-          </HStack>
-          <HStack style={styles.title}>
-            <Checkbox value="one" my={2} onChange={Update}>
-              <TextInput value={name} onChangeText={(e) => setName(e)} />
-            </Checkbox>
+          </View>
+        </View>
+
+        {/* Checkbox */}
+        <HStack style={styles.title}>
+          <Checkbox
+            colorScheme="indigo"
+            borderRadius={20}
+            size="lg"
+            accessibilityLabel="Tap me!"
+            my={2}
+            isChecked={isDone}
+            onChange={() => setIsDone((prevState) => !prevState)}
+          >
+            {/* Name */}
+            <TextInput
+              fontSize={16}
+              value={name}
+              onChangeText={(e) => onChangeName(e)}
+            />
+          </Checkbox>
+
+          {isImportant ? (
             <Icon
+              name="star"
               size={30}
-              style={styles.star}
+              style={styles.iconStarCheck}
+              onPress={handlePressStar}
+            />
+          ) : (
+            <Icon
               name="star-o"
-              onPress={Important}
+              size={30}
+              style={styles.iconStarUnCheck}
+              onPress={handlePressStar}
             />
+          )}
+        </HStack>
+
+        {/* Validate Name */}
+        {errorNameRequired && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>Task Name is required</Text>
+          </View>
+        )}
+
+        {/* Check List */}
+        {/* <TouchableOpacity>
+          <HStack>
+            <Text fontSize={30} color="blue.500">
+              +
+            </Text>
+            <TextInput
+              placeholder="Thêm bước"
+              paddingLeft={20}
+              paddingTop={5}
+            ></TextInput>
           </HStack>
-          <TouchableOpacity>
-            <HStack>
-              <Text fontSize={30} color="blue.500">
-                +
+        </TouchableOpacity> */}
+
+        <View style={styles.viewGroup}>
+          {/* Type */}
+          <View style={styles.viewOnGroup}>
+            <Text style={styles.iconOld}>{"Type            "}</Text>
+            <View style={styles.dateTimeContainer}>
+              <TouchableOpacity onPress={() => setModalType(true)}>
+                <View style={styles.remindContainer}>
+                  <Text style={styles.dateTimeText}>
+                    {type ? type.name : ""}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+          {/* Modal Type */}
+          <Modal
+            isOpen={modalType}
+            onClose={() => setModalType(false)}
+            size="lg"
+          >
+            <Modal.Content maxWidth="350">
+              <Modal.CloseButton />
+              <Modal.Header>Type</Modal.Header>
+              <Modal.Body>
+                {allTypes.map(
+                  (x) =>
+                    !x.isDeleted && (
+                      <TouchableOpacity
+                        style={styles.sort}
+                        onPress={() => {
+                          setType(x);
+                          setModalType(false);
+                        }}
+                        key={x._id}
+                      >
+                        <HStack space={3}>
+                          <Text>{x.name}</Text>
+                        </HStack>
+                      </TouchableOpacity>
+                    )
+                )}
+              </Modal.Body>
+            </Modal.Content>
+          </Modal>
+
+          {/* Start time */}
+          <View style={styles.viewOnGroup}>
+            <Text style={styles.iconOld}>{"Start Time  "}</Text>
+            <View style={styles.dateTimeContainer}>
+              {/* Date */}
+              <TouchableOpacity onPress={() => setCalendarStartDate(true)}>
+                <View style={styles.dateContainer}>
+                  <Text style={styles.dateTimeText}>{startDate}</Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* Time */}
+              <TouchableOpacity onPress={() => setCalendarStartTime(true)}>
+                <View style={styles.timeContainer}>
+                  <Text style={styles.dateTimeText}>{startTime}</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <DateTimePickerModal
+            isVisible={calendarStartDate}
+            mode="date"
+            onConfirm={confirmStartDate}
+            onCancel={hideDatePicker}
+          />
+          <DateTimePickerModal
+            isVisible={calendarStartTime}
+            mode="time"
+            onConfirm={confirmStartTime}
+            onCancel={hideTimePicker}
+          />
+
+          {/* Due time */}
+          <View style={styles.viewOnGroup}>
+            <Text style={styles.iconOld}>{"Due Time    "}</Text>
+            <View style={styles.dateTimeContainer}>
+              {/* Date */}
+              <TouchableOpacity onPress={() => setCalendarDueDate(true)}>
+                <View style={styles.dateContainer}>
+                  <Text style={styles.dateTimeText}>{dueDate}</Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* Time */}
+              <TouchableOpacity onPress={() => setCalendarDueTime(true)}>
+                <View style={styles.timeContainer}>
+                  <Text style={styles.dateTimeText}>{dueTime}</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <DateTimePickerModal
+            isVisible={calendarDueDate}
+            mode="date"
+            onConfirm={confirmDueDate}
+            onCancel={hideDatePicker}
+          />
+          <DateTimePickerModal
+            isVisible={calendarDueTime}
+            mode="time"
+            onConfirm={confirmDueTime}
+            onCancel={hideTimePicker}
+          />
+
+          {/* Validate Dates */}
+          {errorDates && (
+            <View style={styles.errorDateContainer}>
+              <Text style={styles.errorText}>
+                Due Date must be greater than Start Date
               </Text>
-              <TextInput
-                placeholder="Thêm bước"
-                paddingLeft={20}
-                paddingTop={5}
-              ></TextInput>
-            </HStack>
+            </View>
+          )}
+
+          {/* Remind */}
+          <View style={styles.viewOnGroup}>
+            <Text style={styles.iconOld}>{"Remind       "}</Text>
+            <View style={styles.dateTimeContainer}>
+              {/* Date */}
+              <TouchableOpacity onPress={() => setModalRemind(true)}>
+                <View style={styles.remindContainer}>
+                  <Text style={styles.dateTimeText}>
+                    {remind && remind != "" ? remind : "Never"}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+          {/* Modal Remind */}
+          <Modal
+            isOpen={modalRemind}
+            onClose={() => setModalRepeat(false)}
+            size="lg"
+          >
+            <Modal.Content maxWidth="350">
+              <Modal.CloseButton />
+              <Modal.Header>Remind</Modal.Header>
+              <Modal.Body>
+                <TouchableOpacity
+                  style={styles.sort}
+                  onPress={() => {
+                    setRemind(null);
+                    setModalRemind(false);
+                  }}
+                >
+                  <HStack space={3}>
+                    <Text>Never</Text>
+                  </HStack>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.sort}
+                  onPress={() => {
+                    setModalRemind(false);
+                    setRemind("On Due Time");
+                  }}
+                >
+                  <HStack space={3}>
+                    <Text>On Due Time</Text>
+                  </HStack>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.sort}
+                  onPress={() => {
+                    setModalRemind(false);
+                    setRemind("1 day before Due Time");
+                  }}
+                >
+                  <HStack space={3}>
+                    <Text>1 day before Due Time</Text>
+                  </HStack>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.sort}
+                  onPress={() => {
+                    setModalRemind(false);
+                    setRemind("5 minutes before Due Time");
+                  }}
+                >
+                  <HStack space={3}>
+                    <Text>5 minutes before Due Time</Text>
+                  </HStack>
+                </TouchableOpacity>
+              </Modal.Body>
+            </Modal.Content>
+          </Modal>
+
+          {/* Repeat */}
+          <View style={styles.viewOnGroup}>
+            <Text style={styles.iconOld}>{"Repeat        "}</Text>
+            <View style={styles.dateTimeContainer}>
+              <TouchableOpacity onPress={() => setModalRepeat(true)}>
+                <View style={styles.remindContainer}>
+                  <Text style={styles.dateTimeText}>
+                    {repeat && repeat != "" ? repeat : "Never"}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+          {/* Modal Repeat */}
+          <Modal
+            isOpen={modalRepeat}
+            onClose={() => setModalRepeat(false)}
+            size="lg"
+          >
+            <Modal.Content maxWidth="350">
+              <Modal.CloseButton />
+              <Modal.Header>Repeat</Modal.Header>
+              <Modal.Body>
+                <TouchableOpacity
+                  style={styles.sort}
+                  onPress={() => {
+                    setRepeat(null);
+                    setModalRepeat(false);
+                  }}
+                >
+                  <HStack space={3}>
+                    <Text>Never</Text>
+                  </HStack>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.sort}
+                  onPress={() => {
+                    setModalRepeat(false);
+                    setRepeat("Everyday");
+                  }}
+                >
+                  <HStack space={3}>
+                    <Text>Everyday</Text>
+                  </HStack>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.sort}
+                  onPress={() => {
+                    setModalRepeat(false);
+                    setRepeat("Every Week");
+                  }}
+                >
+                  <HStack space={3}>
+                    <Text>Every Week</Text>
+                  </HStack>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.sort}
+                  onPress={() => {
+                    setModalRepeat(false);
+                    setRepeat("Every Month");
+                  }}
+                >
+                  <HStack space={3}>
+                    <Text>Every Month</Text>
+                  </HStack>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.sort}
+                  onPress={() => {
+                    setModalRepeat(false);
+                    setRepeat("Every Year");
+                  }}
+                >
+                  <HStack space={3}>
+                    <Text>Every Year</Text>
+                  </HStack>
+                </TouchableOpacity>
+              </Modal.Body>
+            </Modal.Content>
+          </Modal>
+
+          {/* End Repeat */}
+          <View style={styles.viewOnGroup}>
+            <Text style={styles.iconOld}>{"End Repeat"}</Text>
+            <View style={styles.dateTimeContainer}>
+              {repeat && (
+                <TouchableOpacity onPress={() => setCalendarEndRepeat(true)}>
+                  <View style={styles.dateContainer}>
+                    <Text style={styles.dateTimeText}>{endRepeat}</Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+          <DateTimePickerModal
+            isVisible={calendarEndRepeat}
+            mode="date"
+            onConfirm={confirmEndRepeat}
+            onCancel={hideDatePicker}
+          />
+        </View>
+
+        {/* Files */}
+        {/* <View>{file != null ? <Text>{file.name}</Text> : null}</View>
+        <View style={styles.view}>
+          <Icon size={20} name="paperclip" style={styles.icon}></Icon>
+          <TouchableOpacity style={styles.button} onPress={selectFile}>
+            <Text>Thêm tệp</Text>
           </TouchableOpacity>
-          <View style={styles.viewgroup}>
-            <Popover
-              trigger={(triggerProps) => {
-                return (
-                  <View style={styles.viewOnGroup} onCh>
-                    <EvilIcons
-                      size={25}
-                      name="bell"
-                      style={styles.icon}
-                    ></EvilIcons>
+        </View> */}
 
-                    <Text
-                      {...triggerProps}
-                      borderBottomWidth={1}
-                      width="80%"
-                      borderBottomColor="#BBBBBB"
-                      onChange
-                    >
-                      {repeatTime}
-                    </Text>
-                  </View>
-                );
-              }}
-            >
-              <Popover.Content w="56">
-                <Popover.Body>
-                  <HStack paddingBottom={5}>
-                    <Icon name="clock-o" size={20} />
-                    <Text
-                      style={{ paddingLeft: 10 }}
-                      onPress={() =>
-                        setRepeatTime(
-                          moment(dateTime).format("YYYY-MM-DD hh:mm:ss")
-                        )
-                      }
-                    >
-                      Cuối ngày
-                    </Text>
-                  </HStack>
-                  <HStack paddingBottom={5}>
-                    <Icon name="clock-o" size={20} />
-                    <Text
-                      style={{ paddingLeft: 10 }}
-                      onPress={() =>
-                        setRepeatTime(
-                          moment(dateTime)
-                            .add(1, "day")
-                            .format("YYYY-MM-DD hh:mm:ss")
-                        )
-                      }
-                    >
-                      Ngày mai
-                    </Text>
-                  </HStack>
-                  <HStack paddingBottom={5}>
-                    <Icon name="clock-o" size={20} />
-                    <Text
-                      style={{ paddingLeft: 10 }}
-                      onPress={() =>
-                        setRepeatTime(
-                          moment(dateTime)
-                            .add(1, "week")
-                            .format("YYYY-MM-DD hh:mm:ss")
-                        )
-                      }
-                    >
-                      Tuần tới
-                    </Text>
-                  </HStack>
-                  <HStack paddingBottom={5}>
-                    <Icon name="clock-o" size={20} />
-                    <Text
-                      onPress={() => setCalendarRepeat(true)}
-                      style={{ paddingLeft: 10 }}
-                    >
-                      Chọn ngày
-                    </Text>
-                  </HStack>
-                  <DateTimePickerModal
-                    isVisible={calendarRepeat}
-                    mode="date"
-                    onConfirm={confirmRepeatTime}
-                    onCancel={hideDatePicker}
-                  />
-                </Popover.Body>
-              </Popover.Content>
-            </Popover>
-
-            <Popover
-              trigger={(triggerProps) => {
-                return (
-                  <View style={styles.viewOnGroup}>
-                    <AntIcon size={25} name="calendar" style={styles.icon} />
-                    <Text
-                      {...triggerProps}
-                      borderBottomWidth={1}
-                      width="80%"
-                      borderBottomColor="#BBBBBB"
-                    >
-                      {dueTime}
-                    </Text>
-                  </View>
-                );
-              }}
-            >
-              <Popover.Content w="56">
-                <Popover.Body>
-                  <HStack paddingBottom={5}>
-                    <AntIcon name="calendar" size={20} />
-                    <Text
-                      style={{ paddingLeft: 10 }}
-                      onPress={() => setDueTime(dateTime)}
-                    >
-                      Hôm nay
-                    </Text>
-                  </HStack>
-                  <HStack paddingBottom={5}>
-                    <AntIcon name="calendar" size={20} />
-                    <Text
-                      style={{ paddingLeft: 10 }}
-                      onPress={() =>
-                        setDueTime(
-                          moment(dateTime).add(1, "day").format("YYYY-MM-DD")
-                        )
-                      }
-                    >
-                      Ngày mai
-                    </Text>
-                  </HStack>
-                  <HStack paddingBottom={5}>
-                    <AntIcon name="calendar" size={20} />
-                    <Text
-                      style={{ paddingLeft: 10 }}
-                      onPress={() =>
-                        setDueTime(
-                          moment(dateTime).add(1, "week").format("YYYY-MM-DD")
-                        )
-                      }
-                    >
-                      Tuần tới
-                    </Text>
-                  </HStack>
-                  <HStack paddingBottom={5}>
-                    <Icon name="calendar" size={20} />
-                    <Text
-                      onPress={() => setCalendarDue(true)}
-                      style={{ paddingLeft: 10 }}
-                    >
-                      Chọn ngày
-                    </Text>
-                  </HStack>
-                  <DateTimePickerModal
-                    isVisible={calendarDue}
-                    mode="date"
-                    onConfirm={confirmDueTime}
-                    onCancel={hideDatePicker}
-                  />
-                </Popover.Body>
-              </Popover.Content>
-            </Popover>
-
-            <Popover
-              trigger={(triggerProps) => {
-                return (
-                  <View style={styles.viewOnGroup}>
-                    <AntIcon
-                      size={20}
-                      name="retweet"
-                      style={styles.icon}
-                    ></AntIcon>
-                    <Text {...triggerProps}>{reuse}</Text>
-                  </View>
-                );
-              }}
-            >
-              <Popover.Content w="56">
-                <Popover.Body>
-                  <HStack paddingBottom={5}>
-                    <Icon name="magic" size={20} />
-                    <Text
-                      style={{ paddingLeft: 10 }}
-                      onPress={() => setReuse()}
-                    >
-                      Mỗi 1 ngày
-                    </Text>
-                  </HStack>
-                  <HStack paddingBottom={5}>
-                    <Icon name="magic" size={20} />
-                    <Text
-                      style={{ paddingLeft: 10 }}
-                      onPress={() => setReuse()}
-                    >
-                      Mỗi tuần
-                    </Text>
-                  </HStack>
-                  <HStack paddingBottom={5}>
-                    <Icon name="magic" size={20} />
-                    <Text
-                      style={{ paddingLeft: 10 }}
-                      onPress={() => setReuse()}
-                    >
-                      Mỗi tháng
-                    </Text>
-                  </HStack>
-                  <HStack paddingBottom={5}>
-                    <Icon name="magic" size={20} />
-                    <Text style={{ paddingLeft: 10 }}>Mỗi năm</Text>
-                  </HStack>
-                </Popover.Body>
-              </Popover.Content>
-            </Popover>
-          </View>
-
-          <View>{file != null ? <Text>{file.name}</Text> : null}</View>
-
-          <View style={styles.view}>
-            <Icon size={20} name="paperclip" style={styles.icon}></Icon>
-            <TouchableOpacity style={styles.button} onPress={selectFile}>
-              <Text>Thêm tệp</Text>
-            </TouchableOpacity>
-          </View>
-          <View marginTop={4}>
-            <TextArea
-              onChangeText={(e) => setDescription(e)}
-              h={200}
-              placeholder="Thêm chú thích"
-              w="100%"
-              maxW="400"
-            />
-          </View>
-          <View>
-            <TouchableOpacity>
-              <HStack style={styles.footer}>
-                <Text>Đã tạo vào </Text>
-                <AntIcon size={20} name="delete" onPress={Delete} />
-              </HStack>
-            </TouchableOpacity>
-          </View>
-          {message ? <Snackbar textColor="black" message={message} /> : null}
-        </Box>
-      </Center>
-    </NativeBaseProvider>
+        {/* Note */}
+        <View marginTop={4}>
+          <TextArea
+            onChangeText={(e) => setNote(e)}
+            value={note}
+            fontSize={16}
+            h={200}
+            placeholder="Add Note"
+            w="100%"
+            maxW="400"
+          />
+        </View>
+      </Box>
+    </Center>
   );
 };
-export default AddTaskComponent;
+
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    alignContent: "center",
+    justifyContent: "space-between",
+    paddingTop: 5,
+    marginBottom: 10,
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  textBack: {
+    fontWeight: "500",
+    color: Color.Button().ButtonActive,
+  },
+  icon: {
+    color: Color.Button().ButtonActive,
+  },
+  text_header: {
+    paddingLeft: 30,
+    fontSize: 20,
+    paddingBottom: 30,
+  },
+  iconOld: {
+    paddingBottom: 10,
+    paddingLeft: 10,
+  },
+  view: {
+    display: "flex",
+    flexDirection: "row",
+    paddingTop: 10,
+    marginTop: 10,
+    gap: 20,
+    shadowColor: "#000000",
+    borderColor: "#000000",
+    shadowOpacity: 1.0,
+    shadowRadius: 0,
+    shadowOffset: {
+      height: 3,
+      width: 5,
+    },
+    elevation: 2,
+  },
+  viewGroup: {
+    marginTop: 10,
+    borderColor: "#000000",
+    shadowColor: "#000000",
+    shadowOpacity: 1.0,
+    shadowRadius: 0,
+    shadowOffset: {
+      height: 3,
+      width: 0,
+    },
+    elevation: 2,
+    padding: 3,
+    paddingBottom: 10,
+  },
+  viewOnGroup: {
+    display: "flex",
+    flexDirection: "row",
+    paddingTop: 10,
+    gap: 20,
+  },
+  textAreaContainer: {
+    marginTop: 10,
+    borderColor: "grey",
+    borderWidth: 1,
+    borderRadius: 20,
+  },
+  textArea: {
+    height: 150,
+    justifyContent: "flex-start",
+    shadowColor: "black",
+  },
+  title: {
+    justifyContent: "space-between",
+    alignContent: "center",
+    paddingHorizontal: 10,
+    paddingTop: 5,
+  },
+  header_text: {
+    fontSize: 20,
+    paddingBottom: 30,
+  },
+
+  errorContainer: {
+    paddingLeft: 45,
+  },
+  errorDateContainer: {
+    paddingLeft: 95,
+  },
+  errorText: {
+    color: "red",
+  },
+  iconStarCheck: {
+    marginTop: 5,
+    color: Color.Button().ButtonActive,
+  },
+  iconStarUnCheck: {
+    marginTop: 5,
+  },
+  remindContainer: {
+    minWidth: 80,
+    height: 30,
+    backgroundColor: Color.Button().ButtonActive,
+    justifyContent: "center",
+    borderRadius: 5,
+    paddingHorizontal: 10,
+  },
+  dateContainer: {
+    width: 80,
+    height: 30,
+    backgroundColor: Color.Button().ButtonActive,
+    justifyContent: "center",
+    borderRadius: 5,
+  },
+  timeContainer: {
+    width: 50,
+    height: 30,
+    backgroundColor: Color.Button().ButtonActive,
+    justifyContent: "center",
+    borderRadius: 5,
+  },
+  dateTimeText: {
+    color: Color.Button().Text,
+    textAlign: "center",
+  },
+  dateTimeContainer: {
+    display: "flex",
+    flexDirection: "row",
+    gap: 10,
+    flex: 1,
+    marginRight: 10,
+    borderBottomColor: "#BBBBBB",
+    borderBottomWidth: 1,
+    paddingBottom: 5,
+  },
+  sort: {
+    paddingBottom: 20,
+  },
+});

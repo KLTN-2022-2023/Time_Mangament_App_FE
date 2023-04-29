@@ -166,7 +166,7 @@ export default ({ route, navigation }) => {
         <Button
           style={styles.button}
           size={50}
-          onPress={() => navigation.navigate("AddTaskScreen")}
+          onPress={() => navigation.navigate("AddTaskScreen", { taskId: null })}
         >
           <Text fontSize={30} style={styles.buttonText}>
             +
@@ -247,36 +247,6 @@ export default ({ route, navigation }) => {
           </Modal.Content>
         </Modal>
 
-        {/* <Modal isOpen={showModal} onClose={() => setShowModal(false)} size="lg">
-          <Modal.Content maxWidth="350">
-            <Modal.CloseButton />
-            <Modal.Header>Sắp xếp theo</Modal.Header>
-            <Modal.Body>
-              <TextInput placeholder="Tên công việc" />
-            </Modal.Body>
-            <Modal.Footer>
-              <Button.Group space={2}>
-                <Button
-                  variant="ghost"
-                  colorScheme="blueGray"
-                  onPress={() => {
-                    setShowModal(false);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  disabled={disableButton}
-                  onPress={() => {
-                    setShowModal(false);
-                  }}
-                >
-                  Next
-                </Button>
-              </Button.Group>
-            </Modal.Footer>
-          </Modal.Content>
-        </Modal> */}
       </Box>
     </Center>
   );
