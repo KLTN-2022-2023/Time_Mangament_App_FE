@@ -18,15 +18,17 @@ import TasksComponent from "../../Component/Task/TasksComponent";
 import { format } from "date-fns";
 import Color from "../../Style/Color";
 import { useSelector, useDispatch } from "react-redux";
+import CommonData from "../../CommonData/CommonData";
 
 export default ({ route, navigation }) => {
   const [showModalSort, setShowModalSort] = useState({
     data: null,
     isShow: false,
   });
-  const { showDate } = route.params;
+  const { showDate, typeId } = route.params;
   const dispatch = useDispatch();
   const allTasks = useSelector((state) => state.task.allTasks);
+  const allTypes = useSelector((state) => state.type.allTypes);
 
   const getDateTitle = () => {
     if (showDate) {
@@ -36,6 +38,23 @@ export default ({ route, navigation }) => {
         format(new Date(showDate), "yyyy MMMM dd")
       );
     }
+
+    if (typeId) {
+      if (typeId == CommonData.TaskType().AllTask) {
+        return "All Tasks";
+      }
+
+      if (typeId == CommonData.TaskType().Important) {
+        return "Important";
+      }
+
+      let foundItem = allTypes.find((x) => x._id === typeId && !x.isDeleted);
+      if (foundItem) {
+        return foundItem.name;
+      }
+    }
+
+    return "";
   };
 
   const handleChangeAcsSort = () => {
@@ -135,8 +154,9 @@ export default ({ route, navigation }) => {
         {/* Task */}
         <TasksComponent
           navigation={navigation}
-          listTasks={allTasks.filter((x) => !x.isDeleted && !x.parentId)}
+          listTasks={allTasks.filter((x) => !x.isDeleted)}
           date={showDate}
+          typeId={typeId}
           filter={
             showModalSort && showModalSort.data ? showModalSort.data : null
           }

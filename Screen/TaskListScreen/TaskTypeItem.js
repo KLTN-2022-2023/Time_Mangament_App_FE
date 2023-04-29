@@ -2,14 +2,11 @@ import { HStack, Text, VStack, View } from "native-base";
 import React, { useEffect, useState } from "react";
 import { StyleSheet } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
-import { formatInTimeZone } from "date-fns-tz";
-import { format } from "date-fns";
 import CommonData from "../../CommonData/CommonData";
 import Color from "../../Style/Color";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import jwt_decode from "jwt-decode";
+import { TouchableOpacity } from "react-native";
 
-export default ({ navigation, type, name, quantity }) => {
+export default ({ navigation, type, name, quantity, actionFunc }) => {
   const showIcon = () => {
     if (type) {
       if (type == CommonData.TaskType().AllTask) {
@@ -63,19 +60,21 @@ export default ({ navigation, type, name, quantity }) => {
   };
 
   return (
-    <HStack style={showBackgroundStyle()}>
-      <HStack>
-        <Icon name={showIcon()} size={25} style={showIconStyle()} />
-        <VStack paddingLeft={3} paddingTop={1}>
-          <Text style={showNameStyle()} numberOfLines={1} maxWidth={200}>
-            {name}
-          </Text>
-        </VStack>
+    <TouchableOpacity onPress={() => actionFunc()}>
+      <HStack style={showBackgroundStyle()}>
+        <HStack>
+          <Icon name={showIcon()} size={25} style={showIconStyle()} />
+          <VStack paddingLeft={3} paddingTop={1}>
+            <Text style={showNameStyle()} numberOfLines={1} maxWidth={200}>
+              {name}
+            </Text>
+          </VStack>
+        </HStack>
+        <Text paddingTop={1} style={showNameStyle()}>
+          {quantity}
+        </Text>
       </HStack>
-      <Text paddingTop={1} style={showNameStyle()}>
-        {quantity}
-      </Text>
-    </HStack>
+    </TouchableOpacity>
   );
 };
 

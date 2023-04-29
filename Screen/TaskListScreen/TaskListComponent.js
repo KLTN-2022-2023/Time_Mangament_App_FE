@@ -155,11 +155,23 @@ export default ({ navigation }) => {
               type={CommonData.TaskType().AllTask}
               name={"All Tasks"}
               quantity={showQty(CommonData.TaskType().AllTask)}
+              actionFunc={() => {
+                navigation.navigate("TaskListDetail", {
+                  showDate: null,
+                  typeId: CommonData.TaskType().AllTask,
+                });
+              }}
             ></TaskTypeItem>
             <TaskTypeItem
               type={CommonData.TaskType().Important}
               name={"Important"}
               quantity={showQty(CommonData.TaskType().Important)}
+              actionFunc={() => {
+                navigation.navigate("TaskListDetail", {
+                  showDate: null,
+                  typeId: CommonData.TaskType().Important,
+                });
+              }}
             ></TaskTypeItem>
 
             {/* Divider */}
