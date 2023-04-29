@@ -10,7 +10,7 @@ import {
   NativeBaseProvider,
   TextArea,
 } from "native-base";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   TextInput,
   StyleSheet,
@@ -43,6 +43,68 @@ import Color from "../../Style/Color";
 import CommonData from "../../CommonData/CommonData";
 import PopupComponent from "../../Component/Common/PopupComponent";
 
+// Warning
+import { LogBox } from "react-native";
+
+// Notification
+import * as Device from "expo-device";
+import * as Notifications from "expo-notifications";
+
+LogBox.ignoreLogs(["Warning: ..."]); // Ignore log notification by message
+LogBox.ignoreAllLogs();
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
+
+async function schedulePushNotification(title, content, secs) {
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: title,
+      body: content,
+      data: null,
+    },
+    trigger: { seconds: secs },
+  });
+}
+
+async function registerForPushNotificationsAsync() {
+  let token;
+
+  if (Platform.OS === "android") {
+    await Notifications.setNotificationChannelAsync("default", {
+      name: "default",
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: "#FF231F7C",
+    });
+  }
+
+  if (Device.isDevice) {
+    const { status: existingStatus } =
+      await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== "granted") {
+      alert("Failed to get push token for push notification!");
+      return;
+    }
+    token = (await Notifications.getExpoPushTokenAsync()).data;
+    console.log(token);
+  } else {
+    alert("Must use physical device for Push Notifications");
+  }
+
+  return token;
+}
+
 export default ({ navigation, taskId }) => {
   const [data, setData] = useState(null);
   const [name, setName] = useState("New Task");
@@ -55,6 +117,12 @@ export default ({ navigation, taskId }) => {
   const [repeat, setRepeat] = useState(null);
   const [type, setType] = useState(null);
   const [open, setOpen] = useState(false);
+
+  // Noti
+  const [expoPushToken, setExpoPushToken] = useState("");
+  const [notification, setNotification] = useState(false);
+  const notificationListener = useRef();
+  const responseListener = useRef();
 
   // Modal
   const [modalRepeat, setModalRepeat] = useState(false);
@@ -86,6 +154,29 @@ export default ({ navigation, taskId }) => {
   const allTypes = useSelector((state) => state.type.allTypes);
   const navigation1 = useNavigation();
   const dateTime = moment(new Date()).format("YYYY-MM-DD");
+
+  useEffect(() => {
+    registerForPushNotificationsAsync().then((token) =>
+      setExpoPushToken(token)
+    );
+
+    notificationListener.current =
+      Notifications.addNotificationReceivedListener((notification) => {
+        setNotification(notification);
+      });
+
+    responseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        console.log(response);
+      });
+
+    return () => {
+      Notifications.removeNotificationSubscription(
+        notificationListener.current
+      );
+      Notifications.removeNotificationSubscription(responseListener.current);
+    };
+  }, []);
 
   // Get Detail
   useEffect(() => {
@@ -382,6 +473,23 @@ export default ({ navigation, taskId }) => {
           const response = await CreateTask(request, token);
 
           if (response) {
+            if (request.remindTime) {
+              let dueTimeString = formatInTimeZone(
+                request.dueTime,
+                "Asia/Ho_Chi_Minh",
+                "yyyy-MM-dd HH:mm"
+              );
+              if (request.remindTime == "5 minutes before Due Time") {
+                let secsBefore =
+                  (request.dueTime.getTime() - new Date().getTime()) / 1000;
+
+                await schedulePushNotification(
+                  "Alert",
+                  request.name + ", Due Time: " + dueTimeString,
+                  secsBefore - 5 * 60
+                );
+              }
+            }
             await handleGetAllTasks();
 
             navigation.navigate("HomeTab", { screen: "Tasks" });
