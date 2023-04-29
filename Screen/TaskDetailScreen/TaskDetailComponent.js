@@ -1,11 +1,11 @@
-import { Box, Center, Heading, Input, View, Text, Checkbox, HStack, Popover, NativeBaseProvider } from "native-base"
+import { Box, Center, Heading, Input, View, Text, Checkbox, HStack, Popover, NativeBaseProvider, TextArea } from "native-base"
 import { useState } from "react";
 import { TextInput, StyleSheet, TouchableOpacity, PermissionsAndroid } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome';
 import * as DocumentPicker from 'expo-document-picker';
 
 
-const TaskDetailComponent= ({ navigation }) => {
+const TaskDetailComponent = ({ navigation }) => {
     const [singleFile, setSingleFile] = useState(null);
     const [open, setOpen] = useState(false);
     const [open1, setOpen1] =useState(false);
@@ -27,39 +27,49 @@ const TaskDetailComponent= ({ navigation }) => {
             fontSize: 20,
             paddingBottom: 30,
         },
-        button: {
-           // color: `'#1256F3'`,
-          //  width: 280
-        },
         icon: {
             paddingBottom:10,
             paddingLeft: 10
         },
         view: {
-            borderWidth: 0.5,
-            borderRadius: 10,
+          
             display: 'flex',
             flexDirection: 'row',
-            color: '#11111',
             paddingTop: 10,
             marginTop: 10, 
             gap: 20,
-            alignContent: "center"
+            shadowColor: "#000000",
+            borderColor: "#000000",
+            shadowOpacity: 1.0,
+            shadowRadius: 0,
+            shadowOffset: {
+              height: 3,
+              width: 5
+            },
+            elevation: 2
         },
-        textAreaContainer: {
-            marginTop: 10,
-            borderColor: 'grey',
-            borderWidth: 1,
-            borderRadius:20
+        viewgroup: {
+          marginTop: 10,
+          borderColor: "#000000",
+          shadowColor: "#000000",
+          shadowOpacity: 1.0,
+          shadowRadius: 0,
+          shadowOffset: {
+            height: 3,
+            width: 0
           },
-        textArea: {
-            height: 150,
-            justifyContent: "flex-start",
-          },
-          title: {
-            justifyContent: "space-between",
-            alignContent: "center"
-          },
+          elevation: 2
+        },
+        viewOnGroup: {
+          display: "flex",
+          flexDirection: "row",
+          paddingTop: 10,
+          gap: 20
+        },
+        title: {
+          justifyContent: "space-between",
+          alignContent: "center"
+        },
     });
     const checkPermissions = async () => {
         try {
@@ -121,6 +131,7 @@ const TaskDetailComponent= ({ navigation }) => {
         }
       }
     return (
+      <NativeBaseProvider>
     <Center w="100%">
         <Box safeArea p="2" py="2" w="100%" maxW="350">
             <HStack style={styles.header}>
@@ -131,7 +142,7 @@ const TaskDetailComponent= ({ navigation }) => {
                 <Checkbox value="one" my={2}>
                     <Heading> Tên công việc </Heading> 
                 </Checkbox>
-                <Icon size={30}  name="star-o"/>
+                <Icon size={30} onPress={() => alert("Nam")} name="star-o"/>
             </HStack>
         
             <Input placeholder="Thêm bước"/>
@@ -143,13 +154,14 @@ const TaskDetailComponent= ({ navigation }) => {
                 </TouchableOpacity>
             </View>
 
+          <View style={styles.viewgroup}>
             <Popover trigger={triggerProps => {
             return (
-                <View style={styles.view}  >
-                <Icon size={25} name="bell" style={styles.icon} ></Icon>
-                    <Text {...triggerProps}>
+                <View style={styles.viewOnGroup}  >
+                  <Icon size={25} name="bell" style={styles.icon} ></Icon>
+                  <Text {...triggerProps} borderBottomWidth={1} width="80%" borderBottomColor="#BBBBBB">
                     Nhắc tôi
-                    </Text>
+                  </Text>
                 </View>);
             }}>
                 <Popover.Content w="56">
@@ -172,9 +184,9 @@ const TaskDetailComponent= ({ navigation }) => {
 
             <Popover trigger={triggerProps => {
             return (
-                <View style={styles.view}  >
+                <View style={styles.viewOnGroup}  >
                 <Icon size={25} name="calendar-o" style={styles.icon} ></Icon>
-                    <Text {...triggerProps}>
+                    <Text {...triggerProps} borderBottomWidth={1} width="80%" borderBottomColor="#BBBBBB">
                     Thêm ngày đến hạn
                     </Text>
                 </View>);
@@ -199,9 +211,9 @@ const TaskDetailComponent= ({ navigation }) => {
 
             <Popover trigger={triggerProps => {
             return (
-                <View style={styles.view}>
+                <View style={styles.viewOnGroup}>
                 <Icon size={25} name="retweet" style={styles.icon} ></Icon>
-                    <Text {...triggerProps}>
+                    <Text {...triggerProps} >
                     Lặp lại
                     </Text>
                 </View>);
@@ -227,25 +239,19 @@ const TaskDetailComponent= ({ navigation }) => {
                 </Popover.Body>
                 </Popover.Content>
             </Popover>
-
-            <View style={styles.view}>
+          </View>
+            <View style={styles.view} >
                 <Icon size={25} name="paperclip" style={styles.icon}></Icon>
                 <TouchableOpacity style={styles.button} onPress={selectFile}>
                     <Text>Thêm tệp</Text>
                 </TouchableOpacity>
             </View>
-            <View style={styles.textAreaContainer} >
-                <TextInput
-                style={styles.textArea}
-                underlineColorAndroid="transparent"
-                placeholder="Thêm ghi chú"
-                placeholderTextColor="grey"
-                numberOfLines={10}
-                multiline={true}
-                />
+            <View marginTop={4} >
+              <TextArea h={20} placeholder="Thêm chú thích" w="100%" maxW="400" />
             </View>
         </Box>
     </Center>
+    </NativeBaseProvider>
     )
 }
 export default TaskDetailComponent;
