@@ -7,7 +7,7 @@ import {
   View,
 } from "native-base";
 import React, { useEffect, useState } from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import { formatInTimeZone } from "date-fns-tz";
 import { format } from "date-fns";
@@ -139,52 +139,56 @@ export default ({ navigation, item }) => {
   };
 
   return (
-    <HStack style={styles.root}>
-      <HStack>
-        <Checkbox
-          style={styles.checkbox}
-          colorScheme="indigo"
-          borderRadius={20}
-          size="lg"
-          isChecked={isDone}
-          accessibilityLabel="Tap me!"
-          onChange={handlePressCheck}
-        ></Checkbox>
-        <VStack paddingLeft={3}>
-          <Text
-            style={isDone ? styles.nameTaskDone : styles.nameTask}
-            numberOfLines={1}
-            maxWidth={200}
-          >
-            {showItemName()}
-          </Text>
-          <Text
-            style={
-              !isDone && checkTaskIsLate(item)
-                ? styles.invalidText
-                : styles.validText
-            }
-          >
-            {showItemStatus()}
-          </Text>
-        </VStack>
+    <TouchableOpacity
+      onPress={() => navigation.navigate("AddTaskScreen", { taskId: item._id })}
+    >
+      <HStack style={styles.root}>
+        <HStack>
+          <Checkbox
+            style={styles.checkbox}
+            colorScheme="indigo"
+            borderRadius={20}
+            size="lg"
+            isChecked={isDone}
+            accessibilityLabel="Tap me!"
+            onChange={handlePressCheck}
+          ></Checkbox>
+          <VStack paddingLeft={3}>
+            <Text
+              style={isDone ? styles.nameTaskDone : styles.nameTask}
+              numberOfLines={1}
+              maxWidth={200}
+            >
+              {showItemName()}
+            </Text>
+            <Text
+              style={
+                !isDone && checkTaskIsLate(item)
+                  ? styles.invalidText
+                  : styles.validText
+              }
+            >
+              {showItemStatus()}
+            </Text>
+          </VStack>
+        </HStack>
+        {isImportant ? (
+          <Icon
+            name="star"
+            size={30}
+            style={styles.iconStarCheck}
+            onPress={handlePressStar}
+          />
+        ) : (
+          <Icon
+            name="star-o"
+            size={30}
+            style={styles.iconStarUnCheck}
+            onPress={handlePressStar}
+          />
+        )}
       </HStack>
-      {isImportant ? (
-        <Icon
-          name="star"
-          size={30}
-          style={styles.iconStarCheck}
-          onPress={handlePressStar}
-        />
-      ) : (
-        <Icon
-          name="star-o"
-          size={30}
-          style={styles.iconStarUnCheck}
-          onPress={handlePressStar}
-        />
-      )}
-    </HStack>
+    </TouchableOpacity>
   );
 };
 

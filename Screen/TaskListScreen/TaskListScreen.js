@@ -22,7 +22,7 @@ export default ({ navigation }) => {
 
   const doAction = (name) => {
     if (name === "Create New Task") {
-      navigation.navigate("AddTaskScreen");
+      navigation.navigate("AddTaskScreen", { taskId: null });
     } else if (name === "Create New Type") {
       navigation.navigate("AddTypeScreen", { typeId: null });
     }

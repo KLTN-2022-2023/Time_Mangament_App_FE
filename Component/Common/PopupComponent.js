@@ -23,7 +23,7 @@ export default ({ isOpen, title, content, actionFunction, closeFunction }) => {
           <View style={styles.buttonContainer}>
             <TouchableOpacity onPress={() => actionFunction()}>
               <HStack>
-                <Text fontWeight={500} color={"blue.600"}>
+                <Text fontWeight={500} color={"red.600"}>
                   YES
                 </Text>
               </HStack>
