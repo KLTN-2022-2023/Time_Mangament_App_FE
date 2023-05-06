@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Your IP Address
-const localApi = "http://192.168.1.7:3000/";
+const localApi = "http://192.168.1.8:3000/";
 const baseApi = localApi;
 
 export default {
@@ -48,6 +48,14 @@ export default {
         }),
       createTask: (req, token) =>
         axios.post(url + "CreateTask/", JSON.stringify(req), {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        }),
+      createRepeatTask: (req, token) =>
+        axios.post(url + "CreateRepeat/", JSON.stringify(req), {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
