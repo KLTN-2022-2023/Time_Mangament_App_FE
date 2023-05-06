@@ -6,8 +6,6 @@ import {
   Text,
   Checkbox,
   HStack,
-  Popover,
-  NativeBaseProvider,
   TextArea,
 } from "native-base";
 import { useEffect, useState, useRef } from "react";
@@ -23,18 +21,12 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import {
   CreateTask,
   DeleteTask,
-  MarkImportant,
-  UpdateStatus,
   UpdateTask,
   Upload,
+  CreateRepeat,
 } from "../../Reducers/TaskReducer";
-import EvilIcons from "react-native-vector-icons/EvilIcons";
-import AntIcon from "react-native-vector-icons/AntDesign";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import jwt_decode from "jwt-decode";
-import moment from "moment/moment";
-import { Snackbar } from "@react-native-material/core";
-import { useNavigation } from "@react-navigation/native";
 import { useSelector, useDispatch } from "react-redux";
 import { getListAllTasksByUserId } from "../../Reducers/TaskReducer.js";
 import { formatInTimeZone } from "date-fns-tz";
@@ -42,6 +34,7 @@ import Spinner from "react-native-loading-spinner-overlay";
 import Color from "../../Style/Color";
 import CommonData from "../../CommonData/CommonData";
 import PopupComponent from "../../Component/Common/PopupComponent";
+import RepeatModal from "../../Component/Task/RepeatModal";
 
 // Warning
 import { LogBox } from "react-native";
@@ -152,9 +145,8 @@ export default ({ navigation, taskId }) => {
   const dispatch = useDispatch();
   const allTasks = useSelector((state) => state.task.allTasks);
   const allTypes = useSelector((state) => state.type.allTypes);
-  const navigation1 = useNavigation();
-  const dateTime = moment(new Date()).format("YYYY-MM-DD");
 
+  // Notification
   useEffect(() => {
     registerForPushNotificationsAsync().then((token) =>
       setExpoPushToken(token)
@@ -197,13 +189,13 @@ export default ({ navigation, taskId }) => {
 
       let startTimeString = formatInTimeZone(
         foundItem.startTime,
-        "Asia/Ho_Chi_Minh",
-        "yyyy-MM-dd HH:mm"
+        CommonData.Format().TimeZoneFormat,
+        CommonData.Format().DateTimeFormatCreate
       );
       let dueTimeString = formatInTimeZone(
         foundItem.dueTime,
-        "Asia/Ho_Chi_Minh",
-        "yyyy-MM-dd HH:mm"
+        CommonData.Format().TimeZoneFormat,
+        CommonData.Format().DateTimeFormatCreate
       );
       setStartDate(startTimeString.split(" ").shift());
       setStartTime(startTimeString.split(" ")[1]);
@@ -213,8 +205,8 @@ export default ({ navigation, taskId }) => {
       if (foundItem.endRepeat) {
         let endRepeatString = formatInTimeZone(
           foundItem.endRepeat,
-          "Asia/Ho_Chi_Minh",
-          "yyyy-MM-dd HH:mm"
+          CommonData.Format().TimeZoneFormat,
+          CommonData.Format().DateTimeFormatCreate
         );
         setEndRepeat(endRepeatString.split(" ").shift());
       }
@@ -228,8 +220,8 @@ export default ({ navigation, taskId }) => {
     if (!taskId) {
       let dateNowString = formatInTimeZone(
         new Date(),
-        "Asia/Ho_Chi_Minh",
-        "yyyy-MM-dd HH:mm"
+        CommonData.Format().TimeZoneFormat,
+        CommonData.Format().DateTimeFormatCreate
       );
       setStartDate(dateNowString.split(" ").shift());
       setStartTime(dateNowString.split(" ")[1]);
@@ -297,8 +289,8 @@ export default ({ navigation, taskId }) => {
   const confirmStartDate = (date) => {
     let dateString = formatInTimeZone(
       date,
-      "Asia/Ho_Chi_Minh",
-      "yyyy-MM-dd HH:mm"
+      CommonData.Format().TimeZoneFormat,
+      CommonData.Format().DateTimeFormatCreate
     );
     setStartDate(dateString.split(" ").shift());
     setCalendarStartDate(false);
@@ -307,8 +299,8 @@ export default ({ navigation, taskId }) => {
   const confirmStartTime = (time) => {
     let dateString = formatInTimeZone(
       time,
-      "Asia/Ho_Chi_Minh",
-      "yyyy-MM-dd HH:mm"
+      CommonData.Format().TimeZoneFormat,
+      CommonData.Format().DateTimeFormatCreate
     );
     setStartTime(dateString.split(" ")[1]);
     setCalendarStartTime(false);
@@ -317,8 +309,8 @@ export default ({ navigation, taskId }) => {
   const confirmDueDate = (date) => {
     let dateString = formatInTimeZone(
       date,
-      "Asia/Ho_Chi_Minh",
-      "yyyy-MM-dd HH:mm"
+      CommonData.Format().TimeZoneFormat,
+      CommonData.Format().DateTimeFormatCreate
     );
     setDueDate(dateString.split(" ").shift());
     setCalendarDueDate(false);
@@ -327,8 +319,8 @@ export default ({ navigation, taskId }) => {
   const confirmDueTime = (time) => {
     let dateString = formatInTimeZone(
       time,
-      "Asia/Ho_Chi_Minh",
-      "yyyy-MM-dd HH:mm"
+      CommonData.Format().TimeZoneFormat,
+      CommonData.Format().DateTimeFormatCreate
     );
     setDueTime(dateString.split(" ")[1]);
     setCalendarDueTime(false);
@@ -337,8 +329,8 @@ export default ({ navigation, taskId }) => {
   const confirmEndRepeat = (date) => {
     let dateString = formatInTimeZone(
       date,
-      "Asia/Ho_Chi_Minh",
-      "yyyy-MM-dd HH:mm"
+      CommonData.Format().TimeZoneFormat,
+      CommonData.Format().DateTimeFormatCreate
     );
     setEndRepeat(dateString.split(" ").shift());
     setCalendarEndRepeat(false);
@@ -419,6 +411,7 @@ export default ({ navigation, taskId }) => {
     setOpen(true);
   };
 
+  // CRUD
   const deleteTask = async () => {
     setIsLoading(true);
 
@@ -470,29 +463,79 @@ export default ({ navigation, taskId }) => {
             createdDate: new Date(),
           };
 
-          const response = await CreateTask(request, token);
+          // Repeat Setting
+          if (repeat) {
+            let result = getCalculatedList(
+              request.startTime,
+              request.dueTime,
+              new Date(endRepeat + " " + startTime),
+              CommonData.RepeatType().Daily
+            );
 
-          if (response) {
-            if (request.remindTime) {
-              let dueTimeString = formatInTimeZone(
-                request.dueTime,
-                "Asia/Ho_Chi_Minh",
-                "yyyy-MM-dd HH:mm"
-              );
-              if (request.remindTime == "5 minutes before Due Time") {
-                let secsBefore =
-                  (request.dueTime.getTime() - new Date().getTime()) / 1000;
+            result.shift();
 
-                await schedulePushNotification(
-                  "Alert",
-                  request.name + ", Due Time: " + dueTimeString,
-                  secsBefore - 5 * 60
+            const repeatRequest = {
+              data: request,
+              datesRepeat: result && result.length > 0 ? result : null,
+            };
+
+            const responseRepeat = await CreateRepeat(repeatRequest, token);
+            if (responseRepeat) {
+              // Remind
+              if (request.remindTime) {
+                let dueTimeString = formatInTimeZone(
+                  request.startTime,
+                  CommonData.Format().TimeZoneFormat,
+                  CommonData.Format().DateTimeFormatCreate
                 );
+                if (request.remindTime == "5 minutes before Due Time") {
+                  let secsBefore =
+                    (request.startTime.getTime() - new Date().getTime()) / 1000;
+                  await schedulePushNotification(
+                    "Alert",
+                    request.name + ", Start Time: " + dueTimeString,
+                    secsBefore - 5 * 60
+                  );
+                }
               }
-            }
-            await handleGetAllTasks();
 
-            navigation.navigate("HomeTab", { screen: "Tasks" });
+              // Delay
+              setTimeout(() => {
+                console.log("Executed after 5 second");
+
+                handleGetAllTasks();
+                navigation.navigate("HomeTab", { screen: "Tasks" });
+
+                setIsLoading(false);
+              }, 5000);
+            }
+          }
+          // Non repeat
+          else {
+            const response = await CreateTask(request, token);
+            if (response) {
+              // Remind
+              if (request.remindTime) {
+                let dueTimeString = formatInTimeZone(
+                  request.startTime,
+                  CommonData.Format().TimeZoneFormat,
+                  CommonData.Format().DateTimeFormatCreate
+                );
+                if (request.remindTime == "5 minutes before Due Time") {
+                  let secsBefore =
+                    (request.startTime.getTime() - new Date().getTime()) / 1000;
+                  await schedulePushNotification(
+                    "Alert",
+                    request.name + ", Start Time: " + dueTimeString,
+                    secsBefore - 5 * 60
+                  );
+                }
+              }
+
+              await handleGetAllTasks();
+              navigation.navigate("HomeTab", { screen: "Tasks" });
+              setIsLoading(false);
+            }
           }
         }
       }
@@ -524,14 +567,138 @@ export default ({ navigation, taskId }) => {
           if (response) {
             await handleGetAllTasks();
             navigation.navigate("HomeTab", { screen: "Tasks" });
+            setIsLoading(false);
           }
         }
       }
     } catch (err) {
       console(err);
+      setIsLoading(false);
+    }
+  };
+
+  // Calculate Date
+  const getCalculatedList = (start, end, endRepeat, type) => {
+    let result = [];
+    if (repeat) {
+      // Daily
+      if (repeat === CommonData.RepeatType().Daily) {
+        let i = 0;
+        for (
+          var d = new Date(start.getTime());
+          d <= endRepeat;
+          d.setDate(d.getDate() + 1)
+        ) {
+          let endDate = new Date(end.getTime());
+          if (i > 0) {
+            endDate.setDate(endDate.getDate() + i);
+          }
+          result.push({ start: new Date(d), end: new Date(endDate) });
+          i++;
+        }
+      } else if (repeat === CommonData.RepeatType().Weekly) {
+      } else if (repeat === CommonData.RepeatType().Monthly) {
+      } else if (repeat === CommonData.RepeatType().Yearly) {
+      } else if (repeat.includes(":")) {
+        let mode = repeat.split(": ")[0];
+        let days = repeat.split(": ")[1].split(", ");
+
+        let curr = new Date(start.getTime()); // get current date
+        let first = start.getDate() - start.getDay(); // First day is the day of the month - the day of the week
+        first += 1;
+        let last = first + 6; // last day is the first day + 6
+
+        let firstday = new Date(curr.setDate(first));
+        let lastday = new Date(curr.setDate(last));
+
+        // Get days of first week
+        let listDefault = [];
+        let differenceInTime = end.getTime() - start.getTime();
+        let monStart = firstday;
+        let monEnd = new Date(firstday.getTime() + differenceInTime);
+        days.forEach((x) => {
+          let s = new Date(monStart.getTime());
+          let e = new Date(monEnd.getTime());
+
+          if (x === "Mon") {
+            listDefault.push({ start: monStart, end: monEnd });
+          } else if (x === "Tue") {
+            listDefault.push({
+              start: new Date(s.setDate(s.getDate() + 1)),
+              end: new Date(e.setDate(e.getDate() + 1)),
+            });
+          } else if (x === "Wed") {
+            listDefault.push({
+              start: new Date(s.setDate(s.getDate() + 2)),
+              end: new Date(e.setDate(e.getDate() + 2)),
+            });
+          } else if (x === "Thu") {
+            listDefault.push({
+              start: new Date(s.setDate(s.getDate() + 3)),
+              end: new Date(e.setDate(e.getDate() + 3)),
+            });
+          } else if (x === "Fri") {
+            listDefault.push({
+              start: new Date(s.setDate(s.getDate() + 4)),
+              end: new Date(e.setDate(e.getDate() + 4)),
+            });
+          } else if (x === "Sat") {
+            listDefault.push({
+              start: new Date(s.setDate(s.getDate() + 5)),
+              end: new Date(e.setDate(e.getDate() + 5)),
+            });
+          } else if (x === "Sun") {
+            listDefault.push({
+              start: new Date(s.setDate(s.getDate() + 6)),
+              end: new Date(e.setDate(e.getDate() + 6)),
+            });
+          }
+        });
+
+        // Weekly
+        if (mode === CommonData.RepeatType().Weekly) {
+          let i = 0;
+          for (
+            var d = new Date(monStart.getTime());
+            d <= endRepeat;
+            d.setDate(d.getDate() + 7)
+          ) {
+            if (i > 0) {
+              listDefault.forEach((x) => {
+                let s = new Date(x.start.getTime());
+                let e = new Date(x.end.getTime());
+                s.setDate(s.getDate() + 7 * 1 * i);
+                e.setDate(e.getDate() + 7 * 1 * i);
+                result.push({ start: s, end: e });
+              });
+            } else {
+              result = [...listDefault];
+            }
+            i++;
+          }
+          result = result.filter(
+            (x) => start <= x.start && x.start <= endRepeat
+          );
+        } else {
+        }
+      }
+      return result;
+    }
+  };
+
+  // Modal Repeat
+  const handleCloseRepeat = () => {
+    setModalRepeat(false);
+  };
+
+  const handleChooseRepeat = (value) => {
+    if (value === CommonData.RepeatType().Never) {
+      setRepeat(null);
+    } else {
+      setRepeat(value);
     }
 
-    setIsLoading(false);
+    setModalRepeat(false);
   };
 
   return (
@@ -780,7 +947,7 @@ export default ({ navigation, taskId }) => {
           {/* Modal Remind */}
           <Modal
             isOpen={modalRemind}
-            onClose={() => setModalRepeat(false)}
+            onClose={() => setModalRemind(false)}
             size="lg"
           >
             <Modal.Content maxWidth="350">
@@ -849,73 +1016,11 @@ export default ({ navigation, taskId }) => {
             </View>
           </View>
           {/* Modal Repeat */}
-          <Modal
+          <RepeatModal
             isOpen={modalRepeat}
-            onClose={() => setModalRepeat(false)}
-            size="lg"
-          >
-            <Modal.Content maxWidth="350">
-              <Modal.CloseButton />
-              <Modal.Header>Repeat</Modal.Header>
-              <Modal.Body>
-                <TouchableOpacity
-                  style={styles.sort}
-                  onPress={() => {
-                    setRepeat(null);
-                    setModalRepeat(false);
-                  }}
-                >
-                  <HStack space={3}>
-                    <Text>Never</Text>
-                  </HStack>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.sort}
-                  onPress={() => {
-                    setModalRepeat(false);
-                    setRepeat("Everyday");
-                  }}
-                >
-                  <HStack space={3}>
-                    <Text>Everyday</Text>
-                  </HStack>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.sort}
-                  onPress={() => {
-                    setModalRepeat(false);
-                    setRepeat("Every Week");
-                  }}
-                >
-                  <HStack space={3}>
-                    <Text>Every Week</Text>
-                  </HStack>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.sort}
-                  onPress={() => {
-                    setModalRepeat(false);
-                    setRepeat("Every Month");
-                  }}
-                >
-                  <HStack space={3}>
-                    <Text>Every Month</Text>
-                  </HStack>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.sort}
-                  onPress={() => {
-                    setModalRepeat(false);
-                    setRepeat("Every Year");
-                  }}
-                >
-                  <HStack space={3}>
-                    <Text>Every Year</Text>
-                  </HStack>
-                </TouchableOpacity>
-              </Modal.Body>
-            </Modal.Content>
-          </Modal>
+            actionFunction={handleChooseRepeat}
+            closeFunction={handleCloseRepeat}
+          />
 
           {/* End Repeat */}
           <View style={styles.viewOnGroup}>

@@ -59,7 +59,7 @@ export default ({ navigation }) => {
   };
 
   const handleParseData = (types) => {
-    if (allTasks && types && allTasks.length > 0 && types.length > 0) {
+    if (types && types.length > 0) {
       let validTypes = types.filter((x) => !x.isDeleted);
       if (validTypes && validTypes.length > 0) {
         let result = [];

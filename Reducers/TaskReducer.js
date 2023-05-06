@@ -132,4 +132,18 @@ export const Upload = async (req) => {
   return result;
 };
 
+export const CreateRepeat = async (req, token) => {
+  let result = null;
+  try {
+    if (!req) return;
+    const response = await APIService.task().createRepeatTask(req, token);
+    if (response && response.data) {
+      result = response.data;
+    }
+  } catch (err) {
+    result = null;
+  }
+  return result;
+};
+
 export default tasksSlice.reducer;

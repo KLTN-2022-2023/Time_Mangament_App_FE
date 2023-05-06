@@ -4,6 +4,8 @@ export default {
       DateFormat: "yyyy-MM-dd",
       DateTimeFormat: "YYYY-MM-DD HH:mm:ss",
       DateTimeFormatDateFNS: "yyyy-MM-dd HH:mm:ss",
+      DateTimeFormatCreate: "yyyy-MM-dd HH:mm",
+      TimeZoneFormat: "Asia/Ho_Chi_Minh",
     };
   },
   TaskStatus() {
@@ -19,6 +21,16 @@ export default {
       Important: "Important",
       MyDay: "MyDay",
       CustomType: "CustomType",
+    };
+  },
+  RepeatType() {
+    return {
+      Daily: "Daily",
+      Weekly: "Weekly",
+      Monthly: "Monthly",
+      Yearly: "Yearly",
+      Custom: "Custom",
+      Never: "Never",
     };
   },
 };
