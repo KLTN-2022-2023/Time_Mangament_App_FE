@@ -22,10 +22,9 @@ export default {
   },
   CalendarTask() {
     return {
-      Main: "#22b8cf",
-      Text: "#ffffff",
-      Done: "#51cf66",
-      Late: "#fcc419",
+      Main: "#dbe4ff",
+      Done: "#d3f9d8",
+      BorderBottom: "#adb5bd",
     };
   },
   Task() {
