@@ -4,6 +4,7 @@ import { SectionList, SafeAreaView, StyleSheet } from "react-native";
 import { View, Text } from "native-base";
 import CommonData from "../../CommonData/CommonData";
 import NoData from "../Common/NoData";
+import { formatInTimeZone } from "date-fns-tz";
 
 export default ({ navigation, listTasks, date, typeId, filter }) => {
   const [tasks, setTasks] = useState([]);
@@ -28,16 +29,27 @@ export default ({ navigation, listTasks, date, typeId, filter }) => {
   const handleFilterTasks = (list) => {
     // Split by date
     if (date) {
-      let result = list.filter(
-        (t) =>
+      let result = list.filter((t) => {
+        let startTimeString = formatInTimeZone(
+          t.startTime,
+          CommonData.Format().TimeZoneFormat,
+          CommonData.Format().DateTimeFormatCreate
+        );
+        let dueTimeString = formatInTimeZone(
+          t.dueTime,
+          CommonData.Format().TimeZoneFormat,
+          CommonData.Format().DateTimeFormatCreate
+        );
+        return (
           t.startTime &&
           t.dueTime &&
           compareDateBetweenTwoDate(
             date,
-            t.startTime.split(" ").shift(),
-            t.dueTime.split(" ").shift()
+            startTimeString.split(" ").shift(),
+            dueTimeString.split(" ").shift()
           )
-      );
+        );
+      });
       return result;
     }
 

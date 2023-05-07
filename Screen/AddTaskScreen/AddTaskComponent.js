@@ -46,24 +46,24 @@ import * as Notifications from "expo-notifications";
 LogBox.ignoreLogs(["Warning: ..."]); // Ignore log notification by message
 LogBox.ignoreAllLogs();
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+// Notifications.setNotificationHandler({
+//   handleNotification: async () => ({
+//     shouldShowAlert: true,
+//     shouldPlaySound: true,
+//     shouldSetBadge: true,
+//   }),
+// });
 
-async function schedulePushNotification(title, content, secs) {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: title,
-      body: content,
-      data: null,
-    },
-    trigger: { seconds: secs },
-  });
-}
+// async function schedulePushNotification(title, content, secs) {
+//   await Notifications.scheduleNotificationAsync({
+//     content: {
+//       title: title,
+//       body: content,
+//       data: null,
+//     },
+//     trigger: { seconds: secs },
+//   });
+// }
 
 async function registerForPushNotificationsAsync() {
   let token;
@@ -147,28 +147,28 @@ export default ({ navigation, taskId }) => {
   const allTypes = useSelector((state) => state.type.allTypes);
 
   // Notification
-  useEffect(() => {
-    registerForPushNotificationsAsync().then((token) =>
-      setExpoPushToken(token)
-    );
+  // useEffect(() => {
+  //   registerForPushNotificationsAsync().then((token) =>
+  //     setExpoPushToken(token)
+  //   );
 
-    notificationListener.current =
-      Notifications.addNotificationReceivedListener((notification) => {
-        setNotification(notification);
-      });
+  //   notificationListener.current =
+  //     Notifications.addNotificationReceivedListener((notification) => {
+  //       setNotification(notification);
+  //     });
 
-    responseListener.current =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log(response);
-      });
+  //   responseListener.current =
+  //     Notifications.addNotificationResponseReceivedListener((response) => {
+  //       console.log(response);
+  //     });
 
-    return () => {
-      Notifications.removeNotificationSubscription(
-        notificationListener.current
-      );
-      Notifications.removeNotificationSubscription(responseListener.current);
-    };
-  }, []);
+  //   return () => {
+  //     Notifications.removeNotificationSubscription(
+  //       notificationListener.current
+  //     );
+  //     Notifications.removeNotificationSubscription(responseListener.current);
+  //   };
+  // }, []);
 
   // Get Detail
   useEffect(() => {
@@ -481,23 +481,23 @@ export default ({ navigation, taskId }) => {
 
             const responseRepeat = await CreateRepeat(repeatRequest, token);
             if (responseRepeat) {
-              // Remind
-              if (request.remindTime) {
-                let dueTimeString = formatInTimeZone(
-                  request.startTime,
-                  CommonData.Format().TimeZoneFormat,
-                  CommonData.Format().DateTimeFormatCreate
-                );
-                if (request.remindTime == "5 minutes before Due Time") {
-                  let secsBefore =
-                    (request.startTime.getTime() - new Date().getTime()) / 1000;
-                  await schedulePushNotification(
-                    "Alert",
-                    request.name + ", Start Time: " + dueTimeString,
-                    secsBefore - 5 * 60
-                  );
-                }
-              }
+              // // Remind
+              // if (request.remindTime) {
+              //   let dueTimeString = formatInTimeZone(
+              //     request.startTime,
+              //     CommonData.Format().TimeZoneFormat,
+              //     CommonData.Format().DateTimeFormatCreate
+              //   );
+              //   if (request.remindTime == "5 minutes before Due Time") {
+              //     let secsBefore =
+              //       (request.startTime.getTime() - new Date().getTime()) / 1000;
+              //     await schedulePushNotification(
+              //       "Alert",
+              //       request.name + ", Start Time: " + dueTimeString,
+              //       secsBefore - 5 * 60
+              //     );
+              //   }
+              // }
 
               // Delay
               setTimeout(() => {
@@ -514,23 +514,23 @@ export default ({ navigation, taskId }) => {
           else {
             const response = await CreateTask(request, token);
             if (response) {
-              // Remind
-              if (request.remindTime) {
-                let dueTimeString = formatInTimeZone(
-                  request.startTime,
-                  CommonData.Format().TimeZoneFormat,
-                  CommonData.Format().DateTimeFormatCreate
-                );
-                if (request.remindTime == "5 minutes before Due Time") {
-                  let secsBefore =
-                    (request.startTime.getTime() - new Date().getTime()) / 1000;
-                  await schedulePushNotification(
-                    "Alert",
-                    request.name + ", Start Time: " + dueTimeString,
-                    secsBefore - 5 * 60
-                  );
-                }
-              }
+              // // Remind
+              // if (request.remindTime) {
+              //   let dueTimeString = formatInTimeZone(
+              //     request.startTime,
+              //     CommonData.Format().TimeZoneFormat,
+              //     CommonData.Format().DateTimeFormatCreate
+              //   );
+              //   if (request.remindTime == "5 minutes before Due Time") {
+              //     let secsBefore =
+              //       (request.startTime.getTime() - new Date().getTime()) / 1000;
+              //     await schedulePushNotification(
+              //       "Alert",
+              //       request.name + ", Start Time: " + dueTimeString,
+              //       secsBefore - 5 * 60
+              //     );
+              //   }
+              // }
 
               await handleGetAllTasks();
               navigation.navigate("HomeTab", { screen: "Tasks" });

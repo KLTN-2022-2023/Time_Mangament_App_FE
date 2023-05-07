@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Center, NativeBaseProvider } from "native-base";
 import Spinner from "react-native-loading-spinner-overlay";
-import { Calendar, LocaleConfig, Agenda } from "react-native-calendars";
+import { Agenda } from "react-native-calendars";
 import {
   SafeAreaView,
   StyleSheet,
@@ -22,44 +22,6 @@ export default ({ navigation }) => {
   const dispatch = useDispatch();
   const allTasks = useSelector((state) => state.task.allTasks);
   const [isLoading, setIsLoading] = useState(false);
-
-  // const [data, setData] = useState([
-  //   {
-  //     _id: 1,
-  //     name: "Hom nay khong bao cao nha",
-  //     startTime: "2023-04-01 00:00:00",
-  //     dueTime: "2023-04-02 00:00:00",
-  //     status: "New",
-  //   },
-  //   {
-  //     _id: 2,
-  //     name: "Lam giao dien phan dang ky",
-  //     startTime: "2023-04-01 00:00:00",
-  //     dueTime: "2023-04-01 00:00:00",
-  //     status: "New",
-  //   },
-  //   {
-  //     _id: 3,
-  //     name: "Lam giao dien phan dang nhap",
-  //     startTime: "2023-04-01 00:00:00",
-  //     dueTime: "2023-04-05 00:00:00",
-  //     status: "Done",
-  //   },
-  //   {
-  //     _id: 4,
-  //     name: "Lam giao dien list",
-  //     startTime: "2023-04-01 00:00:00",
-  //     dueTime: "2023-04-01 00:00:00",
-  //     status: "New",
-  //   },
-  //   {
-  //     _id: 5,
-  //     name: "Lam giao dien detail",
-  //     startTime: "2023-04-01 00:00:00",
-  //     dueTime: "2023-04-01 00:00:00",
-  //     status: "New",
-  //   },
-  // ]);
   const [items, setItems] = useState(null);
 
   // Load Data
@@ -116,16 +78,28 @@ export default ({ navigation }) => {
 
     if (listDates && listDates.length > 0) {
       listDates.forEach((x) => {
-        let taskList = data.filter(
-          (t) =>
+        let taskList = data.filter((t) => {
+          let startTimeString = formatInTimeZone(
+            t.startTime,
+            CommonData.Format().TimeZoneFormat,
+            CommonData.Format().DateTimeFormatCreate
+          );
+          let dueTimeString = formatInTimeZone(
+            t.dueTime,
+            CommonData.Format().TimeZoneFormat,
+            CommonData.Format().DateTimeFormatCreate
+          );
+
+          return (
             t.startTime &&
             t.dueTime &&
             compareDateBetweenTwoDate(
               x,
-              t.startTime.split(" ").shift(),
-              t.dueTime.split(" ").shift()
+              startTimeString.split(" ").shift(),
+              dueTimeString.split(" ").shift()
             )
-        );
+          );
+        });
 
         if (taskList && taskList.length > 0) {
           let myObject = new Object();
@@ -151,7 +125,7 @@ export default ({ navigation }) => {
   const handleParseData = () => {
     let data = [];
     if (allTasks && allTasks.length > 0) {
-      data = allTasks.filter((x) => !x.isDeleted && !x.parentId);
+      data = allTasks.filter((x) => !x.isDeleted);
     }
     if (data && data.length > 0) {
       let listDate = [];
@@ -159,12 +133,25 @@ export default ({ navigation }) => {
 
       data.forEach((x) => {
         if (x.startTime && x.dueTime) {
-          let startDate = new Date(Date.parse(x.startTime.split(" ").shift()));
-          let dueTime = new Date(Date.parse(x.dueTime.split(" ").shift()));
+          let startTimeString = formatInTimeZone(
+            x.startTime,
+            CommonData.Format().TimeZoneFormat,
+            CommonData.Format().DateTimeFormatCreate
+          );
+          let dueTimeString = formatInTimeZone(
+            x.dueTime,
+            CommonData.Format().TimeZoneFormat,
+            CommonData.Format().DateTimeFormatCreate
+          );
 
-          if (startDate == dueTime) {
+          let startDate = new Date(
+            Date.parse(startTimeString.split(" ").shift())
+          );
+          let dueTime = new Date(Date.parse(dueTimeString.split(" ").shift()));
+
+          if (startTimeString === dueTimeString) {
             listDate.push(startDate);
-          } else if (startDate < dueTime) {
+          } else if (startTimeString < dueTimeString) {
             let dates = [];
             dates = getDates(startDate, dueTime);
             listDate.push(...dates);
@@ -202,30 +189,10 @@ export default ({ navigation }) => {
     if (!item.isPlus) {
       if (item && item.status == "Done") {
         return stylesStatus.cardDone;
-      } else if (item && checkTaskIsLate(item)) {
-        return stylesStatus.CardLate;
       }
       return styles.itemCard;
     }
     return styles.itemCardPlus;
-  };
-
-  const checkTaskIsLate = (task) => {
-    if (task && task.startTime && task.dueTime) {
-      let dateNowString = formatInTimeZone(
-        new Date(),
-        "Asia/Ho_Chi_Minh",
-        "yyyy-MM-dd HH:mm:ss"
-      );
-      let startDate = new Date(Date.parse(task.startTime.split(" ").shift()));
-      let dueTime = new Date(Date.parse(task.dueTime.split(" ").shift()));
-      let dateNow = new Date(Date.parse(dateNowString.split(" ").shift()));
-
-      if (dueTime < dateNow) {
-        return true;
-      }
-    }
-    return false;
   };
 
   function addHours(date, hours) {
@@ -281,6 +248,8 @@ export default ({ navigation }) => {
         items={items}
         renderItem={renderItem}
         renderEmptyData={renderItemEmpty}
+        firstDay={8}
+        selected={"2023-05-08"}
       />
     </SafeAreaView>
   );
