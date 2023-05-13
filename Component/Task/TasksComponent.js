@@ -1,19 +1,29 @@
 import Task from "./Task";
 import { useState, useEffect } from "react";
-import { SectionList, SafeAreaView, StyleSheet } from "react-native";
+import { SectionList, StyleSheet } from "react-native";
 import { View, Text } from "native-base";
 import CommonData from "../../CommonData/CommonData";
 import NoData from "../Common/NoData";
-import { formatInTimeZone } from "date-fns-tz";
 import { convertDateTime } from "../../helper/Helper";
 
-export default ({ navigation, listTasks, date, typeId, filter }) => {
+export default ({ navigation, listTasks, date, typeId, filter, monthYear }) => {
   const [tasks, setTasks] = useState([]);
   const [tasksImportant, setTasksImportant] = useState([]);
 
   useEffect(() => {
     handleSplitTasks();
   }, [listTasks, date, typeId, filter]);
+
+  const isTaskContainMonthYear = (x) => {
+    let startString = convertDateTime(x.startTime).split(" ")[0];
+    let dueString = convertDateTime(x.dueTime).split(" ")[0];
+    let m = monthYear.split("-")[0];
+    let y = monthYear.split("-")[1];
+    return (
+      (startString.includes(m) && startString.includes(y)) ||
+      (dueString.includes(m) && dueString.includes(y))
+    );
+  };
 
   const compareDateBetweenTwoDate = (date, date1, date2) => {
     if (date && date1 && date2) {
@@ -73,8 +83,9 @@ export default ({ navigation, listTasks, date, typeId, filter }) => {
   };
 
   const handleSplitTasks = () => {
-    if (listTasks && listTasks.length > 0) {
-      let dataResult = handleFilterTasks(listTasks);
+    let list = listTasks.filter((x) => isTaskContainMonthYear(x));
+    if (list && list.length > 0) {
+      let dataResult = handleFilterTasks(list);
       let dataFilter = dataResult.filter(
         (x) => x.status !== CommonData.TaskStatus().Done
       );
@@ -159,15 +170,30 @@ export default ({ navigation, listTasks, date, typeId, filter }) => {
         }
       } else {
         dataFilterCon = dataFilter.sort((x, y) =>
-          x.isImportant === y.isImportant ? 0 : x.isImportant ? -1 : 1
+          x.isImportant === y.isImportant
+            ? y.dueTime > x.dueTime
+              ? 1
+              : -1
+            : x.isImportant
+            ? -1
+            : 1
         );
         dataImportantFilterCon = dataImportantFilter.sort((x, y) =>
-          x.isImportant === y.isImportant ? 0 : x.isImportant ? -1 : 1
+          x.isImportant === y.isImportant
+            ? y.dueTime > x.dueTime
+              ? 1
+              : -1
+            : x.isImportant
+            ? -1
+            : 1
         );
       }
 
       setTasks(dataFilterCon);
       setTasksImportant(dataImportantFilterCon);
+    } else {
+      setTasks([]);
+      setTasksImportant([]);
     }
   };
 
@@ -181,18 +207,34 @@ export default ({ navigation, listTasks, date, typeId, filter }) => {
     return 0;
   }
 
+  const getSection = () => {
+    if (typeId === CommonData.TaskType().InComplete) {
+      return [{ data: [...tasks] }];
+    }
+
+    if (typeId === CommonData.TaskType().Completed) {
+      return [
+        {
+          data: [...tasksImportant],
+        },
+      ];
+    }
+
+    return [
+      { title: "Incomplete", data: [...tasks] },
+      {
+        title: "Completed",
+        data: [...tasksImportant],
+      },
+    ];
+  };
+
   return (
     <View style={styles.safe}>
       {(tasks && tasks.length > 0) ||
       (tasksImportant && tasksImportant.length > 0) ? (
         <SectionList
-          sections={[
-            { title: "Incomplete", data: [...tasks] },
-            {
-              title: "Completed",
-              data: [...tasksImportant],
-            },
-          ]}
+          sections={getSection()}
           renderItem={({ item }) => (
             <Task navigation={navigation} item={item}></Task>
           )}

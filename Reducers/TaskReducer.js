@@ -146,4 +146,21 @@ export const CreateRepeat = async (req, token) => {
   return result;
 };
 
+export const CreateRepeatAfterUpdate = async (req, token) => {
+  let result = null;
+  try {
+    if (!req) return;
+    const response = await APIService.task().createRepeatTaskAfterUpdate(
+      req,
+      token
+    );
+    if (response && response.data) {
+      result = response.data;
+    }
+  } catch (err) {
+    result = null;
+  }
+  return result;
+};
+
 export default tasksSlice.reducer;

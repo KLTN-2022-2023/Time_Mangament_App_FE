@@ -62,6 +62,14 @@ export default {
             Authorization: token,
           },
         }),
+      createRepeatTaskAfterUpdate: (req, token) =>
+        axios.post(url + "CreateRepeatAfterUpdate/", JSON.stringify(req), {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        }),
       updateTask: (req, token) =>
         axios.put(url + "UpdateTask/", JSON.stringify(req), {
           headers: {
