@@ -1,7 +1,6 @@
 import {
   Box,
   Center,
-  Modal,
   View,
   Text,
   Checkbox,
@@ -24,6 +23,7 @@ import {
   UpdateTask,
   Upload,
   CreateRepeat,
+  CreateRepeatAfterUpdate,
 } from "../../Reducers/TaskReducer";
 import { SetNotificationTriggerList } from "../../Reducers/NotificationTriggerReducer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -60,7 +60,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export default ({ navigation, taskId }) => {
+export default ({ navigation, taskId, namePath }) => {
   const [data, setData] = useState(null);
   const [name, setName] = useState("New Task");
   const [note, setNote] = useState("");
@@ -148,6 +148,8 @@ export default ({ navigation, taskId }) => {
   // Get Detail
   useEffect(() => {
     let foundItem = allTasks.find((x) => x._id === taskId);
+    let dateNowString = convertDateTime(new Date());
+
     if (foundItem) {
       setData(foundItem);
       setDataBackup(foundItem);
@@ -178,6 +180,8 @@ export default ({ navigation, taskId }) => {
         let endRepeatString = convertDateTime(foundItem.endRepeat);
 
         setEndRepeat(endRepeatString.split(" ").shift());
+      } else {
+        setEndRepeat(dateNowString.split(" ").shift());
       }
     } else {
       setData(null);
@@ -231,7 +235,7 @@ export default ({ navigation, taskId }) => {
     lits = allTriggers;
 
     // Mode update
-    if (mode != "update") {
+    if (mode === "update" || mode === "delete") {
       if (allTriggers && allTriggers.length > 0) {
         let foundItem = allTriggers.find((x) => x.taskId == taskId);
         if (foundItem) {
@@ -244,7 +248,7 @@ export default ({ navigation, taskId }) => {
       }
     }
 
-    if (mode != "delete") {
+    if (mode === "create" || mode === "update") {
       const identifier = await Notifications.scheduleNotificationAsync({
         content: {
           title: title,
@@ -502,7 +506,8 @@ export default ({ navigation, taskId }) => {
 
           await handleGetAllTasks();
 
-          navigation.navigate("HomeTab", { screen: "Tasks" });
+          // navigation.navigate("HomeTab", { screen: "Tasks" });
+          navigation.goBack();
         }
       }
     } catch (err) {
@@ -573,7 +578,8 @@ export default ({ navigation, taskId }) => {
               // Delay
               setTimeout(() => {
                 handleGetAllTasks();
-                navigation.navigate("HomeTab", { screen: "Tasks" });
+                // navigation.navigate("HomeTab", { screen: "Tasks" });
+                navigation.goBack();
 
                 setIsLoading(false);
               }, 5000);
@@ -592,7 +598,8 @@ export default ({ navigation, taskId }) => {
           await handleSettingRemind(request, response, "create");
 
           await handleGetAllTasks();
-          navigation.navigate("HomeTab", { screen: "Tasks" });
+          // navigation.navigate("HomeTab", { screen: "Tasks" });
+          navigation.goBack();
           setIsLoading(false);
         }
       }
@@ -622,14 +629,68 @@ export default ({ navigation, taskId }) => {
         isRepeatedById: null,
         updatedDate: new Date(),
       };
-      const response = await UpdateTask(request, token);
-      if (response) {
-        // Remind
-        await handleSettingRemind(request, response, "update");
 
-        await handleGetAllTasks();
-        navigation.navigate("HomeTab", { screen: "Tasks" });
-        setIsLoading(false);
+      // Repeat Setting
+      if (
+        (request.repeat && request.repeatTime !== dataBackup.repeatTime) ||
+        request.endRepeat != dataBackup.endRepeat
+      ) {
+        let result = getCalculatedList(
+          request.startTime,
+          request.dueTime,
+          new Date(endRepeat + " " + startTime)
+        );
+
+        // Check overlap task repeat
+        if (!isInValidOverlapRepeat(result)) {
+          result.shift();
+
+          const response = await UpdateTask(request, token);
+          if (response) {
+            const repeatRequest = {
+              data: request,
+              datesRepeat: result && result.length > 0 ? result : null,
+            };
+
+            const responseRepeat = await CreateRepeatAfterUpdate(
+              repeatRequest,
+              token
+            );
+            if (responseRepeat) {
+              // Remind
+              if (request.remindTime !== dataBackup.remindTime) {
+                await handleSettingRemind(request, response, "update");
+              }
+
+              // Delay
+              setTimeout(() => {
+                handleGetAllTasks();
+                // navigation.navigate("HomeTab", { screen: "Tasks" });
+                navigation.goBack();
+
+                setIsLoading(false);
+              }, 5000);
+            }
+          }
+        } else {
+          setIsLoading(false);
+          setErrorRepeatOverlap(true);
+        }
+      }
+      // Non-repeat setting
+      else {
+        const response = await UpdateTask(request, token);
+        if (response) {
+          // Remind
+          if (request.remindTime !== backupData.remindTime) {
+            await handleSettingRemind(request, response, "update");
+          }
+
+          await handleGetAllTasks();
+          // navigation.navigate("HomeTab", { screen: "Tasks" });
+          navigation.goBack();
+          setIsLoading(false);
+        }
       }
     }
   };
@@ -1255,7 +1316,7 @@ export default ({ navigation, taskId }) => {
             <HStack>
               <Icon name="angle-left" size={25} style={styles.icon} />
               <Text paddingLeft={2} fontSize={18} style={styles.textBack}>
-                Tasks List
+                Go back
               </Text>
             </HStack>
           </TouchableOpacity>

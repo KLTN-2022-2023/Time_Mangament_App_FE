@@ -96,7 +96,7 @@ export default ({ navigation }) => {
       if (result && result.length > 0) {
         return result.length;
       }
-    } else if (type == CommonData.TaskType().InComplete) {
+    } else if (type == CommonData.TaskType().Completed) {
       let result = allTasks.filter(
         (x) => !x.isDeleted && x.status === CommonData.TaskStatus().Done
       );
@@ -155,17 +155,6 @@ export default ({ navigation }) => {
           )
         ) : (
           <View>
-            {/* <TaskTypeItem
-              type={CommonData.TaskType().AllTask}
-              name={"All Tasks"}
-              quantity={showQty(CommonData.TaskType().AllTask)}
-              actionFunc={() => {
-                navigation.navigate("TaskListDetail", {
-                  showDate: null,
-                  typeId: CommonData.TaskType().AllTask,
-                });
-              }}
-            ></TaskTypeItem> */}
             <TaskTypeItem
               type={CommonData.TaskType().InComplete}
               name={"Incomplete"}

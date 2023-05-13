@@ -20,7 +20,7 @@ import { useSelector, useDispatch } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { convertDateTime } from "../../helper/Helper";
 
-export default ({ navigation }) => {
+export default ({ route, navigation }) => {
   const dispatch = useDispatch();
   const allTasks = useSelector((state) => state.task.allTasks);
   const [weekTask, setWeekTask] = useState([]);
@@ -34,6 +34,17 @@ export default ({ navigation }) => {
     handleCalculateDayWeek(new Date());
     handleGetMarked();
   }, []);
+
+  useEffect(() => {
+    handleCalculateDayWeek(new Date());
+    handleGetMarked();
+  }, [allTasks]);
+
+  useEffect(() => {
+    handleGetAllTasks();
+    handleCalculateDayWeek(new Date());
+    handleGetMarked();
+  }, [route?.params]);
 
   const getDates = (startDate, stopDate) => {
     let dateArray = [];
@@ -180,29 +191,40 @@ export default ({ navigation }) => {
     }
 
     return (
-      <View style={styles.event}>
-        <View style={styles.header}>
-          {/* Time */}
-          <View style={styles.timeContainer}>
-            <Text style={styles.timeText}>{item.start + " - " + item.end}</Text>
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate("AddTaskScreen", {
+            taskId: item.id,
+            namePath: "Calendar",
+          })
+        }
+      >
+        <View style={styles.event}>
+          <View style={styles.header}>
+            {/* Time */}
+            <View style={styles.timeContainer}>
+              <Text style={styles.timeText}>
+                {item.start + " - " + item.end}
+              </Text>
+            </View>
+
+            {/* Status */}
+            <View
+              style={
+                item.status === CommonData.TaskStatus().Done
+                  ? styles.statusContainerDone
+                  : styles.statusContainerNew
+              }
+            >
+              <Text style={styles.statusText}>{item.status}</Text>
+            </View>
           </View>
 
-          {/* Status */}
-          <View
-            style={
-              item.status === CommonData.TaskStatus().Done
-                ? styles.statusContainerDone
-                : styles.statusContainerNew
-            }
-          >
-            <Text style={styles.statusText}>{item.status}</Text>
+          <View>
+            <Text style={styles.taskName}>{item.name}</Text>
           </View>
         </View>
-
-        <View>
-          <Text style={styles.taskName}>{item.name}</Text>
-        </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 

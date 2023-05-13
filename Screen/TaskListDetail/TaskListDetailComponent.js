@@ -9,8 +9,8 @@ import {
   Popover,
   Modal,
 } from "native-base";
-import { useState, useEffect } from "react";
-import { TextInput, StyleSheet, TouchableOpacity } from "react-native";
+import { useState, useEffect, useCallback } from "react";
+import { StyleSheet, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import IconICon from "react-native-vector-icons/Ionicons";
 import React from "react";
@@ -19,12 +19,20 @@ import { format } from "date-fns";
 import Color from "../../Style/Color";
 import { useSelector, useDispatch } from "react-redux";
 import CommonData from "../../CommonData/CommonData";
+import { convertDateTime } from "../../helper/Helper";
+import PopupSelectMonth from "../../Component/Common/PopupSelectMonth";
 
 export default ({ route, navigation }) => {
   const [showModalSort, setShowModalSort] = useState({
     data: null,
     isShow: false,
   });
+  const [show, setShow] = useState(false);
+  const [monthYear, setMonthYear] = useState(
+    convertDateTime(new Date()).split(" ")[0].split("-")[1] +
+      "-" +
+      convertDateTime(new Date()).split(" ")[0].split("-")[0]
+  );
   const { showDate, typeId } = route.params;
   const dispatch = useDispatch();
   const allTasks = useSelector((state) => state.task.allTasks);
@@ -81,6 +89,22 @@ export default ({ route, navigation }) => {
     setShowModalSort({ data: null, isShow: false });
   };
 
+  const getMonthYear = (month, year) => {
+    setMonthYear(month + "-" + year);
+    setShow(false);
+  };
+
+  const isTaskContainMonthYear = (x) => {
+    let startString = convertDateTime(x.startTime).split(" ")[0];
+    let dueString = convertDateTime(x.dueTime).split(" ")[0];
+    let m = monthYear.split("-")[0];
+    let y = monthYear.split("-")[1];
+    return (
+      (startString.includes(m) && startString.includes(y)) ||
+      (dueString.includes(m) && dueString.includes(y))
+    );
+  };
+
   return (
     <Center w="100%" height="100%">
       <Box safeArea py="2" maxW="350" height="100%">
@@ -131,33 +155,59 @@ export default ({ route, navigation }) => {
         {/* Title */}
         <Text style={styles.title}>{getDateTitle()}</Text>
 
-        {/* Filter */}
-        {showModalSort && showModalSort.data && (
-          <View style={styles.filterContainer}>
-            <Button
-              rightIcon={
-                <Icon
-                  name={showModalSort.data.asc ? "caret-down" : "caret-up"}
-                  size={20}
-                  as="Ionicons"
-                  color="white"
-                />
-              }
-              small
-              colorScheme={"indigo"}
-              onPress={handleChangeAcsSort}
-            >
-              <Text color={Color.Button().Text}>{showModalSort.data.name}</Text>
-            </Button>
-            <Button
-              colorScheme={"indigo"}
-              size={10}
-              onPress={handleClearFilter}
-            >
-              <Icon name="close" color={Color.Button().Text} />
-            </Button>
-          </View>
-        )}
+        <View style={styles.sortFilterContainer}>
+          {/* Sort */}
+          {showModalSort && showModalSort.data ? (
+            <View style={styles.filterContainer}>
+              <Button
+                rightIcon={
+                  <Icon
+                    name={showModalSort.data.asc ? "caret-down" : "caret-up"}
+                    size={20}
+                    as="Ionicons"
+                    color="white"
+                  />
+                }
+                small
+                colorScheme={"indigo"}
+                onPress={handleChangeAcsSort}
+              >
+                <Text color={Color.Button().Text}>
+                  {showModalSort.data.name}
+                </Text>
+              </Button>
+              <Button
+                colorScheme={"indigo"}
+                size={10}
+                onPress={handleClearFilter}
+              >
+                <Icon name="close" color={Color.Button().Text} />
+              </Button>
+            </View>
+          ) : (
+            <View></View>
+          )}
+
+          {/* Filter */}
+          <TouchableOpacity
+            onPress={() => {
+              setShow(true);
+            }}
+          >
+            <View style={styles.monthFilter}>
+              <Text style={styles.monthFilterText}>
+                {"Filter: " + monthYear}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+        <PopupSelectMonth
+          isOpen={show}
+          closeFunction={() => {
+            setShow(false);
+          }}
+          actionFunction={getMonthYear}
+        />
 
         {/* Task */}
         <TasksComponent
@@ -168,13 +218,21 @@ export default ({ route, navigation }) => {
           filter={
             showModalSort && showModalSort.data ? showModalSort.data : null
           }
+          monthYear={monthYear}
         />
 
         {/* Button plus */}
         <Button
           style={styles.button}
           size={50}
-          onPress={() => navigation.navigate("AddTaskScreen", { taskId: null })}
+          onPress={() =>
+            navigation.navigate("AddTaskScreen", {
+              taskId: null,
+              typeId: typeId,
+              namePath: "TaskListDetail",
+              showDate: showDate,
+            })
+          }
         >
           <Text fontSize={30} style={styles.buttonText}>
             +
@@ -292,8 +350,22 @@ const styles = StyleSheet.create({
   filterContainer: {
     display: "flex",
     flexDirection: "row",
-    width: "100%",
     paddingBottom: 10,
     gap: 5,
+  },
+  sortFilterContainer: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  monthFilter: {
+    backgroundColor: Color.Button().ButtonActive,
+    padding: 10,
+    borderRadius: 5,
+  },
+  monthFilterText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "500",
   },
 });
