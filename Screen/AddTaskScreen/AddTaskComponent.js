@@ -25,16 +25,20 @@ import {
   Upload,
   CreateRepeat,
 } from "../../Reducers/TaskReducer";
+import { SetNotificationTriggerList } from "../../Reducers/NotificationTriggerReducer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import jwt_decode from "jwt-decode";
 import { useSelector, useDispatch } from "react-redux";
 import { getListAllTasksByUserId } from "../../Reducers/TaskReducer.js";
-import { formatInTimeZone } from "date-fns-tz";
 import Spinner from "react-native-loading-spinner-overlay";
 import Color from "../../Style/Color";
 import CommonData from "../../CommonData/CommonData";
 import PopupComponent from "../../Component/Common/PopupComponent";
 import RepeatModal from "../../Component/Task/RepeatModal";
+import TypeModal from "../../Component/Task/TypeModal";
+import CreateTypeModal from "../../Component/Task/CreateTypeModal";
+import { formatDateUI } from "../../helper/Helper";
+import { DaysRemind } from "../../CommonData/Data";
 
 // Warning
 import { LogBox } from "react-native";
@@ -42,61 +46,19 @@ import { LogBox } from "react-native";
 // Notification
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
+import RemindModal from "../../Component/Task/RemindModal";
+import { convertDateTime } from "../../helper/Helper";
 
 LogBox.ignoreLogs(["Warning: ..."]); // Ignore log notification by message
 LogBox.ignoreAllLogs();
 
-// Notifications.setNotificationHandler({
-//   handleNotification: async () => ({
-//     shouldShowAlert: true,
-//     shouldPlaySound: true,
-//     shouldSetBadge: true,
-//   }),
-// });
-
-// async function schedulePushNotification(title, content, secs) {
-//   await Notifications.scheduleNotificationAsync({
-//     content: {
-//       title: title,
-//       body: content,
-//       data: null,
-//     },
-//     trigger: { seconds: secs },
-//   });
-// }
-
-async function registerForPushNotificationsAsync() {
-  let token;
-
-  if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync("default", {
-      name: "default",
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: "#FF231F7C",
-    });
-  }
-
-  if (Device.isDevice) {
-    const { status: existingStatus } =
-      await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-    if (existingStatus !== "granted") {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-    if (finalStatus !== "granted") {
-      alert("Failed to get push token for push notification!");
-      return;
-    }
-    token = (await Notifications.getExpoPushTokenAsync()).data;
-    console.log(token);
-  } else {
-    alert("Must use physical device for Push Notifications");
-  }
-
-  return token;
-}
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 export default ({ navigation, taskId }) => {
   const [data, setData] = useState(null);
@@ -107,11 +69,13 @@ export default ({ navigation, taskId }) => {
   const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [remind, setRemind] = useState(null);
+  const [remindTime, setRemindTime] = useState(null);
   const [repeat, setRepeat] = useState(null);
   const [type, setType] = useState(null);
   const [open, setOpen] = useState(false);
+  const [dataBackup, setDataBackup] = useState(null);
 
-  // Noti
+  // Notification
   const [expoPushToken, setExpoPushToken] = useState("");
   const [notification, setNotification] = useState(false);
   const notificationListener = useRef();
@@ -121,10 +85,18 @@ export default ({ navigation, taskId }) => {
   const [modalRepeat, setModalRepeat] = useState(false);
   const [modalRemind, setModalRemind] = useState(false);
   const [modalType, setModalType] = useState(false);
+  const [modalCreateType, setModalCreateType] = useState(false);
 
   // Validate
   const [errorNameRequired, setErrorNameRequired] = useState(false);
+  const [errorTypeRequired, setErrorTypeRequired] = useState(false);
   const [errorDates, setErrorDates] = useState(false);
+  const [errorStartPast, setStartPast] = useState(false);
+  const [errorOverlap, setErrorOverlap] = useState(false);
+  const [errorRemindPast, setRemindPast] = useState(false);
+  const [errorRepeatTimePast, setRepeatTimePast] = useState(false);
+  const [errorRepeatOverlap, setErrorRepeatOverlap] = useState(false);
+  const [errorInvalidDaysWeek, setInvalidDaysWeek] = useState(false);
 
   // Start
   const [startDate, setStartDate] = useState(null);
@@ -145,69 +117,66 @@ export default ({ navigation, taskId }) => {
   const dispatch = useDispatch();
   const allTasks = useSelector((state) => state.task.allTasks);
   const allTypes = useSelector((state) => state.type.allTypes);
+  const allTriggers = useSelector(
+    (state) => state.notificationTrigger.allTriggers
+  );
 
   // Notification
-  // useEffect(() => {
-  //   registerForPushNotificationsAsync().then((token) =>
-  //     setExpoPushToken(token)
-  //   );
+  useEffect(() => {
+    registerForPushNotificationsAsync().then((token) =>
+      setExpoPushToken(token)
+    );
 
-  //   notificationListener.current =
-  //     Notifications.addNotificationReceivedListener((notification) => {
-  //       setNotification(notification);
-  //     });
+    notificationListener.current =
+      Notifications.addNotificationReceivedListener((notification) => {
+        setNotification(notification);
+      });
 
-  //   responseListener.current =
-  //     Notifications.addNotificationResponseReceivedListener((response) => {
-  //       console.log(response);
-  //     });
+    responseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        console.log("Received");
+      });
 
-  //   return () => {
-  //     Notifications.removeNotificationSubscription(
-  //       notificationListener.current
-  //     );
-  //     Notifications.removeNotificationSubscription(responseListener.current);
-  //   };
-  // }, []);
+    return () => {
+      Notifications.removeNotificationSubscription(
+        notificationListener.current
+      );
+      Notifications.removeNotificationSubscription(responseListener.current);
+    };
+  }, []);
 
   // Get Detail
   useEffect(() => {
     let foundItem = allTasks.find((x) => x._id === taskId);
     if (foundItem) {
       setData(foundItem);
+      setDataBackup(foundItem);
+
+      let remindTimeString = convertDateTime(foundItem.remindTime);
 
       //set Data
       setName(foundItem.name);
       setNote(foundItem.description);
       setType(allTypes.find((x) => x._id === foundItem.typeId));
-      setRemind(foundItem.remindTime);
+      setRemind(foundItem.remindMode);
+      setRemindTime(remindTimeString);
       setRepeat(foundItem.repeatTime);
       setIsImportant(foundItem.isImportant);
       setIsDone(
         foundItem.status === CommonData.TaskStatus().Done ? true : false
       );
 
-      let startTimeString = formatInTimeZone(
-        foundItem.startTime,
-        CommonData.Format().TimeZoneFormat,
-        CommonData.Format().DateTimeFormatCreate
-      );
-      let dueTimeString = formatInTimeZone(
-        foundItem.dueTime,
-        CommonData.Format().TimeZoneFormat,
-        CommonData.Format().DateTimeFormatCreate
-      );
+      let startTimeString = convertDateTime(foundItem.startTime);
+      let dueTimeString = convertDateTime(foundItem.dueTime);
+
       setStartDate(startTimeString.split(" ").shift());
       setStartTime(startTimeString.split(" ")[1]);
       setDueDate(dueTimeString.split(" ").shift());
       setDueTime(dueTimeString.split(" ")[1]);
 
       if (foundItem.endRepeat) {
-        let endRepeatString = formatInTimeZone(
-          foundItem.endRepeat,
-          CommonData.Format().TimeZoneFormat,
-          CommonData.Format().DateTimeFormatCreate
-        );
+        let endRepeatString = convertDateTime(foundItem.endRepeat);
+
         setEndRepeat(endRepeatString.split(" ").shift());
       }
     } else {
@@ -218,37 +187,109 @@ export default ({ navigation, taskId }) => {
   // Set default
   useEffect(() => {
     if (!taskId) {
-      let dateNowString = formatInTimeZone(
-        new Date(),
-        CommonData.Format().TimeZoneFormat,
-        CommonData.Format().DateTimeFormatCreate
-      );
+      let dateNowString = convertDateTime(new Date());
+
       setStartDate(dateNowString.split(" ").shift());
       setStartTime(dateNowString.split(" ")[1]);
       setDueDate(dateNowString.split(" ").shift());
       setDueTime(dateNowString.split(" ")[1]);
       setEndRepeat(dateNowString.split(" ").shift());
 
-      setType(allTypes.filter((x) => !x.isDeleted)[0]);
+      setType(allTypes ? allTypes.filter((x) => !x.isDeleted)[0] : null);
     }
   }, []);
 
-  //Validate
+  // Validate dates, remind, repeat
   useEffect(() => {
-    if (startDate && startTime && dueDate && dueTime) {
-      if (startDate > dueDate) {
-        setErrorDates(true);
-      } else if (startDate == dueDate) {
-        if (startTime > dueTime) {
-          setErrorDates(true);
-        } else {
-          setErrorDates(false);
+    let result = handleValidate(false, true, true, true);
+    setErrorRepeatOverlap(false);
+  }, [startDate, startTime, dueDate, dueTime]);
+  useEffect(() => {
+    let result = handleValidate(false, false, false, true);
+    setErrorRepeatOverlap(false);
+  }, [endRepeat, repeat]);
+  useEffect(() => {
+    let result = handleValidate(false, false, true, false);
+    setErrorRepeatOverlap(false);
+  }, [remind, remindTime]);
+
+  // Validate type
+  useEffect(() => {
+    let result = handleValidate(true, false, false, false);
+  }, [type]);
+
+  // Recalculate Remind
+  useEffect(() => {
+    if (remind) {
+      handleChooseRemind(remind);
+    }
+  }, [startTime, startDate]);
+
+  //Notification
+  async function schedulePushNotification(title, content, secs, mode, idTask) {
+    let list = [];
+    lits = allTriggers;
+
+    // Mode update
+    if (mode != "update") {
+      if (allTriggers && allTriggers.length > 0) {
+        let foundItem = allTriggers.find((x) => x.taskId == taskId);
+        if (foundItem) {
+          await Notifications.cancelScheduledNotificationAsync(
+            foundItem.trigger
+          );
+
+          list = list.filter((x) => x.taskId != taskId);
         }
-      } else {
-        setErrorDates(false);
       }
     }
-  }, [startDate, startTime, dueDate, dueTime]);
+
+    if (mode != "delete") {
+      const identifier = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: title,
+          body: content,
+          data: null,
+        },
+        trigger: { seconds: secs },
+      });
+      list.push({ taskId: idTask, trigger: identifier });
+    }
+
+    dispatch(SetNotificationTriggerList(list));
+  }
+
+  async function registerForPushNotificationsAsync() {
+    let token;
+
+    if (Platform.OS === "android") {
+      await Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#FF231F7C",
+      });
+    }
+
+    if (Device.isDevice) {
+      const { status: existingStatus } =
+        await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== "granted") {
+        alert("Failed to get push token for push notification!");
+        return;
+      }
+      token = (await Notifications.getExpoPushTokenAsync()).data;
+    } else {
+      alert("Must use physical device for Push Notifications");
+    }
+
+    return token;
+  }
 
   const handleGetAllTasks = async () => {
     const token = await AsyncStorage.getItem("Token");
@@ -256,10 +297,6 @@ export default ({ navigation, taskId }) => {
       const decoded = jwt_decode(token);
       dispatch(getListAllTasksByUserId({ userId: decoded._id }, token));
     }
-  };
-
-  const inValidData = () => {
-    return errorDates || errorNameRequired;
   };
 
   const onChangeName = (v) => {
@@ -287,51 +324,36 @@ export default ({ navigation, taskId }) => {
   };
 
   const confirmStartDate = (date) => {
-    let dateString = formatInTimeZone(
-      date,
-      CommonData.Format().TimeZoneFormat,
-      CommonData.Format().DateTimeFormatCreate
-    );
+    let dateString = convertDateTime(date);
+
     setStartDate(dateString.split(" ").shift());
     setCalendarStartDate(false);
   };
 
   const confirmStartTime = (time) => {
-    let dateString = formatInTimeZone(
-      time,
-      CommonData.Format().TimeZoneFormat,
-      CommonData.Format().DateTimeFormatCreate
-    );
+    let dateString = convertDateTime(time);
+
     setStartTime(dateString.split(" ")[1]);
     setCalendarStartTime(false);
   };
 
   const confirmDueDate = (date) => {
-    let dateString = formatInTimeZone(
-      date,
-      CommonData.Format().TimeZoneFormat,
-      CommonData.Format().DateTimeFormatCreate
-    );
+    let dateString = convertDateTime(date);
+
     setDueDate(dateString.split(" ").shift());
     setCalendarDueDate(false);
   };
 
   const confirmDueTime = (time) => {
-    let dateString = formatInTimeZone(
-      time,
-      CommonData.Format().TimeZoneFormat,
-      CommonData.Format().DateTimeFormatCreate
-    );
+    let dateString = convertDateTime(time);
+
     setDueTime(dateString.split(" ")[1]);
     setCalendarDueTime(false);
   };
 
   const confirmEndRepeat = (date) => {
-    let dateString = formatInTimeZone(
-      date,
-      CommonData.Format().TimeZoneFormat,
-      CommonData.Format().DateTimeFormatCreate
-    );
+    let dateString = convertDateTime(date);
+
     setEndRepeat(dateString.split(" ").shift());
     setCalendarEndRepeat(false);
   };
@@ -411,6 +433,59 @@ export default ({ navigation, taskId }) => {
     setOpen(true);
   };
 
+  // Remind
+  const handleSettingRemind = async (request, response, mode) => {
+    // Remind
+    if (request.remindMode) {
+      let startTimeString = convertDateTime(request.startTime);
+
+      // Choose
+      if (request.remindMode == CommonData.RemindType().FiveMinutes) {
+        let secsBefore =
+          (request.startTime.getTime() - new Date().getTime()) / 1000;
+        await schedulePushNotification(
+          "Remind",
+          request.name + ", start time: " + startTimeString,
+          secsBefore - 5 * 60,
+          mode,
+          response.data._id
+        );
+      } else if (request.remindMode == CommonData.RemindType().OnStartTime) {
+        let secsBefore =
+          (request.startTime.getTime() - new Date().getTime()) / 1000;
+        await schedulePushNotification(
+          "Remind",
+          request.name + ", start Time: " + dueTimeString,
+          secsBefore,
+          mode,
+          response.data._id
+        );
+      } else if (request.remindMode == CommonData.RemindType().OneDay) {
+        let secsBefore =
+          (request.startTime.getTime() - new Date().getTime()) / 1000;
+        await schedulePushNotification(
+          "Remind",
+          request.name + ", start time: " + startTimeString,
+          secsBefore - 24 * 60 * 60,
+          mode,
+          response.data._id
+        );
+      }
+      // Custom
+      else if (request.remindMode.includes(":")) {
+        let secsBefore =
+          (request.remindTime.getTime() - new Date().getTime()) / 1000;
+        await schedulePushNotification(
+          "Remind",
+          request.name + ", start time: " + startTimeString,
+          secsBefore,
+          mode,
+          response.data._id
+        );
+      }
+    }
+  };
+
   // CRUD
   const deleteTask = async () => {
     setIsLoading(true);
@@ -422,6 +497,9 @@ export default ({ navigation, taskId }) => {
         const response = await DeleteTask(taskId, token);
 
         if (response) {
+          // Clear Remind
+          await schedulePushNotification(null, null, null, "delete", null);
+
           await handleGetAllTasks();
 
           navigation.navigate("HomeTab", { screen: "Tasks" });
@@ -434,75 +512,66 @@ export default ({ navigation, taskId }) => {
     setIsLoading(false);
   };
 
-  const save = async () => {
-    setIsLoading(true);
+  const createTask = async () => {
+    const token = await AsyncStorage.getItem("Token");
+    if (token) {
+      const decoded = jwt_decode(token);
+      let request = {
+        userId: decoded._id,
+        typeId: type._id,
+        name: name,
+        description: note,
+        startTime: new Date(startDate + " " + startTime),
+        dueTime: new Date(dueDate + " " + dueTime),
+        files: [],
+        checkList: [],
+        isImportant: isImportant,
+        status: isDone
+          ? CommonData.TaskStatus().Done
+          : CommonData.TaskStatus().New,
+        remindMode: remind,
+        remindTime: new Date(remindTime),
+        repeatTime: repeat,
+        endRepeat: repeat ? new Date(endRepeat) : null,
+        isRepeatedById: null,
+        createdDate: new Date(),
+      };
 
-    try {
-      // create
-      if (!taskId) {
-        const token = await AsyncStorage.getItem("Token");
-        if (token) {
-          const decoded = jwt_decode(token);
-          let request = {
-            userId: decoded._id,
-            typeId: type._id,
-            name: name,
-            description: note,
-            startTime: new Date(startDate + " " + startTime),
-            dueTime: new Date(dueDate + " " + dueTime),
-            files: [],
-            checkList: [],
-            isImportant: isImportant,
-            status: isDone
-              ? CommonData.TaskStatus().Done
-              : CommonData.TaskStatus().New,
-            remindTime: remind,
-            repeatTime: repeat,
-            endRepeat: repeat ? new Date(endRepeat) : null,
-            isRepeatedById: null,
-            createdDate: new Date(),
+      // Repeat Setting
+      if (repeat) {
+        let result = getCalculatedList(
+          request.startTime,
+          request.dueTime,
+          new Date(endRepeat + " " + startTime)
+        );
+
+        result.forEach((x) => {
+          console.log(convertDateTime(x.start), convertDateTime(x.end));
+        });
+
+        // Check overlap task repeat
+        if (!isInValidOverlapRepeat(result)) {
+          result.shift();
+
+          const repeatRequest = {
+            data: request,
+            datesRepeat: result && result.length > 0 ? result : null,
           };
 
-          // Repeat Setting
-          if (repeat) {
-            let result = getCalculatedList(
-              request.startTime,
-              request.dueTime,
-              new Date(endRepeat + " " + startTime),
-              CommonData.RepeatType().Daily
-            );
-
-            result.shift();
-
-            const repeatRequest = {
-              data: request,
-              datesRepeat: result && result.length > 0 ? result : null,
+          const responseRepeat = await CreateRepeat(repeatRequest, token);
+          if (responseRepeat && responseRepeat.data) {
+            const requestToUpdate = {
+              ...responseRepeat.data,
+              isRepeatedById: responseRepeat.data._id,
             };
 
-            const responseRepeat = await CreateRepeat(repeatRequest, token);
-            if (responseRepeat) {
-              // // Remind
-              // if (request.remindTime) {
-              //   let dueTimeString = formatInTimeZone(
-              //     request.startTime,
-              //     CommonData.Format().TimeZoneFormat,
-              //     CommonData.Format().DateTimeFormatCreate
-              //   );
-              //   if (request.remindTime == "5 minutes before Due Time") {
-              //     let secsBefore =
-              //       (request.startTime.getTime() - new Date().getTime()) / 1000;
-              //     await schedulePushNotification(
-              //       "Alert",
-              //       request.name + ", Start Time: " + dueTimeString,
-              //       secsBefore - 5 * 60
-              //     );
-              //   }
-              // }
+            const responseUpdate = await UpdateTask(requestToUpdate, token);
+            if (responseUpdate) {
+              // Remind
+              await handleSettingRemind(request, responseRepeat, "create");
 
               // Delay
               setTimeout(() => {
-                console.log("Executed after 5 second");
-
                 handleGetAllTasks();
                 navigation.navigate("HomeTab", { screen: "Tasks" });
 
@@ -510,66 +579,76 @@ export default ({ navigation, taskId }) => {
               }, 5000);
             }
           }
-          // Non repeat
-          else {
-            const response = await CreateTask(request, token);
-            if (response) {
-              // // Remind
-              // if (request.remindTime) {
-              //   let dueTimeString = formatInTimeZone(
-              //     request.startTime,
-              //     CommonData.Format().TimeZoneFormat,
-              //     CommonData.Format().DateTimeFormatCreate
-              //   );
-              //   if (request.remindTime == "5 minutes before Due Time") {
-              //     let secsBefore =
-              //       (request.startTime.getTime() - new Date().getTime()) / 1000;
-              //     await schedulePushNotification(
-              //       "Alert",
-              //       request.name + ", Start Time: " + dueTimeString,
-              //       secsBefore - 5 * 60
-              //     );
-              //   }
-              // }
-
-              await handleGetAllTasks();
-              navigation.navigate("HomeTab", { screen: "Tasks" });
-              setIsLoading(false);
-            }
-          }
+        } else {
+          setIsLoading(false);
+          setErrorRepeatOverlap(true);
         }
       }
-      // Update
+      // Non repeat
       else {
-        const token = await AsyncStorage.getItem("Token");
-        if (token) {
-          let request = {
-            ...data,
-            typeId: type._id,
-            name: name,
-            description: note,
-            startTime: new Date(startDate + " " + startTime),
-            dueTime: new Date(dueDate + " " + dueTime),
-            files: [],
-            checkList: [],
-            isImportant: isImportant,
-            status: isDone
-              ? CommonData.TaskStatus().Done
-              : CommonData.TaskStatus().New,
-            remindTime: remind,
-            repeatTime: repeat,
-            endRepeat: repeat ? new Date(endRepeat) : null,
-            isRepeatedById: null,
-            updatedDate: new Date(),
-          };
-          const response = await UpdateTask(request, token);
-          console.log(response);
-          if (response) {
-            await handleGetAllTasks();
-            navigation.navigate("HomeTab", { screen: "Tasks" });
-            setIsLoading(false);
-          }
+        const response = await CreateTask(request, token);
+        if (response) {
+          // Remind
+          await handleSettingRemind(request, response, "create");
+
+          await handleGetAllTasks();
+          navigation.navigate("HomeTab", { screen: "Tasks" });
+          setIsLoading(false);
         }
+      }
+    }
+  };
+
+  const updateTask = async () => {
+    const token = await AsyncStorage.getItem("Token");
+    if (token) {
+      let request = {
+        ...data,
+        typeId: type._id,
+        name: name,
+        description: note,
+        startTime: new Date(startDate + " " + startTime),
+        dueTime: new Date(dueDate + " " + dueTime),
+        files: [],
+        checkList: [],
+        isImportant: isImportant,
+        status: isDone
+          ? CommonData.TaskStatus().Done
+          : CommonData.TaskStatus().New,
+        remindMode: remind,
+        remindTime: new Date(remindTime),
+        repeatTime: repeat,
+        endRepeat: repeat ? new Date(endRepeat) : null,
+        isRepeatedById: null,
+        updatedDate: new Date(),
+      };
+      const response = await UpdateTask(request, token);
+      if (response) {
+        // Remind
+        await handleSettingRemind(request, response, "update");
+
+        await handleGetAllTasks();
+        navigation.navigate("HomeTab", { screen: "Tasks" });
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const save = async () => {
+    setIsLoading(true);
+
+    try {
+      if (!handleValidate(true, true, true, true)) {
+        // create
+        if (!taskId) {
+          await createTask();
+        }
+        // Update
+        else {
+          await updateTask();
+        }
+      } else {
+        setIsLoading(false);
       }
     } catch (err) {
       console(err);
@@ -578,7 +657,7 @@ export default ({ navigation, taskId }) => {
   };
 
   // Calculate Date
-  const getCalculatedList = (start, end, endRepeat, type) => {
+  const getCalculatedList = (start, end, endRepeat) => {
     let result = [];
     if (repeat) {
       // Daily
@@ -596,10 +675,57 @@ export default ({ navigation, taskId }) => {
           result.push({ start: new Date(d), end: new Date(endDate) });
           i++;
         }
-      } else if (repeat === CommonData.RepeatType().Weekly) {
-      } else if (repeat === CommonData.RepeatType().Monthly) {
-      } else if (repeat === CommonData.RepeatType().Yearly) {
-      } else if (repeat.includes(":")) {
+      }
+      // Weekly
+      else if (repeat === CommonData.RepeatType().Weekly) {
+        let i = 0;
+        for (
+          var d = new Date(start.getTime());
+          d <= endRepeat;
+          d.setDate(d.getDate() + 7)
+        ) {
+          let endDate = new Date(end.getTime());
+          if (i > 0) {
+            endDate.setDate(endDate.getDate() + 7 * i);
+          }
+          result.push({ start: new Date(d), end: new Date(endDate) });
+          i++;
+        }
+      }
+      // Monthly
+      else if (repeat === CommonData.RepeatType().Monthly) {
+        let i = 0;
+        for (
+          var d = new Date(start.getTime());
+          d <= endRepeat;
+          d.setMonth(d.getMonth() + 1)
+        ) {
+          let endDate = new Date(end.getTime());
+          if (i > 0) {
+            endDate.setMonth(endDate.getMonth() + 1 * i);
+          }
+          result.push({ start: new Date(d), end: new Date(endDate) });
+          i++;
+        }
+      }
+      // Yearly
+      else if (repeat === CommonData.RepeatType().Yearly) {
+        let i = 0;
+        for (
+          var d = new Date(start.getTime());
+          d <= endRepeat;
+          d.setFullYear(d.getFullYear() + 1)
+        ) {
+          let endDate = new Date(end.getTime());
+          if (i > 0) {
+            endDate.setFullYear(endDate.getFullYear() + 1 * i);
+          }
+          result.push({ start: new Date(d), end: new Date(endDate) });
+          i++;
+        }
+      }
+      // Custom
+      else if (repeat.includes(":")) {
         let mode = repeat.split(": ")[0];
         let days = repeat.split(": ")[1].split(", ");
 
@@ -680,6 +806,106 @@ export default ({ navigation, taskId }) => {
             (x) => start <= x.start && x.start <= endRepeat
           );
         } else {
+          let list = mode.split("Every ");
+          let list2 = list[1].split(" ");
+          let num = parseInt(list2[0]);
+          let finalMode = list2[1];
+
+          // Weeks
+          if (finalMode === "Weeks") {
+            let i = 0;
+            for (
+              var d = new Date(monStart.getTime());
+              d <= endRepeat;
+              d.setDate(d.getDate() + num * 7)
+            ) {
+              if (i > 0) {
+                listDefault.forEach((x) => {
+                  let s = new Date(x.start.getTime());
+                  let e = new Date(x.end.getTime());
+                  s.setDate(s.getDate() + 7 * num * i);
+                  e.setDate(e.getDate() + 7 * num * i);
+                  result.push({ start: s, end: e });
+                });
+              } else {
+                result = [...listDefault];
+              }
+              i++;
+            }
+            result = result.filter(
+              (x) => start <= x.start && x.start <= endRepeat
+            );
+          }
+        }
+      } else {
+        let list = repeat.split("Every ");
+        let list2 = list[1].split(" ");
+        let num = parseInt(list2[0]);
+        let finalMode = list2[1];
+
+        // Days
+        if (finalMode === "Days") {
+          let i = 0;
+          for (
+            var d = new Date(start.getTime());
+            d <= endRepeat;
+            d.setDate(d.getDate() + num)
+          ) {
+            let endDate = new Date(end.getTime());
+            if (i > 0) {
+              endDate.setDate(endDate.getDate() + num * i);
+            }
+            result.push({ start: new Date(d), end: new Date(endDate) });
+            i++;
+          }
+        }
+        // Weeks
+        else if (finalMode === "Weeks") {
+          let i = 0;
+          for (
+            var d = new Date(start.getTime());
+            d <= endRepeat;
+            d.setDate(d.getDate() + num * 7)
+          ) {
+            let endDate = new Date(end.getTime());
+            if (i > 0) {
+              endDate.setDate(endDate.getDate() + 7 * num * i);
+            }
+            result.push({ start: new Date(d), end: new Date(endDate) });
+            i++;
+          }
+        }
+        // Months
+        else if (finalMode === "Months") {
+          let i = 0;
+          for (
+            var d = new Date(start.getTime());
+            d <= endRepeat;
+            d.setMonth(d.getMonth() + num)
+          ) {
+            let endDate = new Date(end.getTime());
+            if (i > 0) {
+              endDate.setMonth(endDate.getMonth() + num * i);
+            }
+            result.push({ start: new Date(d), end: new Date(endDate) });
+            i++;
+          }
+        }
+        // Years
+        else if (finalMode === "Years") {
+          let i = 0;
+          for (
+            var d = new Date(start.getTime());
+            d <= endRepeat;
+            d.setFullYear(d.getFullYear() + num)
+          ) {
+            let endDate = new Date(end.getTime());
+            if (i > 0) {
+              endDate.setFullYear(endDate.getFullYear() + num * i);
+            }
+            result.push({ start: new Date(d), end: new Date(endDate) });
+            i++;
+          }
         }
       }
       return result;
@@ -701,19 +927,329 @@ export default ({ navigation, taskId }) => {
     setModalRepeat(false);
   };
 
+  // Modal Remind
+  const handleCloseRemind = () => {
+    setModalRemind(false);
+  };
+
+  const handleChooseRemind = (value) => {
+    if (!value) {
+      setRemind(null);
+      setRemindTime(null);
+    } else {
+      // Custom
+      if (value.includes(":")) {
+        // set Day
+        let list = value.split(" (");
+        let dayRemind = list[0];
+
+        // set Hour Minute
+        let list2 = list[1].split(")");
+        let list3 = list2[0].split(":");
+        let hourRemind = list3[0];
+        let minuteRemind = list3[1];
+
+        if (dayRemind === DaysRemind[0]) {
+          setRemindTime(startDate + " " + hourRemind + ":" + minuteRemind);
+        } else {
+          let l1 = dayRemind.split(" ");
+          let num = parseInt(l1[0]);
+
+          let date = new Date(startDate);
+          date.setTime(date.getTime() - num * 24 * 60 * 60 * 1000);
+          date = new Date(date);
+          let dateString = convertDateTime(date);
+          dateString =
+            dateString.split(" ")[0] + " " + hourRemind + ":" + minuteRemind;
+          setRemindTime(dateString);
+        }
+      }
+      // Choose
+      else {
+        // Before five minutes
+        if (value === CommonData.RemindType().FiveMinutes) {
+          let date = new Date(startDate + " " + startTime);
+          date.setTime(date.getTime() - 5 * 60 * 1000);
+          date = new Date(date);
+          let dateString = convertDateTime(date);
+          setRemindTime(dateString);
+        }
+        // Before one day
+        else if (value === CommonData.RemindType().OneDay) {
+          let date = new Date(startDate + " " + startTime);
+          date.setTime(date.getTime() - 24 * 60 * 60 * 1000);
+          date = new Date(date);
+          let dateString = convertDateTime(date);
+          setRemindTime(dateString);
+          console.log(dateString);
+        }
+        // On start time
+        else if (value === CommonData.RemindType().OnStartTime) {
+          setRemindTime(startDate + " " + startTime);
+        }
+      }
+      setRemind(value);
+    }
+
+    setModalRemind(false);
+  };
+
+  // Modal Type
+  const handleCloseType = () => {
+    setModalType(false);
+  };
+
+  const handleChooseType = (value) => {
+    setType(value);
+    setModalType(false);
+  };
+
+  // Modal  Create Type
+  const handleCloseCreateType = () => {
+    setModalCreateType(false);
+  };
+
+  const handleChooseCreateType = (value) => {
+    setType(value);
+    setModalCreateType(false);
+  };
+
+  // Validate
+  const handleValidate = (onlyName, onlyDate, onlyRemind, onlyRepeat) => {
+    let result = false;
+    let backupStartTimeString = dataBackup
+      ? convertDateTime(dataBackup.startTime)
+      : "";
+    let backupDueTimeString = dataBackup
+      ? convertDateTime(dataBackup.dueTime)
+      : "";
+    let startTimeString = startDate + " " + startTime;
+    let dueTimeString = dueDate + " " + dueTime;
+    let dateNowString = convertDateTime(new Date());
+
+    if (!onlyName) {
+      // Name
+      if (!name || name === "") {
+        setErrorNameRequired(true);
+        result = true;
+      } else {
+        setErrorNameRequired(false);
+      }
+
+      // Type
+      if (!type) {
+        setErrorTypeRequired(true);
+        result = true;
+      } else {
+        setErrorTypeRequired(false);
+      }
+    }
+
+    // Start date, due date
+    if (
+      onlyDate &&
+      (!dataBackup ||
+        startTimeString !== backupStartTimeString ||
+        dueTimeString !== backupDueTimeString)
+    ) {
+      if (startDate && startTime && dueDate && dueTime) {
+        // start time in the future
+        if (startTimeString < dateNowString) {
+          setStartPast(true);
+          result = true;
+        } else {
+          setStartPast(false);
+
+          // Compare 2 dates
+          let isInValidDates = false;
+          if (startDate > dueDate) {
+            setErrorDates(true);
+            result = true;
+            // Invalid Dates
+            isInValidDates = true;
+          } else if (startDate == dueDate) {
+            if (startTime > dueTime) {
+              setErrorDates(true);
+              result = true;
+              // Invalid Dates
+              isInValidDates = true;
+            } else {
+              setErrorDates(false);
+            }
+          } else {
+            setErrorDates(false);
+          }
+
+          if (!isInValidDates) {
+            let countTask = 0;
+            for (const x of allTasks) {
+              let taskStart = convertDateTime(x.startTime);
+              let taskDue = convertDateTime(x.dueTime);
+
+              if (
+                (taskStart <= startTimeString && startTimeString <= taskDue) ||
+                (taskStart <= dueTimeString && dueTimeString <= taskDue)
+              ) {
+                countTask++;
+                setErrorOverlap(true);
+                result = true;
+                break;
+              }
+            }
+
+            if (countTask === 0) {
+              setErrorOverlap(false);
+            }
+          }
+        }
+      }
+    }
+
+    // Remind not in the past
+    if (onlyRemind && (!dataBackup || remind !== dataBackup.remindMode)) {
+      console.log(remindTime);
+      if (remindTime < dateNowString || remindTime > startTimeString) {
+        setRemindPast(true);
+        result = true;
+      } else {
+        setRemindPast(false);
+      }
+    }
+
+    // End repeat
+    if (
+      onlyRepeat &&
+      (!dataBackup || new Date(endRepeat) !== dataBackup.endRepeat)
+    ) {
+      if (repeat) {
+        if (endRepeat < dateNowString.split(" ")[0] || endRepeat < startDate) {
+          setRepeatTimePast(true);
+          result = true;
+        } else {
+          setRepeatTimePast(false);
+        }
+      }
+    }
+
+    // Repeat
+    if (onlyRepeat && (!dataBackup || repeat !== dataBackup.repeatTime)) {
+      if (repeat && repeat.includes(":")) {
+        let splitList = repeat.split(": ");
+        let splitList2 = splitList[1].split(", ");
+
+        let date = new Date(startDate + " " + startTime);
+        let curr = new Date(date.getTime()); // get current date
+        let first = date.getDate() - date.getDay(); // First day is the day of the month - the day of the week
+        first += 1;
+        let list = [];
+
+        for (let i = 0; i < 7; i++) {
+          let d = first + i;
+
+          list.push({
+            date: convertDateTime(new Date(curr.setDate(d))).split(" ")[0],
+          });
+        }
+
+        let dayWeek = "";
+        let indexItem = list.findIndex((x) => x.date === startDate);
+        if (!indexItem || indexItem < 0) {
+          setInvalidDaysWeek(true);
+          result = true;
+        } else {
+          if (indexItem === 0) {
+            dayWeek = "Mon";
+          } else if (indexItem === 1) {
+            dayWeek = "Tue";
+          } else if (indexItem === 2) {
+            dayWeek = "Wed";
+          } else if (indexItem === 3) {
+            dayWeek = "Thu";
+          } else if (indexItem === 4) {
+            dayWeek = "Fri";
+          } else if (indexItem === 5) {
+            dayWeek = "Sat";
+          } else if (indexItem === 6) {
+            dayWeek = "Sun";
+          }
+
+          let find = splitList2.find((x) => x === dayWeek);
+
+          if (!find) {
+            setInvalidDaysWeek(true);
+            result = true;
+          } else {
+            setInvalidDaysWeek(false);
+          }
+        }
+      } else {
+        setInvalidDaysWeek(false);
+      }
+    }
+
+    return result;
+  };
+
+  const isInValidModel = () => {
+    return (
+      errorNameRequired ||
+      errorTypeRequired ||
+      errorDates ||
+      errorOverlap ||
+      errorRemindPast ||
+      errorRepeatOverlap ||
+      errorStartPast
+    );
+  };
+
+  const isInValidOverlapRepeat = (listDate) => {
+    // Check overlap with repeat task
+    for (let i = 0; i < listDate.length; i++) {
+      let start = i;
+      let end = i + 1;
+
+      if (end == listDate.length) {
+        break;
+      }
+
+      if (listDate[start].end >= listDate[end].start) {
+        return true;
+      }
+    }
+
+    // Check overlap with other tasks
+    for (let item of allTasks) {
+      let startString = convertDateTime(item.startTime);
+      let endString = convertDateTime(item.dueTime);
+
+      let list = listDate.filter((x) => {
+        return (
+          (x.start <= startString && startString <= x.end) ||
+          (x.start <= startString && endString <= x.end)
+        );
+      });
+
+      if (list.length > 0) {
+        return false;
+      }
+    }
+
+    return false;
+  };
+
   return (
     <Center w="100%" h="100%">
       <Spinner visible={isLoading}></Spinner>
 
       <PopupComponent
         title={"Delete"}
-        content={"Do you want to delete this task?"}
+        content={"Are you sure to delete this task?"}
         closeFunction={closeModal}
         isOpen={open}
         actionFunction={deleteTask}
       ></PopupComponent>
 
-      <Box safeArea height="100%" width="100%">
+      <Box safeArea height="100%" width="100%" paddingX={1}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <HStack>
@@ -740,13 +1276,17 @@ export default ({ navigation, taskId }) => {
               </TouchableOpacity>
             )}
 
-            <TouchableOpacity disabled={inValidData()} onPress={() => save()}>
+            <TouchableOpacity
+              disabled={isInValidModel()}
+              onPress={() => save()}
+            >
               <HStack>
                 <Text
                   paddingLeft={2}
                   fontSize={18}
                   color="blue.500"
                   fontWeight={500}
+                  style={isInValidModel() && styles.saveButtonDisable}
                 >
                   Save
                 </Text>
@@ -757,22 +1297,25 @@ export default ({ navigation, taskId }) => {
 
         {/* Checkbox */}
         <HStack style={styles.title}>
-          <Checkbox
-            colorScheme="indigo"
-            borderRadius={20}
-            size="lg"
-            accessibilityLabel="Tap me!"
-            my={2}
-            isChecked={isDone}
-            onChange={() => setIsDone((prevState) => !prevState)}
-          >
-            {/* Name */}
-            <TextInput
-              fontSize={16}
-              value={name}
-              onChangeText={(e) => onChangeName(e)}
-            />
-          </Checkbox>
+          {taskId && (
+            <Checkbox
+              colorScheme="indigo"
+              borderRadius={20}
+              size="lg"
+              accessibilityLabel="Tap me!"
+              my={2}
+              isChecked={isDone}
+              onChange={() => setIsDone((prevState) => !prevState)}
+            ></Checkbox>
+          )}
+
+          {/* Name */}
+          <TextInput
+            fontSize={18}
+            value={name}
+            onChangeText={(e) => onChangeName(e)}
+            style={styles.checkBoxInput}
+          />
 
           {isImportant ? (
             <Icon
@@ -793,78 +1336,66 @@ export default ({ navigation, taskId }) => {
 
         {/* Validate Name */}
         {errorNameRequired && (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>Task Name is required</Text>
+          <View style={taskId && styles.errorContainer}>
+            <Text style={styles.errorText}>
+              {CommonData.ErrorTaskName().Required}
+            </Text>
           </View>
         )}
-
-        {/* Check List */}
-        {/* <TouchableOpacity>
-          <HStack>
-            <Text fontSize={30} color="blue.500">
-              +
-            </Text>
-            <TextInput
-              placeholder="Thêm bước"
-              paddingLeft={20}
-              paddingTop={5}
-            ></TextInput>
-          </HStack>
-        </TouchableOpacity> */}
 
         <View style={styles.viewGroup}>
           {/* Type */}
           <View style={styles.viewOnGroup}>
-            <Text style={styles.iconOld}>{"Type            "}</Text>
-            <View style={styles.dateTimeContainer}>
+            <Text style={styles.iconOld}>{"Type              "}</Text>
+            <View style={styles.typeContainer}>
               <TouchableOpacity onPress={() => setModalType(true)}>
                 <View style={styles.remindContainer}>
-                  <Text style={styles.dateTimeText}>
-                    {type ? type.name : ""}
-                  </Text>
+                  <Text style={styles.fieldText}>{type ? type.name : ""}</Text>
                 </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => setModalCreateType(true)}>
+                <Icon
+                  name="plus-square"
+                  size={26}
+                  style={styles.iconStarCheck}
+                />
               </TouchableOpacity>
             </View>
           </View>
           {/* Modal Type */}
-          <Modal
+          <TypeModal
             isOpen={modalType}
-            onClose={() => setModalType(false)}
-            size="lg"
-          >
-            <Modal.Content maxWidth="350">
-              <Modal.CloseButton />
-              <Modal.Header>Type</Modal.Header>
-              <Modal.Body>
-                {allTypes.map(
-                  (x) =>
-                    !x.isDeleted && (
-                      <TouchableOpacity
-                        style={styles.sort}
-                        onPress={() => {
-                          setType(x);
-                          setModalType(false);
-                        }}
-                        key={x._id}
-                      >
-                        <HStack space={3}>
-                          <Text>{x.name}</Text>
-                        </HStack>
-                      </TouchableOpacity>
-                    )
-                )}
-              </Modal.Body>
-            </Modal.Content>
-          </Modal>
+            closeFunction={handleCloseType}
+            actionFunction={handleChooseType}
+            selected={type}
+          />
+          {/* Modal Create Type */}
+          <CreateTypeModal
+            isOpen={modalCreateType}
+            closeFunction={handleCloseCreateType}
+            actionFunction={handleChooseCreateType}
+          />
+
+          {/* Validate Type */}
+          {errorTypeRequired && (
+            <View style={styles.errorDateContainer}>
+              <Text style={styles.errorText}>
+                {CommonData.ErrorTaskType().Required}
+              </Text>
+            </View>
+          )}
 
           {/* Start time */}
           <View style={styles.viewOnGroup}>
-            <Text style={styles.iconOld}>{"Start Time  "}</Text>
+            <Text style={styles.iconOld}>{"Start time    "}</Text>
             <View style={styles.dateTimeContainer}>
               {/* Date */}
               <TouchableOpacity onPress={() => setCalendarStartDate(true)}>
                 <View style={styles.dateContainer}>
-                  <Text style={styles.dateTimeText}>{startDate}</Text>
+                  <Text style={styles.dateTimeText}>
+                    {formatDateUI(startDate)}
+                  </Text>
                 </View>
               </TouchableOpacity>
 
@@ -889,14 +1420,25 @@ export default ({ navigation, taskId }) => {
             onCancel={hideTimePicker}
           />
 
+          {/* Validate start */}
+          {errorStartPast && (
+            <View style={styles.errorDateContainer}>
+              <Text style={styles.errorText}>
+                {CommonData.ErrorCompareDate().StartPast}
+              </Text>
+            </View>
+          )}
+
           {/* Due time */}
           <View style={styles.viewOnGroup}>
-            <Text style={styles.iconOld}>{"Due Time    "}</Text>
+            <Text style={styles.iconOld}>{"Due time      "}</Text>
             <View style={styles.dateTimeContainer}>
               {/* Date */}
               <TouchableOpacity onPress={() => setCalendarDueDate(true)}>
                 <View style={styles.dateContainer}>
-                  <Text style={styles.dateTimeText}>{dueDate}</Text>
+                  <Text style={styles.dateTimeText}>
+                    {formatDateUI(dueDate)}
+                  </Text>
                 </View>
               </TouchableOpacity>
 
@@ -925,19 +1467,27 @@ export default ({ navigation, taskId }) => {
           {errorDates && (
             <View style={styles.errorDateContainer}>
               <Text style={styles.errorText}>
-                Due Date must be greater than Start Date
+                {CommonData.ErrorCompareDate().GreaterOrEqual}
+              </Text>
+            </View>
+          )}
+          {/* Validate overlap */}
+          {errorOverlap && (
+            <View style={styles.errorDateContainer}>
+              <Text style={styles.errorText}>
+                {CommonData.ErrorCompareDate().Overlap}
               </Text>
             </View>
           )}
 
           {/* Remind */}
           <View style={styles.viewOnGroup}>
-            <Text style={styles.iconOld}>{"Remind       "}</Text>
+            <Text style={styles.iconOld}>{"Remind         "}</Text>
             <View style={styles.dateTimeContainer}>
               {/* Date */}
               <TouchableOpacity onPress={() => setModalRemind(true)}>
                 <View style={styles.remindContainer}>
-                  <Text style={styles.dateTimeText}>
+                  <Text style={styles.fieldText}>
                     {remind && remind != "" ? remind : "Never"}
                   </Text>
                 </View>
@@ -945,70 +1495,29 @@ export default ({ navigation, taskId }) => {
             </View>
           </View>
           {/* Modal Remind */}
-          <Modal
+          <RemindModal
             isOpen={modalRemind}
-            onClose={() => setModalRemind(false)}
-            size="lg"
-          >
-            <Modal.Content maxWidth="350">
-              <Modal.CloseButton />
-              <Modal.Header>Remind</Modal.Header>
-              <Modal.Body>
-                <TouchableOpacity
-                  style={styles.sort}
-                  onPress={() => {
-                    setRemind(null);
-                    setModalRemind(false);
-                  }}
-                >
-                  <HStack space={3}>
-                    <Text>Never</Text>
-                  </HStack>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.sort}
-                  onPress={() => {
-                    setModalRemind(false);
-                    setRemind("On Due Time");
-                  }}
-                >
-                  <HStack space={3}>
-                    <Text>On Due Time</Text>
-                  </HStack>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.sort}
-                  onPress={() => {
-                    setModalRemind(false);
-                    setRemind("1 day before Due Time");
-                  }}
-                >
-                  <HStack space={3}>
-                    <Text>1 day before Due Time</Text>
-                  </HStack>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.sort}
-                  onPress={() => {
-                    setModalRemind(false);
-                    setRemind("5 minutes before Due Time");
-                  }}
-                >
-                  <HStack space={3}>
-                    <Text>5 minutes before Due Time</Text>
-                  </HStack>
-                </TouchableOpacity>
-              </Modal.Body>
-            </Modal.Content>
-          </Modal>
+            closeFunction={handleCloseRemind}
+            actionFunction={handleChooseRemind}
+            selected={remind}
+          />
+
+          {/* Validate remind */}
+          {errorRemindPast && (
+            <View style={styles.errorDateContainer}>
+              <Text style={styles.errorText}>
+                {CommonData.ErrorRemind().Past}
+              </Text>
+            </View>
+          )}
 
           {/* Repeat */}
           <View style={styles.viewOnGroup}>
-            <Text style={styles.iconOld}>{"Repeat        "}</Text>
+            <Text style={styles.iconOld}>{"Repeat          "}</Text>
             <View style={styles.dateTimeContainer}>
               <TouchableOpacity onPress={() => setModalRepeat(true)}>
                 <View style={styles.remindContainer}>
-                  <Text style={styles.dateTimeText}>
+                  <Text style={styles.fieldText}>
                     {repeat && repeat != "" ? repeat : "Never"}
                   </Text>
                 </View>
@@ -1017,19 +1526,40 @@ export default ({ navigation, taskId }) => {
           </View>
           {/* Modal Repeat */}
           <RepeatModal
+            selected={repeat}
             isOpen={modalRepeat}
             actionFunction={handleChooseRepeat}
             closeFunction={handleCloseRepeat}
           />
 
+          {/* Overlapping */}
+          {errorRepeatOverlap && (
+            <View style={styles.errorDateContainer}>
+              <Text style={styles.errorText}>
+                {CommonData.ErrorRepeat().overlap}
+              </Text>
+            </View>
+          )}
+
+          {/* Validate day week repeat */}
+          {errorInvalidDaysWeek && (
+            <View style={styles.errorDateContainer}>
+              <Text style={styles.errorText}>
+                {CommonData.ErrorRepeat().InvalidDayWeek}
+              </Text>
+            </View>
+          )}
+
           {/* End Repeat */}
           <View style={styles.viewOnGroup}>
-            <Text style={styles.iconOld}>{"End Repeat"}</Text>
+            <Text style={styles.iconOld}>{"End repeat   "}</Text>
             <View style={styles.dateTimeContainer}>
               {repeat && (
                 <TouchableOpacity onPress={() => setCalendarEndRepeat(true)}>
                   <View style={styles.dateContainer}>
-                    <Text style={styles.dateTimeText}>{endRepeat}</Text>
+                    <Text style={styles.dateTimeText}>
+                      {formatDateUI(endRepeat)}
+                    </Text>
                   </View>
                 </TouchableOpacity>
               )}
@@ -1041,16 +1571,16 @@ export default ({ navigation, taskId }) => {
             onConfirm={confirmEndRepeat}
             onCancel={hideDatePicker}
           />
-        </View>
 
-        {/* Files */}
-        {/* <View>{file != null ? <Text>{file.name}</Text> : null}</View>
-        <View style={styles.view}>
-          <Icon size={20} name="paperclip" style={styles.icon}></Icon>
-          <TouchableOpacity style={styles.button} onPress={selectFile}>
-            <Text>Thêm tệp</Text>
-          </TouchableOpacity>
-        </View> */}
+          {/* Validate day week repeat */}
+          {errorRepeatTimePast && (
+            <View style={styles.errorDateContainer}>
+              <Text style={styles.errorText}>
+                {CommonData.ErrorRepeat().EndRepeatPast}
+              </Text>
+            </View>
+          )}
+        </View>
 
         {/* Note */}
         <View marginTop={4}>
@@ -1059,9 +1589,10 @@ export default ({ navigation, taskId }) => {
             value={note}
             fontSize={16}
             h={200}
-            placeholder="Add Note"
+            placeholder="Add note"
             w="100%"
             maxW="400"
+            style={styles.textArea}
           />
         </View>
       </Box>
@@ -1088,14 +1619,12 @@ const styles = StyleSheet.create({
   icon: {
     color: Color.Button().ButtonActive,
   },
-  text_header: {
-    paddingLeft: 30,
-    fontSize: 20,
-    paddingBottom: 30,
-  },
   iconOld: {
     paddingBottom: 10,
     paddingLeft: 10,
+    fontSize: 16,
+    fontWeight: "500",
+    color: Color.Input().label,
   },
   view: {
     display: "flex",
@@ -1103,29 +1632,14 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     marginTop: 10,
     gap: 20,
-    shadowColor: "#000000",
-    borderColor: "#000000",
-    shadowOpacity: 1.0,
-    shadowRadius: 0,
-    shadowOffset: {
-      height: 3,
-      width: 5,
-    },
-    elevation: 2,
   },
   viewGroup: {
-    marginTop: 10,
-    borderColor: "#000000",
-    shadowColor: "#000000",
-    shadowOpacity: 1.0,
-    shadowRadius: 0,
-    shadowOffset: {
-      height: 3,
-      width: 0,
-    },
-    elevation: 2,
+    marginTop: 15,
+    borderColor: Color.Input().Border,
+    borderWidth: 1,
     padding: 3,
     paddingBottom: 10,
+    borderRadius: 5,
   },
   viewOnGroup: {
     display: "flex",
@@ -1145,21 +1659,16 @@ const styles = StyleSheet.create({
     shadowColor: "black",
   },
   title: {
-    justifyContent: "space-between",
     alignContent: "center",
-    paddingHorizontal: 10,
     paddingTop: 5,
+    gap: 5,
   },
-  header_text: {
-    fontSize: 20,
-    paddingBottom: 30,
-  },
-
   errorContainer: {
     paddingLeft: 45,
   },
   errorDateContainer: {
-    paddingLeft: 95,
+    paddingLeft: 117,
+    marginBottom: 5,
   },
   errorText: {
     color: "red",
@@ -1172,19 +1681,15 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   remindContainer: {
-    minWidth: 80,
     height: 30,
-    backgroundColor: Color.Button().ButtonActive,
     justifyContent: "center",
-    borderRadius: 5,
-    paddingHorizontal: 10,
   },
   dateContainer: {
-    width: 80,
     height: 30,
     backgroundColor: Color.Button().ButtonActive,
     justifyContent: "center",
     borderRadius: 5,
+    paddingHorizontal: 5,
   },
   timeContainer: {
     width: 50,
@@ -1196,6 +1701,11 @@ const styles = StyleSheet.create({
   dateTimeText: {
     color: Color.Button().Text,
     textAlign: "center",
+    fontSize: 16,
+  },
+  fieldText: {
+    textAlign: "center",
+    fontSize: 16,
   },
   dateTimeContainer: {
     display: "flex",
@@ -1207,7 +1717,31 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     paddingBottom: 5,
   },
+  typeContainer: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 10,
+    flex: 1,
+    marginRight: 10,
+    borderBottomColor: "#BBBBBB",
+    borderBottomWidth: 1,
+    paddingBottom: 5,
+  },
   sort: {
     paddingBottom: 20,
+  },
+  checkBoxInput: {
+    borderColor: Color.Input().Border,
+    borderWidth: 1,
+    padding: 10,
+    flex: 1,
+    borderRadius: 5,
+  },
+  textArea: {
+    borderColor: Color.Input().Border,
+  },
+  saveButtonDisable: {
+    color: Color.Input().disable,
   },
 });

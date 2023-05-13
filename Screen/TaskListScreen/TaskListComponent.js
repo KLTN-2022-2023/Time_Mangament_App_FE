@@ -82,32 +82,36 @@ export default ({ navigation }) => {
   const showQty = (type) => {
     if (type == CommonData.TaskType().AllTask) {
       if (allTasks && allTasks.length > 0) {
-        let result = allTasks.filter(
-          (x) => !x.isDeleted && x.status === CommonData.TaskStatus().New
-        );
+        let result = allTasks.filter((x) => !x.isDeleted);
 
         if (result && result.length > 0) {
           return result.length;
         }
       }
-    } else if (type == CommonData.TaskType().Important) {
+    } else if (type == CommonData.TaskType().InComplete) {
       let result = allTasks.filter(
-        (x) =>
-          !x.isDeleted &&
-          x.status === CommonData.TaskStatus().New &&
-          x.isImportant
+        (x) => !x.isDeleted && x.status === CommonData.TaskStatus().New
       );
 
       if (result && result.length > 0) {
         return result.length;
       }
-    } else {
+    } else if (type == CommonData.TaskType().InComplete) {
       let result = allTasks.filter(
-        (x) =>
-          !x.isDeleted &&
-          x.status === CommonData.TaskStatus().New &&
-          x.typeId === type
+        (x) => !x.isDeleted && x.status === CommonData.TaskStatus().Done
       );
+
+      if (result && result.length > 0) {
+        return result.length;
+      }
+    } else if (type == CommonData.TaskType().Important) {
+      let result = allTasks.filter((x) => !x.isDeleted && x.isImportant);
+
+      if (result && result.length > 0) {
+        return result.length;
+      }
+    } else {
+      let result = allTasks.filter((x) => !x.isDeleted && x.typeId === type);
 
       if (result && result.length > 0) {
         return result.length;
@@ -151,7 +155,7 @@ export default ({ navigation }) => {
           )
         ) : (
           <View>
-            <TaskTypeItem
+            {/* <TaskTypeItem
               type={CommonData.TaskType().AllTask}
               name={"All Tasks"}
               quantity={showQty(CommonData.TaskType().AllTask)}
@@ -159,6 +163,28 @@ export default ({ navigation }) => {
                 navigation.navigate("TaskListDetail", {
                   showDate: null,
                   typeId: CommonData.TaskType().AllTask,
+                });
+              }}
+            ></TaskTypeItem> */}
+            <TaskTypeItem
+              type={CommonData.TaskType().InComplete}
+              name={"Incomplete"}
+              quantity={showQty(CommonData.TaskType().InComplete)}
+              actionFunc={() => {
+                navigation.navigate("TaskListDetail", {
+                  showDate: null,
+                  typeId: CommonData.TaskType().InComplete,
+                });
+              }}
+            ></TaskTypeItem>
+            <TaskTypeItem
+              type={CommonData.TaskType().Completed}
+              name={"Completed"}
+              quantity={showQty(CommonData.TaskType().Completed)}
+              actionFunc={() => {
+                navigation.navigate("TaskListDetail", {
+                  showDate: null,
+                  typeId: CommonData.TaskType().Completed,
                 });
               }}
             ></TaskTypeItem>
@@ -178,7 +204,11 @@ export default ({ navigation }) => {
             <View style={styles.divider}></View>
 
             {/* List */}
-            <TaskTypeItemList items={items} navigation={navigation} />
+            {items && items.length > 0 ? (
+              <TaskTypeItemList items={items} navigation={navigation} />
+            ) : (
+              <NoData></NoData>
+            )}
           </View>
         )}
       </Box>

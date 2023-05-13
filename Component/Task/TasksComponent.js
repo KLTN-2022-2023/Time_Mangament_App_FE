@@ -5,6 +5,7 @@ import { View, Text } from "native-base";
 import CommonData from "../../CommonData/CommonData";
 import NoData from "../Common/NoData";
 import { formatInTimeZone } from "date-fns-tz";
+import { convertDateTime } from "../../helper/Helper";
 
 export default ({ navigation, listTasks, date, typeId, filter }) => {
   const [tasks, setTasks] = useState([]);
@@ -30,16 +31,9 @@ export default ({ navigation, listTasks, date, typeId, filter }) => {
     // Split by date
     if (date) {
       let result = list.filter((t) => {
-        let startTimeString = formatInTimeZone(
-          t.startTime,
-          CommonData.Format().TimeZoneFormat,
-          CommonData.Format().DateTimeFormatCreate
-        );
-        let dueTimeString = formatInTimeZone(
-          t.dueTime,
-          CommonData.Format().TimeZoneFormat,
-          CommonData.Format().DateTimeFormatCreate
-        );
+        let startTimeString = convertDateTime(t.startTime);
+        let dueTimeString = convertDateTime(t.dueTime);
+
         return (
           t.startTime &&
           t.dueTime &&
@@ -57,6 +51,14 @@ export default ({ navigation, listTasks, date, typeId, filter }) => {
     if (typeId) {
       if (typeId === CommonData.TaskType().AllTask) {
         return list;
+      }
+
+      if (typeId === CommonData.TaskType().Completed) {
+        return list.filter((t) => t.status === CommonData.TaskStatus().Done);
+      }
+
+      if (typeId === CommonData.TaskType().InComplete) {
+        return list.filter((t) => t.status === CommonData.TaskStatus().New);
       }
 
       if (typeId === CommonData.TaskType().Important) {

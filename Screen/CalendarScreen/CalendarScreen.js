@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
-import { Center, NativeBaseProvider } from "native-base";
-import Spinner from "react-native-loading-spinner-overlay";
-import { Agenda } from "react-native-calendars";
+import { useState, useEffect, useCallback } from "react";
+import {
+  CalendarProvider,
+  ExpandableCalendar,
+  AgendaList,
+} from "react-native-calendars";
 import {
   SafeAreaView,
   StyleSheet,
@@ -9,37 +11,29 @@ import {
   View,
   TouchableOpacity,
 } from "react-native";
-import { format } from "date-fns";
+import isEmpty from "lodash/isEmpty";
 import CommonData from "../../CommonData/CommonData";
 import Color from "../../Style/Color";
-import { formatInTimeZone } from "date-fns-tz";
 import { getListAllTasksByUserId } from "../../Reducers/TaskReducer";
 import jwt_decode from "jwt-decode";
 import { useSelector, useDispatch } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { convertDateTime } from "../../helper/Helper";
 
 export default ({ navigation }) => {
   const dispatch = useDispatch();
   const allTasks = useSelector((state) => state.task.allTasks);
-  const [isLoading, setIsLoading] = useState(false);
-  const [items, setItems] = useState(null);
+  const [weekTask, setWeekTask] = useState([]);
+  const [dataMarked, setDataMarked] = useState({});
+
+  const dateNowString = convertDateTime(new Date());
 
   // Load Data
   useEffect(() => {
     handleGetAllTasks();
+    handleCalculateDayWeek(new Date());
+    handleGetMarked();
   }, []);
-
-  useEffect(() => {
-    handleParseData();
-  }, [allTasks]);
-
-  const handleGetAllTasks = async () => {
-    const token = await AsyncStorage.getItem("Token");
-    if (token) {
-      const decoded = jwt_decode(token);
-      dispatch(getListAllTasksByUserId({ userId: decoded._id }, token));
-    }
-  };
 
   const getDates = (startDate, stopDate) => {
     let dateArray = [];
@@ -51,206 +45,189 @@ export default ({ navigation }) => {
     return dateArray;
   };
 
-  const convertListDateToString = (dates) => {
-    let result = [];
-    if (dates && dates.length > 0) {
+  const handleGetMarked = () => {
+    let result = new Object();
+    let dates = [];
+
+    allTasks.forEach((element) => {
+      if (!element.isDeleted) {
+        let start = convertDateTime(element.startTime).split(" ")[0];
+        if (!dates.find((x) => x === start)) {
+          dates.push(start);
+        }
+
+        let end = convertDateTime(element.dueTime).split(" ")[0];
+        if (!dates.find((x) => x === end)) {
+          dates.push(end);
+        }
+
+        let listDates = getDates(new Date(start), new Date(end));
+        if (listDates.length > 0) {
+          listDates.forEach((x) => {
+            let d = convertDateTime(x).split(" ")[0];
+            if (!dates.find((x) => x === d)) {
+              dates.push(d);
+            }
+          });
+        }
+      }
+    });
+
+    if (dates.length > 0) {
       dates.forEach((x) => {
-        let value = format(x, CommonData.Format().DateFormat);
-        if (!result.includes(value)) {
-          result.push(value);
-        }
+        result[x] = { marked: true };
       });
-    }
-    if (result.length > 0) {
-      result = result.sort();
-    }
 
-    return result;
+      setDataMarked(result);
+    }
   };
 
-  const handleConvertDataToItemUi = (listDates) => {
-    let resultArray = [];
-    let resultObject = null;
-    let data = [];
-    if (allTasks && allTasks.length > 0) {
-      data = allTasks.filter((x) => !x.isDeleted && !x.parentId);
+  const handleGetAllTasks = async () => {
+    const token = await AsyncStorage.getItem("Token");
+    if (token) {
+      const decoded = jwt_decode(token);
+      dispatch(getListAllTasksByUserId({ userId: decoded._id }, token));
     }
-
-    if (listDates && listDates.length > 0) {
-      listDates.forEach((x) => {
-        let taskList = data.filter((t) => {
-          let startTimeString = formatInTimeZone(
-            t.startTime,
-            CommonData.Format().TimeZoneFormat,
-            CommonData.Format().DateTimeFormatCreate
-          );
-          let dueTimeString = formatInTimeZone(
-            t.dueTime,
-            CommonData.Format().TimeZoneFormat,
-            CommonData.Format().DateTimeFormatCreate
-          );
-
-          return (
-            t.startTime &&
-            t.dueTime &&
-            compareDateBetweenTwoDate(
-              x,
-              startTimeString.split(" ").shift(),
-              dueTimeString.split(" ").shift()
-            )
-          );
-        });
-
-        if (taskList && taskList.length > 0) {
-          let myObject = new Object();
-          let listData = handleCustomTaskList(taskList);
-          myObject[x] = [
-            {
-              date: x,
-              taskCount: taskList.length,
-              data: [...listData],
-            },
-          ];
-          resultArray.push(myObject);
-        }
-      });
-    }
-    if (resultArray && resultArray.length > 0) {
-      resultObject = Object.assign({}, ...resultArray);
-    }
-
-    return resultObject;
   };
 
-  const handleParseData = () => {
-    let data = [];
-    if (allTasks && allTasks.length > 0) {
-      data = allTasks.filter((x) => !x.isDeleted);
+  const handleCalculateDayWeek = (date) => {
+    let d = new Date(date);
+    let day = d.getDay(),
+      diff = d.getDate() - day + (day == 0 ? -6 : 1); // adjust when day is sunday
+    let monday = new Date(d.setDate(diff));
+    let list = [];
+
+    for (let i = 0; i < 7; i++) {
+      let d = new Date(monday.getTime());
+      d.setDate(d.getDate() + i);
+
+      list.push({
+        title: convertDateTime(new Date(d)).split(" ")[0],
+        data: [{}],
+      });
     }
-    if (data && data.length > 0) {
-      let listDate = [];
-      let listDateString = [];
 
-      data.forEach((x) => {
-        if (x.startTime && x.dueTime) {
-          let startTimeString = formatInTimeZone(
-            x.startTime,
-            CommonData.Format().TimeZoneFormat,
-            CommonData.Format().DateTimeFormatCreate
-          );
-          let dueTimeString = formatInTimeZone(
-            x.dueTime,
-            CommonData.Format().TimeZoneFormat,
-            CommonData.Format().DateTimeFormatCreate
-          );
+    if (list.length > 0 && list.length === 7) {
+      list = handleAddEventForDay(list);
+      setWeekTask(list);
+    }
+  };
 
-          let startDate = new Date(
-            Date.parse(startTimeString.split(" ").shift())
-          );
-          let dueTime = new Date(Date.parse(dueTimeString.split(" ").shift()));
+  const handleAddEventForDay = (list) => {
+    for (let item of list) {
+      let tasks = allTasks.filter((x) => {
+        let startString = convertDateTime(x.startTime);
+        let dueString = convertDateTime(x.dueTime);
 
-          if (startTimeString === dueTimeString) {
-            listDate.push(startDate);
-          } else if (startTimeString < dueTimeString) {
-            let dates = [];
-            dates = getDates(startDate, dueTime);
-            listDate.push(...dates);
+        return (
+          startString.split(" ")[0] <= item.title && item.title <= dueString
+        );
+      });
+
+      if (tasks.length > 0) {
+        let result = tasks.map((x) => {
+          let startString = convertDateTime(x.startTime);
+          let dueString = convertDateTime(x.dueTime);
+          let start = "";
+          let end = "";
+
+          if (startString.split(" ")[0] !== item.title) {
+            start = "00:00";
+          } else {
+            start = startString.split(" ")[1];
           }
-        }
-      });
 
-      if (listDate.length > 0) {
-        listDateString = convertListDateToString(listDate);
-        setItems(handleConvertDataToItemUi(listDateString));
-      }
-    }
-  };
+          if (dueString.split(" ")[0] !== item.title) {
+            end = "23:59";
+          } else {
+            end = dueString.split(" ")[1];
+          }
 
-  const handleCustomTaskList = (listTasksByDate) => {
-    let resultTask = [];
-    if (listTasksByDate && listTasksByDate.length > 0) {
-      if (listTasksByDate.length > 4) {
-        let newArray = listTasksByDate.slice(0, 3);
-        newArray.push({
-          _id: 999,
-          name: "+" + (listTasksByDate.length - 3),
-          status: "New",
-          isPlus: true,
+          return {
+            id: x._id,
+            name: x.name,
+            start: start,
+            end: end,
+            status: x.status,
+          };
         });
-        resultTask = newArray;
-      } else {
-        resultTask = listTasksByDate;
+
+        result.sort((a, b) => (a.start > b.start ? 1 : -1));
+        item.data = [...result];
       }
     }
-    return resultTask;
+
+    return list;
   };
 
-  const getCardStyle = (item) => {
-    if (!item.isPlus) {
-      if (item && item.status == "Done") {
-        return stylesStatus.cardDone;
-      }
-      return styles.itemCard;
+  const onDateChanged = useCallback((date, updateSource) => {
+    handleCalculateDayWeek(new Date(date));
+  }, []);
+
+  const onMonthChange = useCallback(({ dateString }) => {
+    console.log(dateString);
+  }, []);
+
+  const renderItem = (props) => {
+    const { item } = props;
+
+    if (isEmpty(item)) {
+      return (
+        <View style={styles.emptyData}>
+          <Text style={styles.emptyDataText}>No events</Text>
+        </View>
+      );
     }
-    return styles.itemCardPlus;
-  };
 
-  function addHours(date, hours) {
-    date.setTime(date.getTime() + hours * 60 * 60 * 1000);
-
-    return date;
-  }
-
-  const compareDateBetweenTwoDate = (date, date1, date2) => {
-    if (date && date1 && date2) {
-      let val1 = new Date(Date.parse(date1.split(" ").shift()));
-      let val2 = new Date(Date.parse(date2.split(" ").shift()));
-      let val = new Date(Date.parse(date.split(" ").shift()));
-      if (val1 <= val && val <= val2) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  const renderItem = (item) => {
     return (
-      <TouchableOpacity
-        style={styles.itemContainer}
-        onPress={() =>
-          navigation.navigate("TaskListDetail", { showDate: item.date })
-        }
-      >
-        {item.taskCount > 0 ? (
-          item.data.map((x) => (
-            <View style={getCardStyle(x)} key={x._id}>
-              <Text style={styles.CardText}>{x.name}</Text>
-            </View>
-          ))
-        ) : (
-          <Text>{`🍪`}</Text>
-        )}
-      </TouchableOpacity>
-    );
-  };
+      <View style={styles.event}>
+        <View style={styles.header}>
+          {/* Time */}
+          <View style={styles.timeContainer}>
+            <Text style={styles.timeText}>{item.start + " - " + item.end}</Text>
+          </View>
 
-  const renderItemEmpty = () => {
-    return (
-      <View style={styles.itemContainerEmpty}>
-        <Text>No Tasks</Text>
+          {/* Status */}
+          <View
+            style={
+              item.status === CommonData.TaskStatus().Done
+                ? styles.statusContainerDone
+                : styles.statusContainerNew
+            }
+          >
+            <Text style={styles.statusText}>{item.status}</Text>
+          </View>
+        </View>
+
+        <View>
+          <Text style={styles.taskName}>{item.name}</Text>
+        </View>
       </View>
     );
   };
 
   return (
     <SafeAreaView style={styles.safe}>
-      <Agenda
-        items={items}
-        renderItem={renderItem}
-        renderEmptyData={renderItemEmpty}
-        firstDay={8}
-        selected={"2023-05-08"}
-      />
+      <CalendarProvider
+        date={dateNowString.split(" ")[0]}
+        onDateChanged={onDateChanged}
+        onMonthChange={onMonthChange}
+        showTodayButton
+        todayBottomMargin={38}
+        disabledOpacity={0.6}
+      >
+        <ExpandableCalendar
+          firstDay={1}
+          markedDates={dataMarked}
+          date={dateNowString.split(" ")[0]}
+        />
+        <AgendaList
+          sections={weekTask}
+          renderItem={renderItem}
+          sectionStyle={styles.section}
+          markToday={true}
+        />
+      </CalendarProvider>
     </SafeAreaView>
   );
 };
@@ -259,53 +236,61 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
   },
-  itemContainer: {
-    backgroundColor: "white",
-    margin: 5,
-    borderRadius: 15,
-    padding: 10,
-    justifyContent: "center",
-    alignItems: "flex-start",
-    flex: 1,
+  section: {
+    backgroundColor: "#ffffff",
+    color: "#364fc7",
+    fontSize: 16,
+    marginBottom: 10,
   },
-  itemCard: {
-    backgroundColor: Color.CalendarTask().Main,
-    margin: 5,
-    borderRadius: 15,
-    padding: 10,
-    paddingVertical: 5,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  itemCardPlus: {
-    backgroundColor: Color.CalendarTask().Main,
-    margin: 5,
-    borderRadius: 15,
+  emptyData: {
     padding: 20,
-    paddingVertical: 5,
-    justifyContent: "center",
-    alignItems: "center",
   },
-  CardText: {
-    color: Color.CalendarTask().Text,
-    fontWeight: "400",
+  emptyDataText: {
+    fontSize: 16,
+    color: "#868e96",
   },
-  itemContainerEmpty: {
-    backgroundColor: "white",
-    margin: 5,
-    justifyContent: "center",
-    alignItems: "center",
-    flex: 1,
+  event: {
+    margin: 10,
+    marginTop: 0,
+    marginBottom: 10,
+    padding: 10,
+    backgroundColor: "#e7f5ff",
+    borderRadius: 5,
+    borderColor: "#dbe4ff",
+    borderWidth: 1,
   },
-});
-
-const stylesStatus = StyleSheet.create({
-  cardDone: {
-    ...styles.itemCard,
-    backgroundColor: Color.CalendarTask().Done,
+  timeContainer: {
+    display: "flex",
+    flexDirection: "row",
+    gap: 10,
   },
-  CardLate: {
-    ...styles.itemCard,
-    backgroundColor: Color.CalendarTask().Late,
+  timeText: {
+    fontWeight: "500",
+    fontSize: 18,
+  },
+  statusContainerDone: {
+    padding: 5,
+    backgroundColor: "#40c057",
+    width: 50,
+  },
+  statusContainerNew: {
+    padding: 5,
+    backgroundColor: "#ffd43b",
+    width: 50,
+  },
+  statusText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  header: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  taskName: {
+    fontSize: 16,
+    marginTop: 10,
   },
 });

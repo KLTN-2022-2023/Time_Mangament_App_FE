@@ -9,7 +9,7 @@ import {
   FormControl,
 } from "native-base";
 import { useEffect, useState } from "react";
-import { TextInput, StyleSheet, TouchableOpacity } from "react-native";
+import { StyleSheet, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import Color from "../../Style/Color";
 import PopupComponent from "../../Component/Common/PopupComponent";
@@ -23,16 +23,14 @@ import {
   getListAllTypesByUserId,
 } from "../../Reducers/TypeReducer";
 import { getListAllTasksByUserId } from "../../Reducers/TaskReducer";
-import { formatInTimeZone } from "date-fns-tz";
 import Spinner from "react-native-loading-spinner-overlay";
 
 export default ({ navigation, typeId }) => {
   const allTypes = useSelector((state) => state.type.allTypes);
-  const allTasks = useSelector((state) => state.task.allTasks);
   const dispatch = useDispatch();
 
   const [data, setData] = useState(null);
-  const [name, setName] = useState("Untitled Type");
+  const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [open, setOpen] = useState(false);
   const [errorNameLength, setErrorNameLength] = useState(false);
@@ -49,7 +47,7 @@ export default ({ navigation, typeId }) => {
         setDescription(foundItem.description);
         setData(foundItem);
       } else {
-        setName("Untitled Type");
+        setName("");
         setDescription("");
         setData(null);
       }
@@ -74,43 +72,47 @@ export default ({ navigation, typeId }) => {
     setIsLoading(true);
 
     try {
-      // create
-      if (!typeId) {
-        const token = await AsyncStorage.getItem("Token");
-        if (token) {
-          const decoded = jwt_decode(token);
-          let request = {
-            userId: decoded._id,
-            name: name,
-            description: description,
-            createdDate: new Date(),
-          };
+      if (!handleValidateName(name)) {
+        // create
+        if (!typeId) {
+          const token = await AsyncStorage.getItem("Token");
+          if (token) {
+            const decoded = jwt_decode(token);
+            let request = {
+              userId: decoded._id,
+              name: name,
+              description: description,
+              createdDate: new Date(),
+            };
 
-          const response = await CreateType(request, token);
+            const response = await CreateType(request, token);
 
-          if (response) {
-            await handleGetAllTypes();
+            if (response) {
+              await handleGetAllTypes();
 
-            navigation.navigate("HomeTab", { screen: "Tasks" });
+              navigation.navigate("HomeTab", { screen: "Tasks" });
+            }
           }
         }
-      } else {
-        const token = await AsyncStorage.getItem("Token");
+        // Update
+        else {
+          const token = await AsyncStorage.getItem("Token");
 
-        if (token) {
-          let request = {
-            ...data,
-            name: name,
-            description: description,
-            updatedDate: new Date(),
-          };
+          if (token) {
+            let request = {
+              ...data,
+              name: name,
+              description: description,
+              updatedDate: new Date(),
+            };
 
-          const response = await UpdateType(request, token);
+            const response = await UpdateType(request, token);
 
-          if (response) {
-            await handleGetAllTypes();
+            if (response) {
+              await handleGetAllTypes();
 
-            navigation.navigate("HomeTab", { screen: "Tasks" });
+              navigation.navigate("HomeTab", { screen: "Tasks" });
+            }
           }
         }
       }
@@ -160,21 +162,26 @@ export default ({ navigation, typeId }) => {
     }
   };
 
-  const onChangeName = (name) => {
+  const handleValidateName = (name) => {
+    let result = false;
+
     // Check required
     if (!name || name == "") {
       setErrorNameRequired(true);
+      result = true;
     } else {
       setErrorNameRequired(false);
       // Check length
       if (name.length > 30) {
         setErrorNameLength(true);
+        result = true;
       } else {
         setErrorNameLength(false);
       }
       // Check Special Character
       if (/[^a-zA-Z0-9 ]/.test(name)) {
         setErrorNameSpecial(true);
+        result = true;
       } else {
         setErrorNameSpecial(false);
       }
@@ -189,11 +196,17 @@ export default ({ navigation, typeId }) => {
       }
       if (list.length > 0) {
         setErrorNameDup(true);
+        result = true;
       } else {
         setErrorNameDup(false);
       }
     }
 
+    return result;
+  };
+
+  const onChangeName = (name) => {
+    let invalid = handleValidateName(name);
     setName(name);
   };
 
@@ -256,6 +269,7 @@ export default ({ navigation, typeId }) => {
                   color="blue.500"
                   fontWeight={500}
                   disabled={isInvalidName()}
+                  style={isInvalidName() && styles.saveButtonDisable}
                 >
                   Save
                 </Text>
@@ -267,8 +281,10 @@ export default ({ navigation, typeId }) => {
         <FormControl isInvalid={isInvalidName()}>
           <Stack space={5} paddingX={3} marginBottom={2}>
             <Stack>
-              <FormControl.Label _text={{ fontSize: 16 }}>
-                Type Name
+              <FormControl.Label
+                _text={{ fontSize: 16, color: Color.Input().label }}
+              >
+                Name
               </FormControl.Label>
               <Input
                 variant="outline"
@@ -288,13 +304,15 @@ export default ({ navigation, typeId }) => {
         <FormControl>
           <Stack space={5} paddingX={3}>
             <Stack>
-              <FormControl.Label _text={{ fontSize: 16 }}>
-                Type Description
+              <FormControl.Label
+                _text={{ fontSize: 16, color: Color.Input().label }}
+              >
+                Description
               </FormControl.Label>
               <Input
                 variant="outline"
                 p={2}
-                placeholder="Type Description"
+                placeholder="Description"
                 fontSize={16}
                 value={description}
                 onChange={(v) => setDescription(v.nativeEvent.text)}
@@ -305,7 +323,7 @@ export default ({ navigation, typeId }) => {
 
         <PopupComponent
           title={"Delete"}
-          content={"Do you want to delete this type?"}
+          content={"Are you sure to delete this type?"}
           closeFunction={closeModal}
           isOpen={open}
           actionFunction={deleteType}
@@ -333,5 +351,8 @@ const styles = StyleSheet.create({
   },
   icon: {
     color: Color.Button().ButtonActive,
+  },
+  saveButtonDisable: {
+    color: Color.Input().disable,
   },
 });

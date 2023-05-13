@@ -21,6 +21,7 @@ import {
   updateStatus,
 } from "../../Reducers/TaskReducer";
 import jwt_decode from "jwt-decode";
+import { convertDateTime } from "../../helper/Helper";
 
 export default ({ navigation, item }) => {
   const dispatch = useDispatch();
@@ -93,47 +94,37 @@ export default ({ navigation, item }) => {
 
   const showItemStatus = () => {
     if (item && item.dueTime) {
-      let dateNowString = formatInTimeZone(
-        item.dueTime,
-        "Asia/Ho_Chi_Minh",
-        "yyyy-MM-dd HH:mm:ss"
+      let dateNowString = convertDateTime(item.dueTime);
+
+      return getDateTitle(
+        dateNowString.split(" ")[0],
+        dateNowString.split(" ")[1]
       );
-      return getDateTitle(dateNowString.split(" ").shift());
     }
     return "";
   };
 
   const checkTaskIsLate = (task) => {
     if (task && task.startTime && task.dueTime) {
-      let dateNowString = formatInTimeZone(
-        new Date(),
-        "Asia/Ho_Chi_Minh",
-        CommonData.Format().DateTimeFormatDateFNS
-      );
+      let dateNowString = convertDateTime(new Date());
+      let dueTimeString = convertDateTime(task.dueTime);
 
-      let dueTimeString = formatInTimeZone(
-        task.dueTime,
-        "Asia/Ho_Chi_Minh",
-        CommonData.Format().DateTimeFormatDateFNS
-      );
-
-      let dueTime = new Date(Date.parse(dueTimeString.split(" ").shift()));
-      let dateNow = new Date(Date.parse(dateNowString.split(" ").shift()));
-
-      if (dueTime < dateNow) {
+      if (dueTimeString < dateNowString) {
         return true;
       }
     }
     return false;
   };
 
-  const getDateTitle = (showDate) => {
+  const getDateTitle = (showDate, dueTime) => {
     if (showDate) {
       return (
         "Due Date: " +
         format(new Date(showDate), "EE") +
         ", " +
-        format(new Date(showDate), "yyyy MMMM dd")
+        format(new Date(showDate), "dd MMMM yyyy") +
+        " " +
+        dueTime
       );
     }
   };
@@ -206,8 +197,6 @@ const styles = StyleSheet.create({
   },
   nameTaskDone: {
     fontSize: 15,
-    textDecorationLine: "line-through",
-    textDecorationStyle: "solid",
   },
   checkbox: {
     marginTop: 5,
@@ -221,8 +210,6 @@ const styles = StyleSheet.create({
   },
   invalidText: {
     color: Color.Task().inValid,
-    textDecorationLine: "line-through",
-    textDecorationStyle: "solid",
   },
   validText: {
     color: Color.Task().valid,

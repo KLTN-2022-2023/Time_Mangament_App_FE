@@ -36,8 +36,16 @@ export default {
   },
   IconTask() {
     return {
-      AllTasks: "#f08c00",
+      AllTasks: "#087f5b",
       Important: "#d6336c",
+      Incomplete: "#f08c00",
+    };
+  },
+  Input() {
+    return {
+      Border: "#ced4da",
+      label: "#343a40",
+      disable: "#adb5bd",
     };
   },
 };

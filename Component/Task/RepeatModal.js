@@ -6,7 +6,7 @@ import Icon from "react-native-vector-icons/FontAwesome";
 import Color from "../../Style/Color";
 import ScrollPicker from "react-native-wheel-scrollview-picker";
 
-export default ({ isOpen, actionFunction, closeFunction }) => {
+export default ({ isOpen, actionFunction, closeFunction, selected }) => {
   const [isCustom, setIsCustom] = useState(false);
   const [mon, setMon] = useState(false);
   const [tue, setTue] = useState(false);
@@ -26,17 +26,23 @@ export default ({ isOpen, actionFunction, closeFunction }) => {
   ];
 
   useEffect(() => {
-    if (isOpen) {
+    if (selected && selected.includes(":")) {
+      setIsCustom(true);
+    } else if (selected && selected.includes("Every ")) {
+      setIsCustom(true);
+    } else {
       setIsCustom(false);
       setMon(false);
       setTue(false);
-      setWed(false);
       setThu(false);
+      setWed(false);
       setFri(false);
       setSat(false);
       setSun(false);
+      setSelectedRepeatType("Days");
+      setSelectedNum(1);
     }
-  }, [isOpen]);
+  }, [selected, isOpen]);
 
   const clickCustom = () => {
     setIsCustom(true);
@@ -81,6 +87,14 @@ export default ({ isOpen, actionFunction, closeFunction }) => {
     }
 
     actionFunction(result);
+  };
+
+  const isSelected = (value) => {
+    if (!value && !selected) {
+      return true;
+    }
+
+    return selected && selected === value;
   };
 
   return (
@@ -285,50 +299,125 @@ export default ({ isOpen, actionFunction, closeFunction }) => {
           ) : (
             // Modal Choose
             <View>
+              {/* Never */}
               <TouchableOpacity
                 style={styles.sort}
                 onPress={() => actionFunction(CommonData.RepeatType().Never)}
               >
-                <HStack space={3}>
-                  <Text>{CommonData.RepeatType().Never}</Text>
+                <HStack
+                  px={2}
+                  py={2}
+                  style={isSelected(null) && styles.selected}
+                >
+                  <Text
+                    style={isSelected(null) ? styles.textSelected : styles.text}
+                  >
+                    {CommonData.RepeatType().Never}
+                  </Text>
                 </HStack>
               </TouchableOpacity>
+
+              {/* Daily */}
               <TouchableOpacity
                 style={styles.sort}
                 onPress={() => actionFunction(CommonData.RepeatType().Daily)}
               >
-                <HStack space={3}>
-                  <Text>{CommonData.RepeatType().Daily}</Text>
+                <HStack
+                  px={2}
+                  py={2}
+                  style={
+                    isSelected(CommonData.RepeatType().Daily) && styles.selected
+                  }
+                >
+                  <Text
+                    style={
+                      isSelected(CommonData.RepeatType().Daily)
+                        ? styles.textSelected
+                        : styles.text
+                    }
+                  >
+                    {CommonData.RepeatType().Daily}
+                  </Text>
                 </HStack>
               </TouchableOpacity>
+
+              {/* Weekly */}
               <TouchableOpacity
                 style={styles.sort}
                 onPress={() => actionFunction(CommonData.RepeatType().Weekly)}
               >
-                <HStack space={3}>
-                  <Text>{CommonData.RepeatType().Weekly}</Text>
+                <HStack
+                  px={2}
+                  py={2}
+                  style={
+                    isSelected(CommonData.RepeatType().Weekly) &&
+                    styles.selected
+                  }
+                >
+                  <Text
+                    style={
+                      isSelected(CommonData.RepeatType().Weekly)
+                        ? styles.textSelected
+                        : styles.text
+                    }
+                  >
+                    {CommonData.RepeatType().Weekly}
+                  </Text>
                 </HStack>
               </TouchableOpacity>
+
+              {/* Monthly  */}
               <TouchableOpacity
                 style={styles.sort}
                 onPress={() => actionFunction(CommonData.RepeatType().Monthly)}
               >
-                <HStack space={3}>
-                  <Text>{CommonData.RepeatType().Monthly}</Text>
+                <HStack
+                  px={2}
+                  py={2}
+                  style={
+                    isSelected(CommonData.RepeatType().Monthly) &&
+                    styles.selected
+                  }
+                >
+                  <Text
+                    style={
+                      isSelected(CommonData.RepeatType().Monthly)
+                        ? styles.textSelected
+                        : styles.text
+                    }
+                  >
+                    {CommonData.RepeatType().Monthly}
+                  </Text>
                 </HStack>
               </TouchableOpacity>
+
               <TouchableOpacity
                 style={styles.sort}
                 onPress={() => actionFunction(CommonData.RepeatType().Yearly)}
               >
-                <HStack space={3}>
-                  <Text>{CommonData.RepeatType().Yearly}</Text>
+                <HStack
+                  px={2}
+                  py={2}
+                  style={
+                    isSelected(CommonData.RepeatType().Yearly) &&
+                    styles.selected
+                  }
+                >
+                  <Text
+                    style={
+                      isSelected(CommonData.RepeatType().Yearly)
+                        ? styles.textSelected
+                        : styles.text
+                    }
+                  >
+                    {CommonData.RepeatType().Yearly}
+                  </Text>
                 </HStack>
               </TouchableOpacity>
 
               <TouchableOpacity onPress={() => clickCustom()}>
-                <HStack space={3} style={styles.customContainer}>
-                  <Text style={styles.customText}>
+                <HStack px={2} py={2} style={styles.customContainer}>
+                  <Text style={styles.text}>
                     {CommonData.RepeatType().Custom}
                   </Text>
                   <Icon name="angle-right" size={25} style={styles.icon} />
@@ -346,13 +435,6 @@ const styles = StyleSheet.create({
   sort: {
     paddingBottom: 20,
   },
-  icon: {
-    color: Color.Button().ButtonActive,
-  },
-  customText: {
-    color: Color.Button().ButtonActive,
-    fontWeight: "600",
-  },
   customContainer: {
     flex: 1,
     justifyContent: "space-between",
@@ -368,6 +450,7 @@ const styles = StyleSheet.create({
   },
   customHeaderText: {
     fontWeight: "500",
+    fontSize: 16,
   },
   customInput: {
     display: "flex",
@@ -416,5 +499,22 @@ const styles = StyleSheet.create({
   },
   selectDayItemTextChecked: {
     color: "#FFFFFF",
+  },
+  selected: {
+    borderColor: Color.Button().ButtonActive,
+    borderWidth: 1,
+    borderRadius: 5,
+  },
+  textSelected: {
+    color: Color.Button().ButtonActive,
+    fontSize: 16,
+  },
+  text: {
+    fontSize: 16,
+  },
+  customText: {
+    color: Color.Button().ButtonActive,
+    fontWeight: "600",
+    fontSize: 16,
   },
 });
