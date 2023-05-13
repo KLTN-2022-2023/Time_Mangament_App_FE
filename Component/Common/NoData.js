@@ -1,11 +1,11 @@
-import { Box, Center, Button, Input, Icon, Text, View } from "native-base";
-import { useState, useEffect } from "react";
-import { TextInput, StyleSheet, TouchableOpacity } from "react-native";
+import { Text, View } from "native-base";
+import { StyleSheet } from "react-native";
+import Color from "../../Style/Color";
 
-export default () => {
+export default ({ message }) => {
   return (
     <View style={styles.Root}>
-      <Text style={styles.Text}>No Data</Text>
+      <Text style={styles.Text}> {message || "No data"}</Text>
     </View>
   );
 };
@@ -20,5 +20,6 @@ const styles = StyleSheet.create({
   Text: {
     fontWeight: "500",
     fontSize: 20,
+    color: Color.Input().disable,
   },
 });

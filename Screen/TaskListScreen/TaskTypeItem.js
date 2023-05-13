@@ -12,6 +12,12 @@ export default ({ navigation, type, name, quantity, actionFunc }) => {
       if (type == CommonData.TaskType().AllTask) {
         return "home";
       }
+      if (type == CommonData.TaskType().InComplete) {
+        return "square";
+      }
+      if (type == CommonData.TaskType().Completed) {
+        return "home";
+      }
       if (type == CommonData.TaskType().Important) {
         return "star";
       }
@@ -23,6 +29,12 @@ export default ({ navigation, type, name, quantity, actionFunc }) => {
   const showIconStyle = () => {
     if (type) {
       if (type == CommonData.TaskType().AllTask) {
+        return styles.iconTypeAllTask;
+      }
+      if (type == CommonData.TaskType().InComplete) {
+        return styles.iconTypeInComplete;
+      }
+      if (type == CommonData.TaskType().Completed) {
         return styles.iconTypeAllTask;
       }
       if (type == CommonData.TaskType().Important) {
@@ -37,6 +49,8 @@ export default ({ navigation, type, name, quantity, actionFunc }) => {
     if (type) {
       if (
         type == CommonData.TaskType().AllTask ||
+        type == CommonData.TaskType().InComplete ||
+        type == CommonData.TaskType().Completed ||
         type == CommonData.TaskType().Important
       ) {
         return styles.nameTypeDefault;
@@ -50,6 +64,8 @@ export default ({ navigation, type, name, quantity, actionFunc }) => {
     if (type) {
       if (
         type == CommonData.TaskType().AllTask ||
+        type == CommonData.TaskType().Completed ||
+        type == CommonData.TaskType().InComplete ||
         type == CommonData.TaskType().Important
       ) {
         return styles.root;
@@ -112,6 +128,10 @@ const styles = StyleSheet.create({
   iconTypeAllTask: {
     marginTop: 5,
     color: Color.IconTask().AllTasks,
+  },
+  iconTypeInComplete: {
+    marginTop: 5,
+    color: Color.IconTask().Incomplete,
   },
   iconTypeImportant: {
     marginTop: 5,

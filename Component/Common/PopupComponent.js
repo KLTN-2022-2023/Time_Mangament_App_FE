@@ -1,16 +1,5 @@
-import {
-  Box,
-  Button,
-  Center,
-  View,
-  Text,
-  VStack,
-  HStack,
-  Popover,
-  Modal,
-} from "native-base";
-import Color from "../../Style/Color";
-import { TextInput, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, HStack, Modal } from "native-base";
+import { TouchableOpacity, StyleSheet } from "react-native";
 
 export default ({ isOpen, title, content, actionFunction, closeFunction }) => {
   return (

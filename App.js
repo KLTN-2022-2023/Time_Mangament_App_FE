@@ -41,6 +41,9 @@ function HomeTab() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
+        tabBarLabel: () => {
+          return null;
+        },
         tabBarActiveTintColor: Color.Button().ButtonActive,
         tabBarInactiveTintColor: Color.Button().ButtonInActive,
         headerStyle: {
@@ -50,14 +53,6 @@ function HomeTab() {
         headerTitleStyle: {
           fontWeight: "bold",
         },
-        // headerLeft: () => (
-        //   <Ionicons
-        //     style={styles.icon}
-        //     name="ios-reorder-three"
-        //     size={25}
-        //     color={Color.Header().Text}
-        //   />
-        // ),
       })}
     >
       <Tab.Screen
@@ -75,15 +70,10 @@ function HomeTab() {
         component={TaskListScreen}
         options={{ title: "Statistics" }}
       />
-      {/* <Tab.Screen
-        name="Notifications"
-        component={TaskListScreen}
-        options={{ title: "Notifications" }}
-      /> */}
       <Tab.Screen
         name="Settings"
         component={UserDetailScreen}
-        options={{ title: "Settings", headerShown: false }}
+        options={{ title: "Setting", headerShown: false }}
       />
     </Tab.Navigator>
   );

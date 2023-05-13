@@ -44,6 +44,14 @@ export default ({ route, navigation }) => {
         return "All Tasks";
       }
 
+      if (typeId == CommonData.TaskType().InComplete) {
+        return "InComplete";
+      }
+
+      if (typeId == CommonData.TaskType().Completed) {
+        return "Completed";
+      }
+
       if (typeId == CommonData.TaskType().Important) {
         return "Important";
       }
@@ -246,7 +254,6 @@ export default ({ route, navigation }) => {
             </Modal.Body>
           </Modal.Content>
         </Modal>
-
       </Box>
     </Center>
   );
