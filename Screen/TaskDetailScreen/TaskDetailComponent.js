@@ -1,10 +1,12 @@
-import { Box, Button, Center, Heading, Input, TextArea, View, Text, Checkbox, VStack, HStack } from "native-base"
-import { useEffect, useState } from "react";
-import { TextInput, StyleSheet } from "react-native";
+import { Box, Center, Heading, Input, View, Text, Checkbox, HStack, Popover, NativeBaseProvider } from "native-base"
+import { useState } from "react";
+import { TextInput, StyleSheet, TouchableOpacity, PermissionsAndroid } from "react-native";
 import Icon from 'react-native-vector-icons/FontAwesome';
-//import TaskDetail from "./TaskDetail.scss";
-export default ({ navigation }) => {
-    
+import * as DocumentPicker from 'expo-document-picker';
+
+
+const TaskDetailComponent= ({ navigation }) => {
+    const [singleFile, setSingleFile] = useState(null);
     const [open, setOpen] = useState(false);
     const [open1, setOpen1] =useState(false);
     const [open2, setOpen2] = useState(false);
@@ -14,93 +16,223 @@ export default ({ navigation }) => {
     const [addDeadline, setAddDeadline] = useState();
     const [reuse, setReuse] = useState();
     const [description, setDescription] = useState();
+    const [selected, setSelected] = useState(undefined);
     const styles = StyleSheet.create({
+        header: {
+            alignContent: "center",
+            justifyContent: "flex-start"
+        },
+        text_header:{
+            paddingLeft: 30,
+            fontSize: 20,
+            paddingBottom: 30,
+        },
         button: {
-            color: `'#1256F3'`,
-            width: 280
+           // color: `'#1256F3'`,
+          //  width: 280
         },
         icon: {
-            fontSize: ''
+            paddingBottom:10,
+            paddingLeft: 10
         },
         view: {
+            borderWidth: 0.5,
+            borderRadius: 10,
             display: 'flex',
             flexDirection: 'row',
             color: '#11111',
-            paddingTop: 10, 
-            //paddingBottom: 10
+            paddingTop: 10,
+            marginTop: 10, 
+            gap: 20,
+            alignContent: "center"
         },
         textAreaContainer: {
+            marginTop: 10,
             borderColor: 'grey',
             borderWidth: 1,
-           // paddingTop: 10
+            borderRadius:20
           },
-          textArea: {
+        textArea: {
             height: 150,
             justifyContent: "flex-start",
+          },
+          title: {
+            justifyContent: "space-between",
+            alignContent: "center"
+          },
+    });
+    const checkPermissions = async () => {
+        try {
+          const result = await PermissionsAndroid.check(
+            PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
+          );
+    
+          if (!result) {
+            const granted = await PermissionsAndroid.request(
+              PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+              {
+                title:
+                  'You need to give storage permission to download and save the file',
+                message: 'App needs access to your camera ',
+                buttonNeutral: 'Ask Me Later',
+                buttonNegative: 'Cancel',
+                buttonPositive: 'OK',
+              }
+            );
+            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+              console.log('You can use the camera');
+              return true;
+            } else {
+              Alert.alert('Error', I18n.t('PERMISSION_ACCESS_FILE'));
+    
+              console.log('Camera permission denied');
+              return false;
+            }
+          } else {
+            return true;
           }
-    })
+        } catch (err) {
+          console.warn(err);
+          return false;
+        }
+      };
+    
+      async function selectFile() {
+        try {
+          const result = await checkPermissions();
+    
+          if (result) {
+            const result = await DocumentPicker.getDocumentAsync({
+              copyToCacheDirectory: false,
+              type: 'image/*',
+            });
+    
+            if (result.type === 'success') {
+              // Printing the log realted to the file
+              console.log('res : ' + JSON.stringify(result));
+              // Setting the state to show single file attributes
+              setSingleFile(result);
+            }
+          }
+        } catch (err) {
+          setSingleFile(null);
+          console.warn(err);
+          return false;
+        }
+      }
     return (
-        <Center w="100%">
-            <Box safeArea p="2" py="2" w="100%" maxW="350">
-                <HStack>
+    <Center w="100%">
+        <Box safeArea p="2" py="2" w="100%" maxW="350">
+            <HStack style={styles.header}>
+                <Icon onPress={() => navigation.navigate("TaskListScreen")} name="angle-left" size={20}/>
+                <Text style={styles.text_header}>Test</Text>
+            </HStack>
+            <HStack style={styles.title}>
                 <Checkbox value="one" my={2}>
                     <Heading> Tên công việc </Heading> 
                 </Checkbox>
-                <Icon size={30} name="star"/>
-                </HStack>
-           
+                <Icon size={30}  name="star-o"/>
+            </HStack>
+        
             <Input placeholder="Thêm bước"/>
 
             <View style={styles.view}>
-                <Icon size={30} name="spinner"></Icon>
-                <Button style={styles.button}>
-                    Thêm vào Ngày của Tôi
-                </Button>
+                <Icon size={25} name="spinner" style={styles.icon}></Icon>
+                <TouchableOpacity style={styles.button}>
+                    <Text>Thêm vào Ngày của Tôi</Text>
+                </TouchableOpacity>
             </View>
-            <View style={styles.view} >
-                <Icon size={30} name="bell"></Icon>
-                <Button style={styles.button} onPress={() => setOpen(!open)}>
+
+            <Popover trigger={triggerProps => {
+            return (
+                <View style={styles.view}  >
+                <Icon size={25} name="bell" style={styles.icon} ></Icon>
+                    <Text {...triggerProps}>
                     Nhắc tôi
-                </Button>
-            </View>
-            {open ? <View>
-                <TextInput>Cuối ngày</TextInput>
-                <TextInput>Ngày mai</TextInput>
-                <TextInput>Tuần tới</TextInput>
-                <TextInput>Chọn ngày và giờ</TextInput>
-            </View>
-            : null}
+                    </Text>
+                </View>);
+            }}>
+                <Popover.Content w="56">
+                <Popover.Body>
+                        <HStack paddingBottom={5}>
+                            <Icon name="clock-o" size={20}/>
+                            <Text style={{paddingLeft:10}}>Cuối ngày</Text>
+                        </HStack>
+                        <HStack paddingBottom={5}>
+                            <Icon name="clock-o" size={20}/>
+                            <Text style={{paddingLeft:10}}>Ngày mai</Text>
+                        </HStack>
+                        <HStack paddingBottom={5}>
+                            <Icon name="clock-o" size={20}/>
+                            <Text style={{paddingLeft:10}}>Tuần tới</Text>
+                        </HStack>
+                </Popover.Body>
+                </Popover.Content>
+            </Popover>
 
-            <View style={styles.view}>
-                <Icon size={30} name="calendar"></Icon>
-                <Button style={styles.button} onPress={() => setOpen1(!open1)}>
+            <Popover trigger={triggerProps => {
+            return (
+                <View style={styles.view}  >
+                <Icon size={25} name="calendar-o" style={styles.icon} ></Icon>
+                    <Text {...triggerProps}>
                     Thêm ngày đến hạn
-                </Button>
-            </View>
-            {open1 ?<View>
-                <TextInput>Mỗi 1 ngày</TextInput>
-                <TextInput>Ngày trong tuần</TextInput>
-                <TextInput>Mỗi 1 tuần</TextInput>
-            </View> :null}
+                    </Text>
+                </View>);
+            }}>
+                <Popover.Content w="56">
+                <Popover.Body>
+                        <HStack paddingBottom={5}>
+                            <Icon name="calendar-o" size={20}/>
+                            <Text style={{paddingLeft:10}}>Hôm nay</Text>
+                        </HStack>
+                        <HStack paddingBottom={5}>
+                            <Icon name="calendar-o" size={20}/>
+                            <Text style={{paddingLeft:10}}>Ngày mai</Text>
+                        </HStack>
+                        <HStack paddingBottom={5}>
+                            <Icon name="calendar-o" size={20}/>
+                            <Text style={{paddingLeft:10}}>Tuần tới</Text>
+                        </HStack>
+                </Popover.Body>
+                </Popover.Content>
+            </Popover>
 
-            <View style={styles.view}>
-                <Icon size={30} name="spinner"></Icon>
-                <Button style={styles.button}>
+            <Popover trigger={triggerProps => {
+            return (
+                <View style={styles.view}>
+                <Icon size={25} name="retweet" style={styles.icon} ></Icon>
+                    <Text {...triggerProps}>
                     Lặp lại
-                </Button>
-            </View>
-            {open2 ? <View>
-                <TextInput>Mỗi ngày</TextInput>
-                <TextInput>Ngày trong tuần</TextInput>
-                <TextInput>Mỗi 1 tuần</TextInput>
-                <TextInput>Mỗi tháng</TextInput>
-            </View>:null}
+                    </Text>
+                </View>);
+            }}>
+                <Popover.Content w="56">
+                <Popover.Body>
+                        <HStack paddingBottom={5}>
+                            <Icon name="magic" size={20}/>
+                            <Text style={{paddingLeft:10}}>Mỗi 1 ngày</Text>
+                        </HStack>
+                        <HStack paddingBottom={5}>
+                            <Icon name="magic" size={20}/>
+                            <Text style={{paddingLeft:10}}>Mỗi tuần</Text>
+                        </HStack>
+                        <HStack paddingBottom={5}>
+                            <Icon name="magic" size={20}/>
+                            <Text style={{paddingLeft:10}}>Mỗi tháng</Text>
+                        </HStack>
+                        <HStack paddingBottom={5}>
+                            <Icon name="magic" size={20}/>
+                            <Text style={{paddingLeft:10}}>Mỗi năm</Text>
+                        </HStack>
+                </Popover.Body>
+                </Popover.Content>
+            </Popover>
 
             <View style={styles.view}>
-                <Icon size={30} name="spinner"></Icon>
-                <Input style={styles.button}>
-                    Thêm tệp
-                </Input>
+                <Icon size={25} name="paperclip" style={styles.icon}></Icon>
+                <TouchableOpacity style={styles.button} onPress={selectFile}>
+                    <Text>Thêm tệp</Text>
+                </TouchableOpacity>
             </View>
             <View style={styles.textAreaContainer} >
                 <TextInput
@@ -112,7 +244,8 @@ export default ({ navigation }) => {
                 multiline={true}
                 />
             </View>
-            </Box>
-        </Center>
+        </Box>
+    </Center>
     )
 }
+export default TaskDetailComponent;
