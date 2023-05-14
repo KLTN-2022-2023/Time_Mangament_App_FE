@@ -8,19 +8,31 @@ export default ({ renderItem, renderSectionHeader, items, selected }) => {
 
   useEffect(() => {
     let index = items.findIndex((x) => x.title === selected);
-    setScrollToIndex(index ? index : 0);
-  }, [selected]);
+    let result = index ? index : 0;
+    setScrollToIndex(result);
 
-  useEffect(() => {
-    if (dataSourceCords.length > scrollToIndex) {
-      ref.scrollTo({
-        x: 0,
-        y: dataSourceCords[scrollToIndex],
-        animated: true,
-      });
-    } else {
+    if (dataSourceCords.length > index && index >= 0) {
+      if (ref) {
+        ref.scrollTo({
+          x: 0,
+          y: dataSourceCords[index],
+          animated: true,
+        });
+      }
     }
-  }, [scrollToIndex]);
+  }, [items, selected]);
+
+  //   useEffect(() => {
+  //     if (dataSourceCords.length > scrollToIndex) {
+  //       if (ref) {
+  //         ref.scrollTo({
+  //           x: 0,
+  //           y: dataSourceCords[scrollToIndex],
+  //           animated: true,
+  //         });
+  //       }
+  //     }
+  //   }, [scrollToIndex]);
 
   const ItemView = (item, key) => {
     return (
