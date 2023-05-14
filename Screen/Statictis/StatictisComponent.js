@@ -6,7 +6,7 @@ import { StyleSheet } from 'react-native';
 
 import BarChart from 'react-native-bar-chart';
 import PieChart from 'react-native-pie-chart';
-
+import { convertDateTime } from "../../helper/Helper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getAllTask } from '../../Reducers/TaskReducer';
 import jwt_decode from "jwt-decode";
@@ -183,13 +183,13 @@ const StatictisComponent = ({ navigation }) => {
 
       label.forEach(i => {
         dataByMonth.forEach(e => {
-          if (e.startTime.toString().substring(8, 10) === i && e.status === "New") {
+          if (convertDateTime(e.startTime).substring(8, 10) === i && e.status === "New") {
             totalNew++;
           }
-          if (e.startTime.toString().substring(8, 10) === i && e.status === "Done") {
+          if (convertDateTime(e.startTime).substring(8, 10) === i && e.status === "Done") {
             totalDone++;
           }
-          if (e.startTime.toString().substring(8, 10)) {
+          if (convertDateTime(e.startTime).substring(8, 10)) {
             totalY++;
           }
         })
@@ -282,22 +282,22 @@ const StatictisComponent = ({ navigation }) => {
         <Box safeArea py="2" w="100%" maxW="350">
           <ScrollView width={350} >
             <HStack w={"100%"}>
-              <Select selectedValue={selectStatictis} minWidth="300" accessibilityLabel="Choose type statictis" placeholder="Type statictis" _selectedItem={{
+              <Select selectedValue={selectStatictis} minWidth="300" accessibilityLabel="Choose type statictis" placeholder="Choose type statictis" _selectedItem={{
                 bg: "teal.600",
                 endIcon: <CheckIcon size="5" />
               }} mt={1} onValueChange={itemValue => setSelectStatistic(itemValue)} >
-                <Select.Item label={"Statistic tasks global in the current month"} value={"currentMonth"} />
+                <Select.Item label={"Statistic tasks global"} value={"currentMonth"} />
                 <Select.Item label={"Statistic tasks by type work"} value={"typework"} />
                 <Select.Item label={"Statictis tasks by year"} value={"year"} />
                 <Select.Item label={"Statictis tasks by month"} value={"month"} />
               </Select>
-              <Button onPress={xyz} marginTop={1} >OK</Button>
+              <Button marginLeft={2} onPress={xyz} marginTop={1} >OK</Button>
             </HStack>
             {chart ?
               <View>
                 {pieChart ?
                   <View>
-                    <Text fontSize={18} fontWeight={500} color={"#00BFFF"}>Statistics of jobs in the month current </Text>
+                    <Text fontSize={18} fontWeight={500} color={"#00BFFF"}>Statistics of jobs global </Text>
                     <HStack alignItems={"center"} paddingBottom={5} justifyContent={"space-between"}>
                       <Text fontWeight={500}>Month</Text>
                       <Select selectedValue={pieMonth} minWidth="100" accessibilityLabel="Month" placeholder="Month" _selectedItem={{
@@ -320,15 +320,15 @@ const StatictisComponent = ({ navigation }) => {
                         <PieChart
                           widthAndHeight={widthAndHeight}
                           series={[uncompleteTask, completeTask]}
-                          sliceColor={['#fbd203', '#ffb300']}
+                          sliceColor={['#FFCC00', '#FF0000']}
                         />
                         <TouchableOpacity>
                           <HStack>
-                            <Button backgroundColor={"#fbd203"} disabled={true}></Button>
+                            <Button backgroundColor={"#FFCC00"} disabled={true}></Button>
                             <Text paddingLeft={5}> {uncompleteTask} Task uncomplete</Text>
                           </HStack>
                           <HStack paddingTop={2}>
-                            <Button backgroundColor={"#ffb300"} disabled={true}></Button>
+                            <Button backgroundColor={"#FF0000"} disabled={true}></Button>
                             <Text paddingLeft={5}>{completeTask} Task complete</Text>
                           </HStack>
                         </TouchableOpacity>
@@ -419,7 +419,7 @@ const StatictisComponent = ({ navigation }) => {
                       }} mt={1} onValueChange={itemValue => setSelectYear(itemValue)} >
                         {allYear.map((e) => <Select.Item label={e.year} value={e.year} />)}
                       </Select>
-                      <Button onPress={hanldeReportByYear} marginTop={1}>OK</Button>
+                      <Button onPress={hanldeReportByYear} marginLeft={2} marginTop={1}>OK</Button>
                     </HStack>
                     {chartYear ?
                       <ScrollView horizontal={true}>

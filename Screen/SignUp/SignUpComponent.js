@@ -26,22 +26,21 @@ export default ({ navigation }) => {
   const [password, setPassword] = useState();
   const [confirmPassword, setConfirmPassword] = useState();
   const [modalOTP, setModalOTP] = useState(true);
-  const [disableButton, setDissableButton] = useState(true);
-  const [colorButton, setColorButton] = useState("#C0C0C0");
   const [validateName, setValidateName] = useState(false);
   const [validateEmail, setValidateEmail] = useState(false);
   const [validateNumberPhone, setValidateNumberPhone] = useState(false);
   const [validateConfirmPassword, setValidateConfirmPassword] = useState(false);
-  const [textConfirmPassword, setTextConfirmPassword] = useState("Confirm password is not empty");
+  const [textConfirmPassword, setTextConfirmPassword] = useState("Confirm password is invalid");
   const [validatePass, setValidatePass] = useState(false);
-  //const [validateConfirmPass, setValidateConfirmPass] = useState(false);
   const [snackBar, setSnackBar] = useState(false);
   const [snackBarVerify, setSnackBarVerify] = useState(false);
   const [textPhone, setTextPhone] = useState("Number phone is invalid");
 
   const [otp, setOtp] = useState();
+  const [validateOTP, setValidateOTP] = useState(false);
 
   const handleSignUp = async () => {
+
     if (!validate()) {
       if (confirmPassword === password) {
         const result = await signUp({ name: name, email: email, phone: phone, password: password });
@@ -52,18 +51,18 @@ export default ({ navigation }) => {
             setTextPhone("Phone allready exist");
             setModalOTP(true);
           }
-          else if (result.msg === " Successfully") {
-            setValidateNumberPhone(false);
+          if (result.msg === "Successfully") {
             setModalOTP(false);
+            setValidateNumberPhone(false);
           }
+        } else {
+          setModalOTP(false)
         }
       } else {
         setValidateConfirmPassword(true)
-        setTextConfirmPassword("Confirm password incorrect")
       }
     }
     else { console.log("Nam") }
-
   }
 
   const handleVerify = async () => {
@@ -73,6 +72,11 @@ export default ({ navigation }) => {
       setTimeout(() => {
         navigation.navigate("LoginScreen");
       }, 2000);
+    } else {
+      setValidateOTP(true);
+      setTimeout(() => {
+        setValidateOTP(false);
+      }, 3000)
     }
   }
   useEffect(() => {
@@ -87,7 +91,7 @@ export default ({ navigation }) => {
     return re.test(phone)
   }
   const valName = (name) => {
-    var re = /^[a-zA-Z]+[a-z]*$/;
+    var re = /^[a-zA-Z]{6}\b/g;
     return re.test(name);
   }
   const valPassword = (password) => {
@@ -98,25 +102,6 @@ export default ({ navigation }) => {
     var re = /^[0-9]{6}\b/g;
     return re.test(confirmPassword)
   }
-  const abc = () => {
-    console.log("Nam")
-    if (!name && !confirmPassword && !phone && !email && !password) {
-      // setDissableButton(false);
-      setColorButton("#0000EE");
-    }
-    else {
-      console.log("a")
-      //   setDissableButton(true);
-      setColorButton("#C0C0C0");
-    }
-  }
-  // useEffect(() => {
-  //   abc();
-  // }, [confirmPassword])
-  // useEffect(() => {
-  //   validate();
-  //   //abc();
-  // }, [name, email, password, phone, confirmPassword]);
   const validate = () => {
     if (!valName(name)) {
       setValidateName(true)
@@ -148,13 +133,6 @@ export default ({ navigation }) => {
     else {
       setValidateConfirmPassword(false);
     }
-    // if (confirmPassword === password && confirmPassword) {
-    //   setValidateConfirmPassword(false);
-    // }
-    // else {
-    //   setTextConfirmPassword("Confirm password is incorrect");
-    //   setValidateConfirmPassword(true);
-    // }
 
   }
   return (
@@ -169,7 +147,7 @@ export default ({ navigation }) => {
             }}
             fontWeight="semibold"
           >
-            Welcome
+            Sign up new account!
           </Heading>
           <Heading
             mt="1"
@@ -188,7 +166,7 @@ export default ({ navigation }) => {
                 <FormControl.Label>Name</FormControl.Label>
                 <Input value={name} onChangeText={e => setName(e)} />
                 {validateName && (
-                  <Text color={"#FF0000"}> Name is not empty </Text>
+                  <Text color={"#FF0000"}> Name is invalid </Text>
                 )}
               </FormControl>
 
@@ -250,6 +228,9 @@ export default ({ navigation }) => {
               <FormControl>
                 <FormControl.Label>OTP</FormControl.Label>
                 <Input value={otp} onChangeText={e => setOtp(e)} />
+                {validateOTP && (
+                  <Text color={"#FF0000"}>OTP is incorrect</Text>
+                )}
               </FormControl>
               <Button mt="2" colorScheme="indigo" onPress={handleVerify}>
                 Verify

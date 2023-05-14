@@ -102,36 +102,36 @@ export default ({ navigation }) => {
       <Box safeArea p="2" py="2" w="100%" maxW="350" width={500}>
         <View>
           <HStack alignItems={"center"} justifyContent={"space-between"}>
-            <HStack alignItems={"center"}>
+            <HStack alignItems={"center"} backgroundColor={"#FF00000"}>
               <IconICon size={25}
                 color={"#000000"}
                 name="arrow-back"
-                onPress={() => navigation.navigate("SettingScreen")}
+                onPress={() => navigation.goBack()}
               />
               <Text color={"#000000"} fontWeight={800} fontSize={20} paddingLeft={5}>Profile</Text>
             </HStack>
             {update ? <Text style={style.buttonSave} fontWeight={500} onPress={HandleUpdateProfile}>Save</Text> : null}
           </HStack>
-          <View backgroundColor={"white"} marginTop={5}>
-            <HStack>
-              <Image source={{
-                uri: "https://static.vecteezy.com/system/resources/previews/000/439/863/original/vector-users-icon.jpg"
-              }} alt="Alternate Text" size="xl" height={"180"} width={"120"} />
-              <View paddingLeft={2}>
-                <HStack alignItems="center" marginTop={5} height={10} >
-                  <IconFontisto name="email" size={20} color={"#000000"} />
-                  <TextInput paddingLeft={20} style={style.text} value={email} onChangeText={(e) => setEmail(e)} />
-                </HStack>
-                <HStack alignItems="center" marginTop={5} height={10} >
-                  <IconFontisto name="male" size={20} color={"#000000"} />
-                  <TextInput paddingLeft={20} style={style.text} value={name} onChangeText={(e) => { setName(e), setUpdate(true) }} />
-                </HStack>
-                <HStack alignItems="center" marginTop={5} height={10}>
-                  <IconICon name="call-outline" size={20} color={"#000000"} />
-                  <TextInput paddingLeft={20} style={style.text} value={phone} editable={false} onChangeText={(e) => { setPhone(e), setUpdate(true) }} />
-                </HStack>
-              </View>
-            </HStack>
+          <View backgroundColor={"white"} marginTop={5} alignItems={"center"}>
+            <Avatar size={"2xl"} bg="green.500" source={{
+              uri: "https://static.vecteezy.com/system/resources/previews/000/439/863/original/vector-users-icon.jpg"
+            }}>
+              AJ
+            </Avatar>
+            <View>
+              <HStack alignItems="center" marginTop={5} height={10} >
+                <IconFontisto name="email" size={20} color={"#000000"} />
+                <TextInput paddingLeft={20} style={style.text} value={email} onChangeText={(e) => { setEmail(e), setUpdate(true) }} />
+              </HStack>
+              <HStack alignItems="center" marginTop={5} height={10} >
+                <IconFontisto name="male" size={20} color={"#000000"} />
+                <TextInput paddingLeft={20} style={style.text} value={name} onChangeText={(e) => { setName(e), setUpdate(true) }} />
+              </HStack>
+              <HStack alignItems="center" marginTop={5} height={10}>
+                <IconICon name="call-outline" size={20} color={"#000000"} />
+                <TextInput paddingLeft={20} style={style.text} value={phone} editable={false} onChangeText={(e) => setPhone(e)} />
+              </HStack>
+            </View>
           </View>
         </View>
       </Box>
