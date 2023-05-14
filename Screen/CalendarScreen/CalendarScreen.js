@@ -20,14 +20,16 @@ import { useSelector, useDispatch } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { convertDateTime } from "../../helper/Helper";
 import { format } from "date-fns";
+import AgendaComponent from "./AgendaComponent";
 
 export default ({ route, navigation }) => {
+  const dateNowString = convertDateTime(new Date());
+
   const dispatch = useDispatch();
   const allTasks = useSelector((state) => state.task.allTasks);
   const [weekTask, setWeekTask] = useState([]);
   const [dataMarked, setDataMarked] = useState({});
-
-  const dateNowString = convertDateTime(new Date());
+  const [selectedDate, setSelectedDate] = useState(dateNowString.split(" ")[0]);
 
   // Load Data
   useEffect(() => {
@@ -115,7 +117,9 @@ export default ({ route, navigation }) => {
 
       list.push({
         title: convertDateTime(new Date(d)).split(" ")[0],
-        data: [{}],
+        // data: [{}],
+        data: [{ name: null }],
+        id: i,
       });
     }
 
@@ -181,18 +185,21 @@ export default ({ route, navigation }) => {
 
   const onDateChanged = useCallback((date, updateSource) => {
     handleCalculateDayWeek(new Date(date));
+    setSelectedDate(date);
   }, []);
 
   const onMonthChange = useCallback(({ dateString }) => {
     console.log(dateString);
   }, []);
 
-  const renderItem = (props) => {
-    const { item } = props;
+  const renderItem = (props, id) => {
+    // const { item } = props;
+    const item = props;
 
-    if (isEmpty(item)) {
+    // if (isEmpty(item)) {
+    if (!item.name && !item.isDummy) {
       return (
-        <View style={styles.emptyData}>
+        <View style={styles.emptyData} key={id}>
           <Text style={styles.emptyDataText}>No events</Text>
         </View>
       );
@@ -200,6 +207,7 @@ export default ({ route, navigation }) => {
 
     return item.isDummy ? (
       <View
+        key={id}
         style={{
           height: 500,
           borderTopColor: "#dee2e6",
@@ -209,6 +217,7 @@ export default ({ route, navigation }) => {
       ></View>
     ) : (
       <TouchableOpacity
+        key={id}
         onPress={() =>
           navigation.navigate("AddTaskScreen", {
             taskId: item.id,
@@ -276,13 +285,18 @@ export default ({ route, navigation }) => {
         disabledOpacity={0.6}
       >
         <ExpandableCalendar firstDay={1} markedDates={dataMarked} />
-        <AgendaList
+        {/* <AgendaList
           sections={weekTask}
           renderItem={renderItem}
           sectionStyle={styles.section}
           markToday={true}
           renderSectionHeader={renderSectionHeader}
-          avoidDateUpdates={true}
+        /> */}
+        <AgendaComponent
+          items={weekTask}
+          renderItem={renderItem}
+          renderSectionHeader={renderSectionHeader}
+          selected={selectedDate}
         />
       </CalendarProvider>
     </SafeAreaView>
