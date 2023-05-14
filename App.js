@@ -102,7 +102,10 @@ export default function App() {
           <Stack.Screen name="HomeTab" component={HomeTab} />
           <Stack.Screen name="UserDetailScreen" component={UserDetailScreen} />
           <Stack.Screen name="SettingScreen" component={SettingScreen} />
-          <Stack.Screen name="ForgotPasswordScreen" component={ForgotPasswordScreen} />
+          <Stack.Screen
+            name="ForgotPasswordScreen"
+            component={ForgotPasswordScreen}
+          />
           <Stack.Screen
             name="TaskListDetail"
             component={TaskListDetailScreen}

@@ -17,13 +17,14 @@ import Spinner from "react-native-loading-spinner-overlay";
 import { StyleSheet } from "react-native";
 
 export default ({ navigation }) => {
-  const [phone, setPhone] = useState("0369548201");
-  const [password, setPassword] = useState("123456");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [validatePhone, setValidatePhone] = useState(false);
   const [validatePassword, setValidatePassword] = useState(false);
   const [textPassword, setTextPassword] = useState("Password is not empty");
   const [textError, setTextError] = useState(false);
+
   const Login = async () => {
     setIsLoading(true);
 
@@ -51,6 +52,7 @@ export default ({ navigation }) => {
 
     setIsLoading(false);
   };
+
   const validateNumberPhone = (phone) => {
     var re = /(0[3|5|7|8|9])+([0-9]{8})\b/g;
     return re.test(phone);

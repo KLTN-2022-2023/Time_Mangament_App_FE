@@ -211,10 +211,14 @@ export default ({ navigation, taskId, namePath }) => {
     let result = handleValidate(false, true, true, true);
     setErrorRepeatOverlap(false);
   }, [startDate, startTime, dueDate, dueTime]);
+
+  // Validate repeat
   useEffect(() => {
     let result = handleValidate(false, false, false, true);
     setErrorRepeatOverlap(false);
   }, [endRepeat, repeat]);
+
+  // Validate remind
   useEffect(() => {
     let result = handleValidate(false, false, true, false);
     setErrorRepeatOverlap(false);
@@ -223,7 +227,7 @@ export default ({ navigation, taskId, namePath }) => {
   // Validate type
   useEffect(() => {
     let result = handleValidate(true, false, false, false);
-  }, [type]);
+  }, [type, allTypes]);
 
   // Recalculate Remind
   useEffect(() => {
@@ -685,7 +689,7 @@ export default ({ navigation, taskId, namePath }) => {
         const response = await UpdateTask(request, token);
         if (response) {
           // Remind
-          if (request.remindTime !== backupData.remindTime) {
+          if (request.remindTime !== dataBackup.remindTime) {
             await handleSettingRemind(request, response, "update");
           }
 
@@ -793,19 +797,16 @@ export default ({ navigation, taskId, namePath }) => {
         let mode = repeat.split(": ")[0];
         let days = repeat.split(": ")[1].split(", ");
 
-        let curr = new Date(start.getTime()); // get current date
-        let first = start.getDate() - start.getDay(); // First day is the day of the month - the day of the week
-        first += 1;
-        let last = first + 6; // last day is the first day + 6
-
-        let firstday = new Date(curr.setDate(first));
-        let lastday = new Date(curr.setDate(last));
+        let da = new Date(start.getTime());
+        let day = da.getDay(),
+          diff = da.getDate() - day + (day == 0 ? -6 : 1); // adjust when day is sunday
+        let monday = new Date(da.setDate(diff));
 
         // Get days of first week
         let listDefault = [];
         let differenceInTime = end.getTime() - start.getTime();
-        let monStart = firstday;
-        let monEnd = new Date(firstday.getTime() + differenceInTime);
+        let monStart = monday;
+        let monEnd = new Date(monday.getTime() + differenceInTime);
         days.forEach((x) => {
           let s = new Date(monStart.getTime());
           let e = new Date(monEnd.getTime());
@@ -849,7 +850,7 @@ export default ({ navigation, taskId, namePath }) => {
         if (mode === CommonData.RepeatType().Weekly) {
           let i = 0;
           for (
-            var d = new Date(monStart.getTime());
+            let d = new Date(monStart.getTime());
             d <= endRepeat;
             d.setDate(d.getDate() + 7)
           ) {
@@ -866,9 +867,15 @@ export default ({ navigation, taskId, namePath }) => {
             }
             i++;
           }
-          result = result.filter(
-            (x) => start <= x.start && x.start <= endRepeat
-          );
+
+          let startStr = convertDateTime(start);
+          let endRepeatStr = convertDateTime(endRepeat);
+
+          result = result.filter((x) => {
+            let str = convertDateTime(x.start);
+
+            return startStr <= str && str <= endRepeatStr;
+          });
         } else {
           let list = mode.split("Every ");
           let list2 = list[1].split(" ");
@@ -1101,7 +1108,7 @@ export default ({ navigation, taskId, namePath }) => {
       }
 
       // Type
-      if (!type) {
+      if (!type && allTypes.length > 0) {
         setErrorTypeRequired(true);
         result = true;
       } else {
@@ -1171,7 +1178,6 @@ export default ({ navigation, taskId, namePath }) => {
 
     // Remind not in the past
     if (onlyRemind && (!dataBackup || remind !== dataBackup.remindMode)) {
-      console.log(remindTime);
       if (remindTime < dateNowString || remindTime > startTimeString) {
         setRemindPast(true);
         result = true;
@@ -1201,17 +1207,18 @@ export default ({ navigation, taskId, namePath }) => {
         let splitList = repeat.split(": ");
         let splitList2 = splitList[1].split(", ");
 
-        let date = new Date(startDate + " " + startTime);
-        let curr = new Date(date.getTime()); // get current date
-        let first = date.getDate() - date.getDay(); // First day is the day of the month - the day of the week
-        first += 1;
+        let d = new Date(startDate + " " + startTime);
+        let day = d.getDay(),
+          diff = d.getDate() - day + (day == 0 ? -6 : 1); // adjust when day is sunday
+        let monday = new Date(d.setDate(diff));
         let list = [];
 
         for (let i = 0; i < 7; i++) {
-          let d = first + i;
+          let d = new Date(monday.getTime());
+          d.setDate(d.getDate() + i);
 
           list.push({
-            date: convertDateTime(new Date(curr.setDate(d))).split(" ")[0],
+            date: convertDateTime(new Date(d)).split(" ")[0],
           });
         }
 
