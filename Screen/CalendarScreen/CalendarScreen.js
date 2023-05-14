@@ -19,6 +19,7 @@ import jwt_decode from "jwt-decode";
 import { useSelector, useDispatch } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { convertDateTime } from "../../helper/Helper";
+import { format } from "date-fns";
 
 export default ({ route, navigation }) => {
   const dispatch = useDispatch();
@@ -168,6 +169,13 @@ export default ({ route, navigation }) => {
       }
     }
 
+    // Add dummy data
+    for (let i = 0; i < list.length; i++) {
+      if (i === 6) {
+        list[i].data.push({ isDummy: true });
+      }
+    }
+
     return list;
   };
 
@@ -190,7 +198,16 @@ export default ({ route, navigation }) => {
       );
     }
 
-    return (
+    return item.isDummy ? (
+      <View
+        style={{
+          height: 500,
+          borderTopColor: "#dee2e6",
+          borderTopWidth: 1,
+          marginTop: 10,
+        }}
+      ></View>
+    ) : (
       <TouchableOpacity
         onPress={() =>
           navigation.navigate("AddTaskScreen", {
@@ -228,6 +245,26 @@ export default ({ route, navigation }) => {
     );
   };
 
+  const renderSectionHeader = (value) => {
+    let newDateString = convertDateTime(new Date()).split(" ")[0];
+
+    return (
+      <View style={styles.section}>
+        <Text
+          style={
+            newDateString === value
+              ? styles.sectionTextToday
+              : styles.sectionText
+          }
+        >
+          {format(new Date(value), "EEEE") +
+            ", " +
+            format(new Date(value), "dd-MM-yyyy")}
+        </Text>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
       <CalendarProvider
@@ -238,16 +275,14 @@ export default ({ route, navigation }) => {
         todayBottomMargin={38}
         disabledOpacity={0.6}
       >
-        <ExpandableCalendar
-          firstDay={1}
-          markedDates={dataMarked}
-          date={dateNowString.split(" ")[0]}
-        />
+        <ExpandableCalendar firstDay={1} markedDates={dataMarked} />
         <AgendaList
           sections={weekTask}
           renderItem={renderItem}
           sectionStyle={styles.section}
           markToday={true}
+          renderSectionHeader={renderSectionHeader}
+          avoidDateUpdates={true}
         />
       </CalendarProvider>
     </SafeAreaView>
@@ -260,9 +295,17 @@ const styles = StyleSheet.create({
   },
   section: {
     backgroundColor: "#ffffff",
+    marginBottom: 4,
+    padding: 10,
+  },
+  sectionText: {
+    color: "#4dabf7",
+    fontSize: 18,
+  },
+  sectionTextToday: {
     color: "#364fc7",
-    fontSize: 16,
-    marginBottom: 10,
+    fontWeight: "500",
+    fontSize: 18,
   },
   emptyData: {
     padding: 20,
@@ -272,14 +315,11 @@ const styles = StyleSheet.create({
     color: "#868e96",
   },
   event: {
-    margin: 10,
-    marginTop: 0,
-    marginBottom: 10,
     padding: 10,
     backgroundColor: "#e7f5ff",
-    borderRadius: 5,
     borderColor: "#dbe4ff",
-    borderWidth: 1,
+    borderWidth: 2,
+    marginBottom: 2,
   },
   timeContainer: {
     display: "flex",
@@ -287,8 +327,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   timeText: {
-    fontWeight: "500",
-    fontSize: 18,
+    fontSize: 16,
   },
   statusContainerDone: {
     padding: 5,
@@ -297,7 +336,7 @@ const styles = StyleSheet.create({
   },
   statusContainerNew: {
     padding: 5,
-    backgroundColor: "#ffd43b",
+    backgroundColor: "#f59f00",
     width: 50,
   },
   statusText: {
@@ -312,7 +351,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   taskName: {
-    fontSize: 16,
+    fontSize: 18,
     marginTop: 10,
+    fontWeight: "500",
   },
 });
