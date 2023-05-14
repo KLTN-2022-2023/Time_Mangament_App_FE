@@ -29,7 +29,7 @@ const StatictisComponent = ({ navigation }) => {
   const [dataLabel, setDataLabel] = useState([]);
   const [data, setData] = useState([]);
   const [allYear, setAllYear] = useState([]);
-  const [selectYear, setSelectYear] = useState();
+  const [selectYear, setSelectYear] = useState("");
   const [totalTaskYear, setTotalTaskYear] = useState();
 
 
@@ -57,7 +57,6 @@ const StatictisComponent = ({ navigation }) => {
       const data = result.data;
       var countComplete = 0;
       var countUncomplete = 0;
-      const a = [];
       data.forEach(element => {
 
         if (element.status === "New") {
@@ -67,7 +66,6 @@ const StatictisComponent = ({ navigation }) => {
           countComplete++;
         }
       });
-      console.log(a);
       setUncompleteTask(countUncomplete);
       setCompleteTask(countComplete);
     }
@@ -84,8 +82,7 @@ const StatictisComponent = ({ navigation }) => {
 
   useEffect(() => {
     handleGetAllTasks();
-
-  }, [selectMonth]);
+  }, []);
   useEffect(() => {
     dropdownYear()
   }, [])
@@ -109,9 +106,11 @@ const StatictisComponent = ({ navigation }) => {
     totalTaskByYear();
   }, [selectYear]);
   const validateDay = () => {
-    const end = dayEnd.toString().substring(5, 7);
-    const start = dayStart.toString().substring(5, 7);
-    if (end === start) {
+    const endMonth = dayEnd.toString().substring(5, 7);
+    const startMonth = dayStart.toString().substring(5, 7);
+    const endDay = dayEnd.toString().substring(8, 10);
+    const startDay = dayStart.toString().substring(8, 10);
+    if (startMonth === endMonth && endDay > startDay) {
       setColor("#FFFFFF")
     }
     else {
@@ -145,7 +144,6 @@ const StatictisComponent = ({ navigation }) => {
   const handleDay = () => {
     const start = dayStart.toString().substring(8, 10);
     const end = dayEnd.toString().substring(8, 10);
-    console.log(start, end);
     const data = [];
     for (let i = start; i <= end; i++) {
       data.push(i);
@@ -174,7 +172,6 @@ const StatictisComponent = ({ navigation }) => {
       const result = await reportDate({
         userId: decoded._id, startDate: new Date(dayStart), endDate: new Date(dayEnd)
       }, token)
-      // const data = result.data;
       const data = result.data;
       var total = 0;
       let arrTotal = [];
@@ -184,29 +181,18 @@ const StatictisComponent = ({ navigation }) => {
       for (let i = start; i <= end; i++) {
         arrDay.push(i);
       }
-      console.log(arrDay)
       data.forEach(e => {
-        // console.log("StartTime", e.startTime.toString().substring(8, 10));
-        // console.log("DayStart", dayStart.substring(8, 10));
         arrDay.forEach(i => {
           if (Number(e.startTime.toString().substring(8, 10)) === i) {
             total++;
-
           }
           else {
             total = 0;
           }
-          //  console.log(i)
           arrTotal.push(total);
         })
       })
       setData(arrTotal);
-      //   console.log(arrTotal)
-      //  console.log(data)
-      // console.log(decoded._id)
-      // console.log(dayStart)
-      // console.log(dayEnd)
-      // console.log("resul", result.data)
     }
   }
   useEffect(() => {
@@ -226,14 +212,14 @@ const StatictisComponent = ({ navigation }) => {
                   data={[
                     {
                       name: 'Uncomplete',
-                      population: 215,
+                      population: Number(uncompleteTask),
                       color: 'rgba(131, 167, 234, 1)',
                       legendFontColor: '#7F7F7F',
                       legendFontSize: 12,
                     },
                     {
                       name: 'Complete',
-                      population: 28,
+                      population: Number(completeTask),
                       color: '#F00',
                       legendFontColor: '#7F7F7F',
                       legendFontSize: 12,

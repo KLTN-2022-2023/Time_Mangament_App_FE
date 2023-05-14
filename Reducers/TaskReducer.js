@@ -135,11 +135,18 @@ export const Upload = async (req) => {
   return result;
 };
 
+<<<<<<< HEAD
 export const CreateRepeat = async (req, token) => {
   let result = null;
   try {
     if (!req) return;
     const response = await APIService.task().createRepeatTask(req, token);
+=======
+export const getAllTask = async (req, token) => {
+  let result = null;
+  try {
+    const response = await APIService.task().getListAllTasks(req, token);
+>>>>>>> 0b2f60a (edit default value)
     if (response && response.data) {
       result = response.data;
     }
@@ -149,6 +156,7 @@ export const CreateRepeat = async (req, token) => {
   return result;
 };
 
+<<<<<<< HEAD
 export const CreateRepeatAfterUpdate = async (req, token) => {
   let result = null;
   try {
@@ -165,5 +173,8 @@ export const CreateRepeatAfterUpdate = async (req, token) => {
   }
   return result;
 };
+=======
+
+>>>>>>> 0b2f60a (edit default value)
 
 export default tasksSlice.reducer;
