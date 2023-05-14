@@ -35,34 +35,41 @@ export default ({ navigation }) => {
   const [snackBar, setSnackBar] = useState(false);
   const [snackBarVerify, setSnackBarVerify] = useState(false);
   const [textPhone, setTextPhone] = useState("Number phone is invalid");
-
   const [otp, setOtp] = useState();
   const [validateOTP, setValidateOTP] = useState(false);
 
   const handleSignUp = async () => {
-
     if (!validate()) {
-      if (confirmPassword === password) {
-        const result = await signUp({ name: name, email: email, phone: phone, password: password });
-        console.log(result)
-        if (result) {
-          if (result.msg === "Phone already exist") {
-            setValidateNumberPhone(true);
-            setTextPhone("Phone allready exist");
-            setModalOTP(true);
+
+      if (confirmPassword === password && confirmPassword && name && password && phone && email) {
+
+        if (!validateEmail && !validateName && !validateNumberPhone && !validateConfirmPassword && !validatePass) {
+          console.log("abc")
+          const result = await signUp({ name: name, email: email, phone: phone, password: password });
+          console.log("bcd")
+          if (result) {
+            if (result.msg === "Phone already exist") {
+              setValidateNumberPhone(true);
+              setTextPhone("Phone allready exist");
+              setModalOTP(true);
+            }
+            if (result.msg === "Successfully") {
+              setModalOTP(false);
+              setValidateNumberPhone(false);
+            }
+          } else {
+            setModalOTP(false)
           }
-          if (result.msg === "Successfully") {
-            setModalOTP(false);
-            setValidateNumberPhone(false);
-          }
-        } else {
-          setModalOTP(false)
         }
-      } else {
-        setValidateConfirmPassword(true)
+        else {
+          console.log("aaaaaaaaaaaa")
+        }
       }
+      // } else {
+      //   console.log("ABC")
+      // }
     }
-    else { console.log("Nam") }
+    // else { console.log("Nam") }
   }
 
   const handleVerify = async () => {
@@ -79,9 +86,7 @@ export default ({ navigation }) => {
       }, 3000)
     }
   }
-  useEffect(() => {
-    setValidateConfirmPassword(false);
-  }, [confirmPassword])
+
   const validateMail = (email) => {
     var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email);
@@ -164,7 +169,7 @@ export default ({ navigation }) => {
             <VStack space={3} mt="5">
               <FormControl>
                 <FormControl.Label>Name</FormControl.Label>
-                <Input value={name} onChangeText={e => setName(e)} />
+                <Input value={name} onChangeText={e => { setName(e), setValidateName(false) }} />
                 {validateName && (
                   <Text color={"#FF0000"}> Name is invalid </Text>
                 )}
@@ -172,14 +177,14 @@ export default ({ navigation }) => {
 
               <FormControl>
                 <FormControl.Label>Email</FormControl.Label>
-                <Input value={email} onChangeText={e => setEmail(e)} />
+                <Input value={email} onChangeText={e => { setEmail(e), setValidateEmail(false) }} />
                 {validateEmail && (
                   <Text color={"#FF0000"}>Email is invalid</Text>
                 )}
               </FormControl>
               <FormControl>
                 <FormControl.Label>Phone</FormControl.Label>
-                <Input value={phone} onChangeText={e => setPhone(e)} />
+                <Input value={phone} onChangeText={e => { setPhone(e), setValidateNumberPhone(false) }} />
                 {validateNumberPhone && (
                   <Text color={"#FF0000"}>{textPhone}</Text>
                 )}
@@ -187,14 +192,14 @@ export default ({ navigation }) => {
 
               <FormControl>
                 <FormControl.Label>Password</FormControl.Label>
-                <Input value={password} secureTextEntry={true} onChangeText={e => setPassword(e)} />
+                <Input value={password} secureTextEntry={true} onChangeText={e => { setPassword(e), setValidatePass(false) }} />
                 {validatePass && (
                   <Text color={"#FF0000"}>Password is invalid</Text>
                 )}
               </FormControl>
               <FormControl>
                 <FormControl.Label>Confirm password</FormControl.Label>
-                <Input value={confirmPassword} secureTextEntry={true} onChangeText={e => setConfirmPassword(e)} />
+                <Input value={confirmPassword} secureTextEntry={true} onChangeText={e => { setConfirmPassword(e), setValidateConfirmPassword(false) }} />
                 {validateConfirmPassword && (
                   <Text color={"#FF0000"}>{textConfirmPassword}</Text>
                 )}

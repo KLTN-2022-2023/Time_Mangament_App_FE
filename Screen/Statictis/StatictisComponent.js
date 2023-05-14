@@ -3,7 +3,7 @@ import { Box, Button, Center, CheckIcon, HStack, NativeBaseProvider, ScrollView,
 import { memo, useEffect } from 'react';
 import { useState } from 'react';
 import { StyleSheet } from 'react-native';
-
+import Spinner from "react-native-loading-spinner-overlay";
 import BarChart from 'react-native-bar-chart';
 import PieChart from 'react-native-pie-chart';
 import { convertDateTime } from "../../helper/Helper";
@@ -44,10 +44,13 @@ const StatictisComponent = ({ navigation }) => {
   const horizontalData = ['Jan', 'Jeb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const arrayMonth = [{ month: "01" }, { month: "02" }, { month: "03" }, { month: "04" }, { month: "05" }, { month: "06" }, { month: "07" }, { month: "08" }, { month: "09" }, { month: "10" }, { month: "11" }, { month: "12" }];
   const widthAndHeight = 200;
+  const [isLoading, setIsLoading] = useState(false);
+  const [text, setText] = useState(false)
 
   const handleGetAllTasks = async () => {
     const token = await AsyncStorage.getItem("Token");
     if (token) {
+      setIsLoading(true);
       const decoded = jwt_decode(token);
       const result = await reportMonth({ userId: decoded._id, month: pieMonth, year: pieYear }, token);
       const data = result.data;
@@ -61,24 +64,27 @@ const StatictisComponent = ({ navigation }) => {
           complete++;
         }
       });
-      if (complete === 0 || uncomplete === 0) {
+      console.log(complete, uncomplete)
+      if (complete === 0 && uncomplete === 0) {
         setUncompleteTask(1);
         setCompleteTask(1);
         setNoJob(true);
         setSelectPieMonth(false);
       }
-      else if (complete !== 0 && uncomplete !== 0) {
+      else if (complete !== 0 || uncomplete !== 0) {
         setUncompleteTask(uncomplete);
         setCompleteTask(complete);
         setSelectPieMonth(true);
         setNoJob(false);
       }
+      setIsLoading(false);
     }
   };
 
   const handleTypeWork = async () => {
     const token = await AsyncStorage.getItem("Token");
     if (token) {
+      setIsLoading(true);
       const decoded = jwt_decode(token);
       const response = await getTypeWork({ userId: decoded._id }, token);
       const type = response.data;
@@ -98,12 +104,12 @@ const StatictisComponent = ({ navigation }) => {
           if (e.id === i.typeId) {
             totalType++;
           }
-
         })
         abc.push(totalType)
         totalType = 0;
       })
       setCountType(abc);
+      setIsLoading(false);
     }
   }
   const dropdownYear = () => {
@@ -120,7 +126,6 @@ const StatictisComponent = ({ navigation }) => {
     handleTypeWork();
   }, []);
   useEffect(() => {
-
     dropdownYear();
   }, []);
 
@@ -142,6 +147,7 @@ const StatictisComponent = ({ navigation }) => {
   });
 
   const validateMonth = () => {
+    setChartMonth(false);
     if (selectMonth === "04" || selectMonth === "06" || selectMonth === "09" || selectMonth === "11") {
       setLabelDay(['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30'])
     }
@@ -155,22 +161,19 @@ const StatictisComponent = ({ navigation }) => {
 
   useEffect(() => {
     validateMonth();
-  }, [])
+  }, [selectMonth])
 
   const handleReportByMonth = async () => {
     const token = await AsyncStorage.getItem("Token");
     if (token) {
+      setIsLoading(true);
       const decoded = jwt_decode(token);
       const result = await reportMonth({ userId: decoded._id, month: selectMonth, year: yearByMonth }, token);
       const dataByMonth = result.data;
-      console.log(result)
       var totalNew = 0;
       var totalDone = 0;
-      var totalY = 0;
-      var arrTaskNew = [];
-      var arrTaskDone = [];
       var arrY = [];
-      let label;
+      var label;
       if (selectMonth === "04" || selectMonth === "06" || selectMonth === "09" || selectMonth === "11") {
         label = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30'];
       }
@@ -180,34 +183,55 @@ const StatictisComponent = ({ navigation }) => {
       else if (selectMonth === "01" || selectMonth === "03" || selectMonth === "05" || selectMonth === "07" || selectMonth === "08" || selectMonth === "10" || selectMonth === "12") {
         label = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'];
       }
+      if (dataByMonth.length > 0) {
+        label.forEach(i => {
+          dataByMonth.forEach(e => {
+            if (e) {
+              if (convertDateTime(e.startTime).substring(8, 10) === i && e.status === "New") {
+                totalNew++;
+              }
+              if (convertDateTime(e.startTime).substring(8, 10) === i && e.status === "Done") {
+                totalDone++;
+              }
+            } else {
+              console.log("cmn")
+            }
+          })
 
-      label.forEach(i => {
-        dataByMonth.forEach(e => {
-          if (convertDateTime(e.startTime).substring(8, 10) === i && e.status === "New") {
-            totalNew++;
-          }
-          if (convertDateTime(e.startTime).substring(8, 10) === i && e.status === "Done") {
-            totalDone++;
-          }
-          if (convertDateTime(e.startTime).substring(8, 10)) {
-            totalY++;
-          }
+          arrY.push([totalNew, totalDone]);
+          totalNew = 0;
+          totalDone = 0;
+
         })
+        console.log(arrY)
+        setChartY(arrY);
+        console.log("chartY", chartY);
+        if (chartY) {
+          setChartMonth(true);
+        } else {
+          setChartMonth(false);
+        }
 
-        arrY.push([totalNew, totalDone]);
-        totalNew = 0;
-        totalDone = 0;
-        totalY = 0;
+      } else {
+        // setChartMonth(false);
+        label.forEach(i => {
+          dataByMonth.forEach(e => {
 
-      })
-      setChartY(arrY);
-      console.log("arrayY", chartY)
-      if (arrY) {
-        // setDataTaskNew(arrTaskNew);
-        // setDataTaskDone(arrTaskDone);
-        setChartMonth(true);
+          })
+          arrY.push([totalNew, totalDone]);
+        })
+        console.log(arrY);
+        console.log(chartY)
+        setChartY(arrY);
+        console.log(chartY)
+        if (chartY.length > 0) {
+          setChartMonth(true)
+        }
+
       }
+
     }
+    setIsLoading(false);
   }
 
   useEffect(() => {
@@ -217,6 +241,7 @@ const StatictisComponent = ({ navigation }) => {
   const hanldeReportByYear = async () => {
     const token = await AsyncStorage.getItem("Token");
     if (token) {
+      setIsLoading(true)
       const decoded = jwt_decode(token);
       const result = await reportYear({ userId: decoded._id, year: selectYear }, token);
       const data = result.data;
@@ -242,6 +267,7 @@ const StatictisComponent = ({ navigation }) => {
         setChartYear(true);
       }
     }
+    setIsLoading(false);
   }
 
   const xyz = () => {
@@ -279,6 +305,7 @@ const StatictisComponent = ({ navigation }) => {
 
     <NativeBaseProvider>
       <Center>
+        <Spinner visible={isLoading}></Spinner>
         <Box safeArea py="2" w="100%" maxW="350">
           <ScrollView width={350} >
             <HStack w={"100%"}>
@@ -325,7 +352,7 @@ const StatictisComponent = ({ navigation }) => {
                         <TouchableOpacity>
                           <HStack>
                             <Button backgroundColor={"#FFCC00"} disabled={true}></Button>
-                            <Text paddingLeft={5}> {uncompleteTask} Task uncomplete</Text>
+                            <Text paddingLeft={5}>{uncompleteTask} Task uncomplete</Text>
                           </HStack>
                           <HStack paddingTop={2}>
                             <Button backgroundColor={"#FF0000"} disabled={true}></Button>
