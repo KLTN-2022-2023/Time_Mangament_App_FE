@@ -49,5 +49,20 @@ export const HandleLogin = async (req) => {
 
   return result;
 };
+export const UpdateProfile = async (req, token) => {
+  let result = null;
+  try {
+    if (!req) return;
+    const response = await APIService.user().updateProfile(req, token);
+    if (response && response.data && response.data.data) {
+      result = response.data.data;
+    }
+  } catch (err) {
+    console.log(err);
+    result = null;
+  }
+  return result;
+
+}
 
 export default userSlice.reducer;

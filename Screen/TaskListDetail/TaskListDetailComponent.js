@@ -120,12 +120,13 @@ export default ({ route, navigation }) => {
             <Popover
               trigger={(triggerProps) => {
                 return (
-                  <View style={styles.view} marginRight={-5}>
+                  <View style={styles.view} >
                     <TouchableOpacity {...triggerProps}>
                       <IconICon
                         size={25}
                         color={Color.Header().Main}
                         name="ellipsis-vertical"
+
                       />
                     </TouchableOpacity>
                   </View>

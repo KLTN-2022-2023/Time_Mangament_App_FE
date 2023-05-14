@@ -22,6 +22,14 @@ export default {
             Authorization: token,
           },
         }),
+      updateProfile: (req, token) =>
+        axios.post(url + "UpdateProfile/", JSON.stringify(req), {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            "Authorization": token
+          },
+        }),
     };
   },
   task(url = baseApi + "Task/") {
@@ -98,6 +106,32 @@ export default {
         }),
       createType: (req, token) =>
         axios.post(url + "CreateType/", JSON.stringify(req), {
+          Authorization: token
+        }
+        )
+      ,
+      //   markImportant: (id, token) =>
+      //     axios.get(url + "MarkImportant/" + id, {
+      //       headers: {
+      //         Authorization: token
+      //       }
+      //   },
+      //   alert(url + "MarkImportant/" + id)
+      //   ),
+      //  updateStatus: (id, token) => 
+      //     axios.put(url + "UpdateStatus/" + id ,{
+      //       headers: {
+      //         Authorization: token
+      //       }
+      //   }),
+      deleteTask: (id, token) =>
+        axios.delete(url + "FakeDeleteTask/" + id, {
+          headers: {
+            Authorization: token
+          }
+        }),
+      getListAllTasks: (req, token) =>
+        axios.post(url + "GetTasksByUserId/", JSON.stringify(req), {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
@@ -118,7 +152,7 @@ export default {
             Authorization: token,
           },
         }),
-    };
+    }
   },
   s3(url = baseApi + "S3") {
     return {
@@ -126,9 +160,24 @@ export default {
         axios.post(url + "Upload", req, {
           headers: {
             Accept: "application/json",
-            "Content-Type": "multipart/form-data",
-          },
-        }),
-    };
+            "Content-Type": "multipart/form-data"
+          }
+        })
+    }
   },
+  reportByDate(url = baseApi + "Report/") {
+    return {
+      reportByDate: (req, token) =>
+        axios.post(url + "ReportByDate", req, {
+          headers: {
+            // Accept: "application/json",
+            "Content-Type": "application/json",
+            "Authorization": token
+          }
+        })
+    }
+  }
+
 };
+
+
