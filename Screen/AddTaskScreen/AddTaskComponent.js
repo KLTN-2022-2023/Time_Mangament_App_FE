@@ -160,14 +160,11 @@ export default ({ navigation, taskId, namePath }) => {
       setData(foundItem);
       setDataBackup(foundItem);
 
-      let remindTimeString = convertDateTime(foundItem.remindTime);
-
       //set Data
       setName(foundItem.name);
       setNote(foundItem.description);
       setType(allTypes.find((x) => x._id === foundItem.typeId));
       setRemind(foundItem.remindMode);
-      setRemindTime(remindTimeString);
       setRepeat(foundItem.repeatTime);
       setIsImportant(foundItem.isImportant);
       setIsDone(
@@ -188,6 +185,14 @@ export default ({ navigation, taskId, namePath }) => {
         setEndRepeat(endRepeatString.split(" ").shift());
       } else {
         setEndRepeat(dateNowString.split(" ").shift());
+      }
+
+      if (foundItem.remindTime) {
+        let remindTimeString = convertDateTime(foundItem.remindTime);
+
+        setRemindTime(remindTimeString.split(" ").shift());
+      } else {
+        setRemindTime(null);
       }
     } else {
       setData(null);
@@ -229,13 +234,20 @@ export default ({ navigation, taskId, namePath }) => {
 
   // Validate type
   useEffect(() => {
-    let result = handleValidate(true, false, false, false);
-  }, [type, allTypes]);
+    // let result = handleValidate(true, false, false, false);
+    if (type) {
+      console.log(type);
+      setErrorTypeRequired(false);
+    }
+  }, [type]);
 
-  // Recalculate Remind
+  // Recalculate Remind, repeat
   useEffect(() => {
     if (remind) {
       handleChooseRemind(remind);
+    }
+
+    if (repeat) {
     }
   }, [startTime, startDate]);
 
@@ -547,7 +559,7 @@ export default ({ navigation, taskId, namePath }) => {
           ? CommonData.TaskStatus().Done
           : CommonData.TaskStatus().New,
         remindMode: remind,
-        remindTime: new Date(remindTime),
+        remindTime: remind ? new Date(remindTime) : null,
         repeatTime: repeat,
         endRepeat: repeat ? new Date(endRepeat) : null,
         isRepeatedById: null,
@@ -608,7 +620,6 @@ export default ({ navigation, taskId, namePath }) => {
         if (response) {
           // Remind
           await handleSettingRemind(request, response, "create");
-
           await handleGetAllTasks();
           // navigation.navigate("HomeTab", { screen: "Tasks" });
           navigation.goBack();
@@ -635,7 +646,7 @@ export default ({ navigation, taskId, namePath }) => {
           ? CommonData.TaskStatus().Done
           : CommonData.TaskStatus().New,
         remindMode: remind,
-        remindTime: new Date(remindTime),
+        remindTime: remind ? new Date(remindTime) : null,
         repeatTime: repeat,
         endRepeat: repeat ? new Date(endRepeat) : null,
         isRepeatedById: null,
@@ -644,9 +655,12 @@ export default ({ navigation, taskId, namePath }) => {
 
       // Repeat Setting
       if (
-        (request.repeat && request.repeatTime !== dataBackup.repeatTime) ||
-        request.endRepeat != dataBackup.endRepeat
+        request.repeat &&
+        (request.repeatTime !== dataBackup.repeatTime ||
+          request.endRepeat !== dataBackup.endRepeat)
       ) {
+        console.log(request.endRepeat, dataBackup.endRepeat);
+        console.log(request.repeatTime, dataBackup.repeatTime);
         let result = getCalculatedList(
           request.startTime,
           request.dueTime,
@@ -1076,6 +1090,7 @@ export default ({ navigation, taskId, namePath }) => {
   };
 
   const handleChooseType = (value) => {
+    setErrorTypeRequired(false);
     setType(value);
     setModalType(false);
   };
@@ -1113,7 +1128,7 @@ export default ({ navigation, taskId, namePath }) => {
       }
 
       // Type
-      if (!type && allTypes.length > 0) {
+      if (!type) {
         setErrorTypeRequired(true);
         result = true;
       } else {
@@ -1182,7 +1197,15 @@ export default ({ navigation, taskId, namePath }) => {
     }
 
     // Remind not in the past
-    if (onlyRemind && (!dataBackup || remind !== dataBackup.remindMode)) {
+    // if (onlyRemind && (!dataBackup || remind !== dataBackup.remindMode))
+    if (
+      onlyRemind &&
+      remind &&
+      (!dataBackup ||
+        startTimeString !== backupStartTimeString ||
+        dueTimeString !== backupDueTimeString ||
+        remind !== dataBackup.remindMode)
+    ) {
       if (remindTime < dateNowString || remindTime > startTimeString) {
         setRemindPast(true);
         result = true;
@@ -1192,9 +1215,15 @@ export default ({ navigation, taskId, namePath }) => {
     }
 
     // End repeat
+    // if (
+    //   onlyRepeat &&
+    //   (!dataBackup || new Date(endRepeat) !== dataBackup.endRepeat)
     if (
       onlyRepeat &&
-      (!dataBackup || new Date(endRepeat) !== dataBackup.endRepeat)
+      (!dataBackup ||
+        startTimeString !== backupStartTimeString ||
+        dueTimeString !== backupDueTimeString ||
+        new Date(endRepeat) !== dataBackup.endRepeat)
     ) {
       if (repeat) {
         if (endRepeat < dateNowString.split(" ")[0] || endRepeat < startDate) {
@@ -1207,7 +1236,14 @@ export default ({ navigation, taskId, namePath }) => {
     }
 
     // Repeat
-    if (onlyRepeat && (!dataBackup || repeat !== dataBackup.repeatTime)) {
+    // if (onlyRepeat && (!dataBackup || repeat !== dataBackup.repeatTime))
+    if (
+      onlyRepeat &&
+      (!dataBackup ||
+        startTimeString !== backupStartTimeString ||
+        dueTimeString !== backupDueTimeString ||
+        repeat !== dataBackup.repeatTime)
+    ) {
       if (repeat && repeat.includes(":")) {
         let splitList = repeat.split(": ");
         let splitList2 = splitList[1].split(", ");
@@ -1229,7 +1265,8 @@ export default ({ navigation, taskId, namePath }) => {
 
         let dayWeek = "";
         let indexItem = list.findIndex((x) => x.date === startDate);
-        if (!indexItem || indexItem < 0) {
+        console.log(indexItem);
+        if (indexItem === null || indexItem < 0) {
           setInvalidDaysWeek(true);
           result = true;
         } else {
@@ -1250,6 +1287,7 @@ export default ({ navigation, taskId, namePath }) => {
           }
 
           let find = splitList2.find((x) => x === dayWeek);
+          console.log(find);
 
           if (!find) {
             setInvalidDaysWeek(true);
@@ -1271,10 +1309,12 @@ export default ({ navigation, taskId, namePath }) => {
       errorNameRequired ||
       errorTypeRequired ||
       errorDates ||
+      errorStartPast ||
       errorOverlap ||
       errorRemindPast ||
       errorRepeatOverlap ||
-      errorStartPast
+      errorRepeatTimePast ||
+      errorInvalidDaysWeek
     );
   };
 
@@ -1301,7 +1341,7 @@ export default ({ navigation, taskId, namePath }) => {
       let list = listDate.filter((x) => {
         return (
           (x.start <= startString && startString <= x.end) ||
-          (x.start <= startString && endString <= x.end)
+          (x.end <= startString && endString <= x.end)
         );
       });
 

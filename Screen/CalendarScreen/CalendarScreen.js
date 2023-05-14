@@ -10,10 +10,12 @@ import {
   Text,
   View,
   TouchableOpacity,
+  ScrollView,
+  RefreshControl,
 } from "react-native";
+import Spinner from "react-native-loading-spinner-overlay";
 import isEmpty from "lodash/isEmpty";
 import CommonData from "../../CommonData/CommonData";
-import Color from "../../Style/Color";
 import { getListAllTasksByUserId } from "../../Reducers/TaskReducer";
 import jwt_decode from "jwt-decode";
 import { useSelector, useDispatch } from "react-redux";
@@ -23,6 +25,7 @@ import { format } from "date-fns";
 import AgendaComponent from "./AgendaComponent";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
+import Color from "../../Style/Color";
 
 export default ({ route, navigation }) => {
   const dateNowString = convertDateTime(new Date());
@@ -38,6 +41,7 @@ export default ({ route, navigation }) => {
   const [weekTask, setWeekTask] = useState([]);
   const [dataMarked, setDataMarked] = useState({});
   const [selectedDate, setSelectedDate] = useState(dateNowString.split(" ")[0]);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Load Data
   useEffect(() => {
@@ -47,9 +51,22 @@ export default ({ route, navigation }) => {
   }, []);
 
   useEffect(() => {
-    handleCalculateDayWeek(new Date());
+    handleCalculateDayWeek(new Date(selectedDate));
     handleGetMarked();
   }, [allTasks]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    console.log("refresh");
+
+    handleGetAllTasks();
+    handleCalculateDayWeek(new Date(selectedDate));
+    handleGetMarked();
+
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 4000);
+  };
 
   useEffect(() => {
     handleGetAllTasks();
@@ -344,6 +361,15 @@ export default ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <Spinner visible={refreshing}></Spinner>
+
+      <View style={styles.refreshContainer}>
+        <TouchableOpacity onPress={() => onRefresh()}>
+          <View>
+            <Text style={styles.refreshText}>Refresh</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
       <CalendarProvider
         date={dateNowString.split(" ")[0]}
         onDateChanged={onDateChanged}
@@ -360,12 +386,18 @@ export default ({ route, navigation }) => {
           markToday={true}
           renderSectionHeader={renderSectionHeader}
         /> */}
+        {/* <ScrollView
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        > */}
         <AgendaComponent
           items={weekTask}
           renderItem={renderItem}
           renderSectionHeader={renderSectionHeader}
           selected={selectedDate}
         />
+        {/* </ScrollView> */}
       </CalendarProvider>
     </SafeAreaView>
   );
@@ -436,5 +468,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginTop: 10,
     fontWeight: "500",
+  },
+  refreshText: {
+    fontSize: 18,
+    fontWeight: "500",
+    color: Color.Button().ButtonActive,
+  },
+  refreshContainer: {
+    backgroundColor: "#ffffff",
+    padding: 10,
+    display: "flex",
+    flexDirection: "row-reverse",
+    paddingLeft: 20,
   },
 });
