@@ -17,6 +17,7 @@ import Spinner from "react-native-loading-spinner-overlay";
 import { StyleSheet } from "react-native";
 import { View } from "react-native";
 import { Icon } from "react-native-vector-icons/AntDesign"
+import SnackBar from "../../Component/Snackbar/Snackbar";
 
 export default ({ navigation }) => {
     const [phone, setPhone] = useState();
@@ -24,6 +25,7 @@ export default ({ navigation }) => {
     const [otp, setOtp] = useState("");
     const [pageOTP, setPageOTP] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
+    const [snackBar, setSnackBar] = useState(false);
     const handleForgot = async () => {
         const response = await forgotPass({ phone: phone, newPass: newPassword });
         if (response) {
@@ -33,7 +35,12 @@ export default ({ navigation }) => {
     const handleVerifyForgot = async () => {
         const response = await verifyForgotPass({ otp: otp });
         if (response) {
-            navigation.navigate("LoginScreen");
+            setSnackBar(true);
+            setTimeout(() => {
+                setSnackBar(false);
+                navigation.navigate("LoginScreen");
+            }, 2000)
+
         }
     }
 
@@ -108,7 +115,7 @@ export default ({ navigation }) => {
                                 color: "warmGray.200",
                             }}
                         >
-                            I'm a new user.{" "}
+                            Already have an account?{" "}
                         </Text>
                         <Link
                             _text={{
@@ -116,13 +123,14 @@ export default ({ navigation }) => {
                                 fontWeight: "medium",
                                 fontSize: "sm",
                             }}
-                            onPress={() => navigation.navigate("SignUpScreen")}
+                            onPress={() => navigation.navigate("LoginScreen")}
                         >
-                            Sign Up
+                            Login
                         </Link>
                     </HStack>
                 </VStack>
             </Box>
+            {snackBar ? <SnackBar backgroundColor={{ backgroundColor: "green" }} onPress={() => navigation.navigate("LoginScreen")} label={"Forgot password successfully"} /> : null}
         </Center>
     );
 };

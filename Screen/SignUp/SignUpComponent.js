@@ -12,10 +12,10 @@ import {
   Link,
 } from "native-base";
 import { useState, useEffect } from "react";
-import { TextInput, StyleSheet, ScrollView } from "react-native";
+import { ScrollView } from "react-native";
 import { signUp, verifyAccount } from "../../Reducers/UserReducer";
 import SnackBar from "../../Component/Snackbar/Snackbar";
-import e from "cors";
+
 
 
 export default ({ navigation }) => {
@@ -42,27 +42,28 @@ export default ({ navigation }) => {
   const [otp, setOtp] = useState();
 
   const handleSignUp = async () => {
-    // validate();
-    if (confirmPassword === password) {
-
-
-      const result = await signUp({ name: name, email: email, phone: phone, password: password });
-      console.log(result)
-      if (result) {
-        if (result.msg === "Phone already exist") {
-          setValidateNumberPhone(true);
-          setTextPhone("Phone allready exist");
-          setModalOTP(true);
+    if (!validate()) {
+      if (confirmPassword === password) {
+        const result = await signUp({ name: name, email: email, phone: phone, password: password });
+        console.log(result)
+        if (result) {
+          if (result.msg === "Phone already exist") {
+            setValidateNumberPhone(true);
+            setTextPhone("Phone allready exist");
+            setModalOTP(true);
+          }
+          else if (result.msg === " Successfully") {
+            setValidateNumberPhone(false);
+            setModalOTP(false);
+          }
         }
-        else if (result.msg === " Successfully") {
-          setValidateNumberPhone(false);
-          setModalOTP(false);
-        }
+      } else {
+        setValidateConfirmPassword(true)
+        setTextConfirmPassword("Confirm password incorrect")
       }
-    } else {
-      setValidateConfirmPassword(true)
-      setTextConfirmPassword("Confirm password incorrect")
     }
+    else { console.log("Nam") }
+
   }
 
   const handleVerify = async () => {
@@ -86,7 +87,7 @@ export default ({ navigation }) => {
     return re.test(phone)
   }
   const valName = (name) => {
-    var re = /^[a-zA-Z]{1}+[a-z]*$/;
+    var re = /^[a-zA-Z]+[a-z]*$/;
     return re.test(name);
   }
   const valPassword = (password) => {
@@ -98,22 +99,24 @@ export default ({ navigation }) => {
     return re.test(confirmPassword)
   }
   const abc = () => {
-
-
-    if (!validatePass && !validateConfirmPassword && !validateNumberPhone && !validateName && !validateEmail) {
-      setDissableButton(false);
+    console.log("Nam")
+    if (!name && !confirmPassword && !phone && !email && !password) {
+      // setDissableButton(false);
       setColorButton("#0000EE");
     }
     else {
       console.log("a")
-      setDissableButton(true);
+      //   setDissableButton(true);
       setColorButton("#C0C0C0");
     }
   }
-  useEffect(() => {
-    validate();
-    abc();
-  }, [name, email, password, phone, confirmPassword]);
+  // useEffect(() => {
+  //   abc();
+  // }, [confirmPassword])
+  // useEffect(() => {
+  //   validate();
+  //   //abc();
+  // }, [name, email, password, phone, confirmPassword]);
   const validate = () => {
     if (!valName(name)) {
       setValidateName(true)
@@ -218,7 +221,7 @@ export default ({ navigation }) => {
                   <Text color={"#FF0000"}>{textConfirmPassword}</Text>
                 )}
               </FormControl>
-              <Button mt="2" colorScheme="indigo" onPress={handleSignUp} disabled={disableButton} backgroundColor={colorButton}>
+              <Button mt="2" colorScheme="indigo" onPress={handleSignUp} >
                 Sign up
               </Button>
               <HStack mt="6" justifyContent="center">

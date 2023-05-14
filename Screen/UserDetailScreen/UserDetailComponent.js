@@ -32,23 +32,9 @@ export default ({ navigation }) => {
   const [email, setEmail] = useState();
   const [name, setName] = useState();
   const [phone, setPhone] = useState();
-  const [age, setAge] = useState();
+  const [update, setUpdate] = useState(false);
   const [image, setImage] = useState(null);
   const [snackbar, setSnackBar] = useState(false);
-  const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    console.log(result);
-
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
-    }
-  };
 
   const HandleGetInfoUser = async () => {
     const token = await AsyncStorage.getItem("Token");
@@ -59,7 +45,6 @@ export default ({ navigation }) => {
       setEmail(data.email);
       setName(data.name);
       setPhone(data.phone);
-      console.log(result)
     }
 
   };
@@ -76,13 +61,11 @@ export default ({ navigation }) => {
 
     }
   }
-  const a = () => {
-    console.log("nam")
-    navigation.navigate("SettingScreen")
-  }
+
   useEffect(() => {
     HandleGetInfoUser();
   }, []);
+
 
   const style = StyleSheet.create({
     title: {
@@ -120,29 +103,36 @@ export default ({ navigation }) => {
         <View>
           <HStack alignItems={"center"} justifyContent={"space-between"}>
             <HStack alignItems={"center"}>
-
               <IconICon size={25}
+                color={"#000000"}
                 name="arrow-back"
                 onPress={() => navigation.navigate("SettingScreen")}
               />
-
-              <Text fontWeight={800} fontSize={20} paddingLeft={5}>Profile</Text>
+              <Text color={"#000000"} fontWeight={800} fontSize={20} paddingLeft={5}>Profile</Text>
             </HStack>
-            <Text style={style.buttonSave} onPress={HandleUpdateProfile}>Save</Text>
+            {update ? <Text style={style.buttonSave} fontWeight={500} onPress={HandleUpdateProfile}>Save</Text> : null}
           </HStack>
-
-          <HStack alignItems="center" marginTop={5} height={10} >
-            <IconFontisto name="email" size={20} color={"#0000FF"} />
-            <TextInput paddingLeft={20} style={style.text} value={email} editable={false} onChangeText={(e) => setEmail(e)} />
-          </HStack>
-          <HStack alignItems="center" marginTop={5} height={10} >
-            <IconFontisto name="male" size={20} color={"#0000FF"} />
-            <TextInput paddingLeft={20} style={style.text} value={name} onChangeText={(e) => setName(e)} />
-          </HStack>
-          <HStack alignItems="center" marginTop={5} height={10}>
-            <IconICon name="call-outline" size={20} color={"#0000FF"} />
-            <TextInput paddingLeft={20} style={style.text} value={phone} onChangeText={(e) => setPhone(e)} />
-          </HStack>
+          <View backgroundColor={"white"} marginTop={5}>
+            <HStack>
+              <Image source={{
+                uri: "https://static.vecteezy.com/system/resources/previews/000/439/863/original/vector-users-icon.jpg"
+              }} alt="Alternate Text" size="xl" height={"180"} width={"120"} />
+              <View paddingLeft={2}>
+                <HStack alignItems="center" marginTop={5} height={10} >
+                  <IconFontisto name="email" size={20} color={"#000000"} />
+                  <TextInput paddingLeft={20} style={style.text} value={email} onChangeText={(e) => setEmail(e)} />
+                </HStack>
+                <HStack alignItems="center" marginTop={5} height={10} >
+                  <IconFontisto name="male" size={20} color={"#000000"} />
+                  <TextInput paddingLeft={20} style={style.text} value={name} onChangeText={(e) => { setName(e), setUpdate(true) }} />
+                </HStack>
+                <HStack alignItems="center" marginTop={5} height={10}>
+                  <IconICon name="call-outline" size={20} color={"#000000"} />
+                  <TextInput paddingLeft={20} style={style.text} value={phone} editable={false} onChangeText={(e) => { setPhone(e), setUpdate(true) }} />
+                </HStack>
+              </View>
+            </HStack>
+          </View>
         </View>
       </Box>
       {snackbar ? <SnackBar label={"Thay đổi thông tin thành công"} backgroundColor={{ backgroundColor: "green" }} onPress={() => setSnackBar(false)} /> : null}
