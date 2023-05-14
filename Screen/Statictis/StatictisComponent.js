@@ -15,22 +15,14 @@ import { getTypeWork } from '../../Reducers/TypeReducer';
 import { TouchableOpacity } from 'react-native';
 
 const StatictisComponent = ({ navigation }) => {
-  const [dayStart, setDayStart] = useState(moment(new Date()).format("YYYY-MM-DD"));
-  const [dayEnd, setDayEnd] = useState(moment(new Date()).format("YYYY-MM-DD"));
-
-  const [color, setColor] = useState("#ffffff");
   const [selectMonth, setSelectMonth] = useState(moment(new Date()).format("YYYY-MM-DD").toString().substring(5, 7));
   const [selectPieMonth, setSelectPieMonth] = useState(false);
   const [labelDay, setLabelDay] = useState([]);
-  const [countTask, setCountTask] = useState();
   const [completeTask, setCompleteTask] = useState();
   const [uncompleteTask, setUncompleteTask] = useState();
   const [pieChart, setPieChart] = useState(false);
-  const [labelMonth, setLabelMonth] = useState([]);
-
   const [allYear, setAllYear] = useState([]);
   const [selectYear, setSelectYear] = useState(moment(new Date()).format("YYYY-MM-DD").toString().substring(0, 4));
-  const [totalTaskYear, setTotalTaskYear] = useState();
   const [dataReportByYear, setDataReportByYear] = useState([]);
   const [tickYear, setTickYear] = useState([]);
   const [chartByYear, setChartByYear] = useState(false);
@@ -44,13 +36,20 @@ const StatictisComponent = ({ navigation }) => {
   const [chartMonth, setChartMonth] = useState(false);
   const [chartYear, setChartYear] = useState(false);
   const [pieMonth, setPieMonth] = useState(moment(new Date()).format("YYYY-MM-DD").toString().substring(5, 7));
+  const [pieYear, setPieYear] = useState(moment(new Date()).format("YYYY-MM-DD").toString().substring(0, 4));
+  const [typeMonth, setTypeMonth] = useState(moment(new Date()).format("YYYY-MM-DD").toString().substring(5, 7));
+  const [typeYear, setTypeYear] = useState(moment(new Date()).format("YYYY-MM-DD").toString().substring(0, 4));
   const [noJob, setNoJob] = useState(false);
+  const [yearByMonth, setYearByMonth] = useState(moment(new Date()).format("YYYY-MM-DD").toString().substring(0, 4));
+  const horizontalData = ['Jan', 'Jeb', 'Mar', 'Apr', 'May', 'June', 'July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const arrayMonth = [{ month: "01" }, { month: "02" }, { month: "03" }, { month: "04" }, { month: "05" }, { month: "06" }, { month: "07" }, { month: "08" }, { month: "09" }, { month: "10" }, { month: "11" }, { month: "12" }];
+  const widthAndHeight = 200;
 
   const handleGetAllTasks = async () => {
     const token = await AsyncStorage.getItem("Token");
     if (token) {
       const decoded = jwt_decode(token);
-      const result = await reportMonth({ userId: decoded._id, month: pieMonth }, token);
+      const result = await reportMonth({ userId: decoded._id, month: pieMonth, year: pieYear }, token);
       const data = result.data;
       var complete = 0;
       var uncomplete = 0;
@@ -84,8 +83,7 @@ const StatictisComponent = ({ navigation }) => {
       const response = await getTypeWork({ userId: decoded._id }, token);
       const type = response.data;
       var arrType = [];
-      const a = moment(new Date()).format("YYYY-MM-DD").toString().substring(5, 7);
-      const result = await reportMonth({ userId: decoded._id, month: a }, token);
+      const result = await reportMonth({ userId: decoded._id, month: typeMonth, year: typeYear }, token);
       const data = result.data;
       var arrNameType = [];
       type.forEach(e => {
@@ -126,36 +124,6 @@ const StatictisComponent = ({ navigation }) => {
     dropdownYear();
   }, []);
 
-  const totalTaskByYear = async () => {
-    const token = await AsyncStorage.getItem("Token");
-    if (token) {
-      const decoded = jwt_decode(token);
-      const result = await getAllTask({ userId: decoded._id }, token);
-      const data = result.data;
-      var total = 0;
-      data.forEach(element => {
-        if (element.startTime.toString().substring(0, 4) === selectYear.toString()) {
-          total++;
-        }
-      })
-      setTotalTaskYear(total);
-    }
-  }
-
-  const validateDay = () => {
-    const endMonth = dayEnd.toString().substring(5, 7);
-    const startMonth = dayStart.toString().substring(5, 7);
-    const endDay = dayEnd.toString().substring(8, 10);
-    const startDay = dayStart.toString().substring(8, 10);
-    if (startMonth === endMonth || endDay > startDay || endDay === startDay) {
-      setColor("#FFFFFF");
-    }
-    else if (startMonth < endMonth || startMonth > endMonth || endDay < startDay) {
-      setColor("#FF0000");
-    }
-  }
-
-
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -173,17 +141,6 @@ const StatictisComponent = ({ navigation }) => {
     },
   });
 
-  const handleDay = () => {
-    const start = dayStart.toString().substring(8, 10);
-    const end = dayEnd.toString().substring(8, 10);
-    const data = [];
-    for (let i = start; i <= end; i++) {
-      data.push(i);
-    }
-    setLabelMonth(data);
-  }
-
-  const arrayMonth = [{ month: "01" }, { month: "02" }, { month: "03" }, { month: "04" }, { month: "05" }, { month: "06" }, { month: "07" }, { month: "08" }, { month: "09" }, { month: "10" }, { month: "11" }, { month: "12" }]
   const validateMonth = () => {
     if (selectMonth === "04" || selectMonth === "06" || selectMonth === "09" || selectMonth === "11") {
       setLabelDay(['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30'])
@@ -195,6 +152,7 @@ const StatictisComponent = ({ navigation }) => {
       setLabelDay(['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'])
     }
   }
+
   useEffect(() => {
     validateMonth();
   }, [])
@@ -203,7 +161,7 @@ const StatictisComponent = ({ navigation }) => {
     const token = await AsyncStorage.getItem("Token");
     if (token) {
       const decoded = jwt_decode(token);
-      const result = await reportMonth({ userId: decoded._id, month: selectMonth }, token);
+      const result = await reportMonth({ userId: decoded._id, month: selectMonth, year: yearByMonth }, token);
       const dataByMonth = result.data;
       console.log(result)
       var totalNew = 0;
@@ -251,6 +209,7 @@ const StatictisComponent = ({ navigation }) => {
       }
     }
   }
+
   useEffect(() => {
     handleReportByMonth();
   }, [])
@@ -284,19 +243,8 @@ const StatictisComponent = ({ navigation }) => {
       }
     }
   }
-  //   const token = await AsyncStorage.getItem("Token");
-  //   if (token) {
-  //     const decoded = jwt_decode(token);
-  //     const response = await getTypeWork({ userId: decoded._id }, token);
-  //     const data = response.data;
-  //   }
-  // };
-
-
-  const widthAndHeight = 200;
 
   const xyz = () => {
-    // validateMonth();
     if (selectStatictis === "typework") {
       setPieChart(false);
       setChartByMonth(false);
@@ -327,17 +275,14 @@ const StatictisComponent = ({ navigation }) => {
     }
   }
 
-
-  const horizontalData = ['Jan', 'Jeb', 'March', 'April', 'May', 'June', 'July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return (
 
     <NativeBaseProvider>
       <Center>
         <Box safeArea py="2" w="100%" maxW="350">
           <ScrollView width={350} >
-            <Text fontSize={25} fontWeight={500} color={"#0000FF"}>Please choose type statictis</Text>
             <HStack w={"100%"}>
-              <Select selectedValue={selectStatictis} minWidth="300" accessibilityLabel="Type statictis" placeholder="Type statictis" _selectedItem={{
+              <Select selectedValue={selectStatictis} minWidth="300" accessibilityLabel="Choose type statictis" placeholder="Type statictis" _selectedItem={{
                 bg: "teal.600",
                 endIcon: <CheckIcon size="5" />
               }} mt={1} onValueChange={itemValue => setSelectStatistic(itemValue)} >
@@ -353,12 +298,20 @@ const StatictisComponent = ({ navigation }) => {
                 {pieChart ?
                   <View>
                     <Text fontSize={18} fontWeight={500} color={"#00BFFF"}>Statistics of jobs in the month current </Text>
-                    <HStack paddingBottom={5}>
-                      <Select selectedValue={pieMonth} minWidth="300" accessibilityLabel="Month" placeholder="Month" _selectedItem={{
+                    <HStack alignItems={"center"} paddingBottom={5} justifyContent={"space-between"}>
+                      <Text fontWeight={500}>Month</Text>
+                      <Select selectedValue={pieMonth} minWidth="100" accessibilityLabel="Month" placeholder="Month" _selectedItem={{
                         bg: "teal.600",
                         endIcon: <CheckIcon size="5" />
                       }} mt={1} onValueChange={itemValue => setPieMonth(itemValue)} >
                         {arrayMonth.map((e) => <Select.Item label={e.month} value={e.month} />)}
+                      </Select>
+                      <Text fontWeight={500}>Year</Text>
+                      <Select selectedValue={pieYear} minWidth="100" accessibilityLabel="Year" placeholder="Year" _selectedItem={{
+                        bg: "teal.600",
+                        endIcon: <CheckIcon size="5" />
+                      }} mt={1} onValueChange={itemValue => setPieYear(itemValue)} >
+                        {allYear.map((e) => <Select.Item label={e.year} value={e.year} />)}
                       </Select>
                       <Button onPress={handleGetAllTasks} marginTop={1}>OK</Button>
                     </HStack>
@@ -388,8 +341,25 @@ const StatictisComponent = ({ navigation }) => {
                   : null
                 }
                 {barChart ?
-                  <View>
-                    <Text fontSize={18} fontWeight={500} color={"#00BFFF"}>Statictis task by type work in the month current</Text>
+                  <View  >
+                    <Text alignItems={"center"} paddingTop={5} fontSize={18} fontWeight={500} color={"#00BFFF"}  >Statictis task by type work</Text>
+                    <HStack alignItems={"center"} paddingBottom={5} justifyContent={"space-between"}>
+                      <Text fontWeight={500}>Month</Text>
+                      <Select selectedValue={typeMonth} minWidth="100" accessibilityLabel="Month" placeholder="Month" _selectedItem={{
+                        bg: "teal.600",
+                        endIcon: <CheckIcon size="5" />
+                      }} mt={1} onValueChange={itemValue => setTypeMonth(itemValue)} >
+                        {arrayMonth.map((e) => <Select.Item label={e.month} value={e.month} />)}
+                      </Select>
+                      <Text fontWeight={500}>Year</Text>
+                      <Select selectedValue={typeYear} minWidth="100" accessibilityLabel="Year" placeholder="Year" _selectedItem={{
+                        bg: "teal.600",
+                        endIcon: <CheckIcon size="5" />
+                      }} mt={1} onValueChange={itemValue => setTypeYear(itemValue)} >
+                        {allYear.map((e) => <Select.Item label={e.year} value={e.year} />)}
+                      </Select>
+                      <Button onPress={handleTypeWork} marginTop={1}>OK</Button>
+                    </HStack>
                     <ScrollView horizontal={true} >
                       <View width={350}>
                         <BarChart data={countType} horizontalData={nameType} />
@@ -400,12 +370,20 @@ const StatictisComponent = ({ navigation }) => {
                 {chartByMonth ?
                   <View>
                     <Text fontSize={18} fontWeight={500} color={"#00BFFF"}> Statictis task by month in 2023</Text>
-                    <HStack>
-                      <Select selectedValue={selectMonth} minWidth="300" accessibilityLabel="Month" placeholder="Month" _selectedItem={{
+                    <HStack alignItems={"center"} justifyContent={"space-between"}>
+                      <Text fontWeight={500}>Month</Text>
+                      <Select selectedValue={selectMonth} minWidth="100" accessibilityLabel="Month" placeholder="Month" _selectedItem={{
                         bg: "teal.600",
                         endIcon: <CheckIcon size="5" />
                       }} mt={1} onValueChange={itemValue => setSelectMonth(itemValue)} >
                         {arrayMonth.map((e) => <Select.Item label={e.month} value={e.month} />)}
+                      </Select>
+                      <Text fontWeight={500}>Year</Text>
+                      <Select selectedValue={yearByMonth} minWidth="100" accessibilityLabel="Year" placeholder="Year" _selectedItem={{
+                        bg: "teal.600",
+                        endIcon: <CheckIcon size="5" />
+                      }} mt={1} onValueChange={itemValue => setYearByMonth(itemValue)} >
+                        {allYear.map((e) => <Select.Item label={e.year} value={e.year} />)}
                       </Select>
                       <Button onPress={handleReportByMonth} marginTop={1}>OK</Button>
                     </HStack>
