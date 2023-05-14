@@ -147,33 +147,6 @@ const SettingComponent = ({ navigation }) => {
     <NativeBaseProvider>
       <Center w="100%">
         <Box safeArea p="2" py="2" w="100%" minW="370" width="100%">
-          <HStack
-            paddingLeft={5}
-            paddingTop={4}
-            backgroundColor={"#0066FF"}
-            alignItems={"center"}
-            justifyContent="flex-start"
-            paddingBottom={6}
-            width={"100%"}
-          >
-            <IconICon
-              color={"#FFFFFF"}
-              size={25}
-              name="arrow-back"
-              onPress={() =>
-                navigation.navigate("HomeTab", { screen: "Tasks" })
-              }
-            />
-            <Text
-              color={"#FFFFFF"}
-              width={"95%"}
-              paddingLeft={8}
-              fontSize={20}
-              fontWeight={800}
-            >
-              Settings
-            </Text>
-          </HStack>
           <View paddingLeft={18} paddingRight={18} paddingTop={5}>
             <HStack alignItems={"center"}>
               <Avatar

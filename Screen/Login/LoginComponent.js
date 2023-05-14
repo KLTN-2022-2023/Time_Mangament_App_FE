@@ -23,7 +23,6 @@ export default ({ navigation }) => {
   const [validatePhone, setValidatePhone] = useState(false);
   const [validatePassword, setValidatePassword] = useState(false);
   const [disable, setDisable] = useState(true);
-  
   const Login = async () => {
 
     try {
@@ -37,34 +36,19 @@ export default ({ navigation }) => {
             await AsyncStorage.setItem("Token", value);
             navigation.navigate("HomeTab");
           }
-          else {
-            if (validatePhone || validatePassword) {
-              setValidatePassword(false)
-            }
-            else {
-              setValidatePassword(true);
-              setValidatePhone(false)
-              setTimeout(() => {
-                setValidatePassword(false)
-
-              }, 1500)
-            }
-          }
         }
+        else {
+          console.log("abc")
+        }
+      } else {
+        setValidatePassword(true);
+        setValidatePhone(true);
       }
     } catch (err) {
       console.log(err);
     }
     setIsLoading(false);
   };
-  const abc = () => {
-    if (!validatePhone && !validatePassword) {
-      setDisable(false);
-    }
-    else {
-      setDisable(true);
-    }
-  }
   const validateNumberPhone = (phone) => {
     var re = /(0[3|5|7|8|9])+([0-9]{8})\b/g;
     return re.test(phone)
@@ -119,7 +103,7 @@ export default ({ navigation }) => {
             <FormControl.Label>Number Phone</FormControl.Label>
             <Input
               value={phone || ""}
-              onChangeText={async (text) => { setPhone(text), abc() }}
+              onChangeText={async (text) => { setPhone(text), setValidatePhone(false) }}
             />
             {validatePhone && (
               <Text color={"#FF0000"}>Phone is invalid</Text>
@@ -130,7 +114,7 @@ export default ({ navigation }) => {
             <Input
               value={password || ""}
               type="password"
-              onChangeText={async (text) => { setPassword(text), abc() }}
+              onChangeText={async (text) => { setPassword(text), setValidatePassword(false) }}
             />
             {validatePassword && (
               <Text color={"#FF0000"}>Password is invalid</Text>
@@ -148,7 +132,7 @@ export default ({ navigation }) => {
               Forgot Password?
             </Link>
           </FormControl>
-          <Button mt="2" colorScheme="indigo" onPress={Login} disabled={disable}>
+          <Button mt="2" colorScheme="indigo" onPress={Login} >
             Sign in
           </Button>
           <HStack mt="6" justifyContent="center">

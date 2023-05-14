@@ -76,7 +76,7 @@ function HomeTab() {
       <Tab.Screen
         name="Settings"
         component={SettingScreen}
-        options={{ title: "Settings", headerShown: false }}
+        options={{ title: "Settings" }}
       />
     </Tab.Navigator>
   );
