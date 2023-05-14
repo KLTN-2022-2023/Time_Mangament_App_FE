@@ -119,6 +119,19 @@ export const UpdateTask = async (req, token) => {
   return result;
 };
 
+export const UpdateTask = async (req, token) => {
+  let result = null;
+  try {
+    const response = await APIService.task().updateTask(req, token);
+    if (response && response.data) {
+      result = response.data;
+    }
+  } catch (err) {
+    result = null;
+  }
+  return result;
+}
+
 export const Upload = async (req) => {
   let result = null;
   try {
