@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import APIService from "../Service/APIService";
+import { createSlice } from "@reduxjs/toolkit";
 
 export const tasksSlice = createSlice({
   name: "task",
@@ -70,7 +71,7 @@ export const CreateTask = async (req, token) => {
 export const MarkImportant = async (id, token) => {
   let result = null;
   try {
-    const response = await APIService.task().markImportant(id, token);
+    const response = await APIService.task().getListAllTasks(req, token);
     if (response && response.data) {
       result = response.data;
     }
@@ -83,7 +84,8 @@ export const MarkImportant = async (id, token) => {
 export const UpdateStatus = async (id, token) => {
   let result = null;
   try {
-    const response = await APIService.task().updateStatus(id, token);
+    if (!req) return;
+    const response = await APIService.task().createTask(req, token);
     if (response && response.data) {
       result = response.data;
     }
@@ -119,18 +121,7 @@ export const UpdateTask = async (req, token) => {
   return result;
 };
 
-export const UpdateTask = async (req, token) => {
-  let result = null;
-  try {
-    const response = await APIService.task().updateTask(req, token);
-    if (response && response.data) {
-      result = response.data;
-    }
-  } catch (err) {
-    result = null;
-  }
-  return result;
-}
+
 
 export const Upload = async (req) => {
   let result = null;

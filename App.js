@@ -14,6 +14,7 @@ import CalendarScreen from "./Screen/CalendarScreen/CalendarScreen";
 import TaskListDetailScreen from "./Screen/TaskListDetail/TaskListDetailScreen";
 import AddTaskScreen from "./Screen/AddTaskScreen/AddTaskScreen";
 import AddTypeScreen from "./Screen/AddTypeScreen/AddTypeScreen";
+import SettingScreen from "./Screen/SettingScreen/SettingScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -67,13 +68,13 @@ function HomeTab() {
       />
       <Tab.Screen
         name="Statistics"
-        component={TaskListScreen}
+        component={StatictisScreen}
         options={{ title: "Statistics" }}
       />
       <Tab.Screen
         name="Settings"
-        component={UserDetailScreen}
-        options={{ title: "Setting", headerShown: false }}
+        component={SettingScreen}
+        options={{ title: "Settings", headerShown: false }}
       />
     </Tab.Navigator>
   );
@@ -90,8 +91,17 @@ export default function App() {
           }}
         >
           <Stack.Screen name="LoginScreen" component={LoginScreen} />
+
+          <Stack.Screen name="LoginScreen" component={LoginScreen} />
+          <Stack.Screen name="AddTaskScreen" component={AddTaskScreen} />
+          <Stack.Screen name="Statictis" component={StatictisScreen} />
+          <Stack.Screen name="TaskListScreen" component={TaskListScreen} />
+
+          <Stack.Screen name="TaskDetailScreen" component={TaskDetailSceen} />
           <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
           <Stack.Screen name="HomeTab" component={HomeTab} />
+          <Stack.Screen name="UserDetailScreen" component={UserDetailScreen} />
+          <Stack.Screen name="SettingScreen" component={SettingScreen} />
           <Stack.Screen
             name="TaskListDetail"
             component={TaskListDetailScreen}
