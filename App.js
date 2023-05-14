@@ -94,12 +94,12 @@ export default function App() {
         >
           <Stack.Screen name="LoginScreen" component={LoginScreen} />
           <Stack.Screen name="Statictis" component={StatictisScreen} />
-          <Stack.Screen name="TaskListScreen" component={TaskListScreen} />
+          {/* <Stack.Screen name="TaskListScreen" component={TaskListScreen} /> */}
 
           <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
           <Stack.Screen name="HomeTab" component={HomeTab} />
           <Stack.Screen name="UserDetailScreen" component={UserDetailScreen} />
-          <Stack.Screen name="SettingScreen" component={SettingScreen} />
+          {/* <Stack.Screen name="SettingScreen" component={SettingScreen} /> */}
           <Stack.Screen
             name="ForgotPasswordScreen"
             component={ForgotPasswordScreen}

@@ -35,7 +35,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
-const SettingComponent = ({ navigation }) => {
+const SettingComponent = ({ route, navigation }) => {
   // Notification
   const [expoPushToken, setExpoPushToken] = useState("");
   const [notification, setNotification] = useState(false);
@@ -44,6 +44,7 @@ const SettingComponent = ({ navigation }) => {
 
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
+
   const HandleGetInfoUser = async () => {
     const token = await AsyncStorage.getItem("Token");
     if (token) {
@@ -54,7 +55,11 @@ const SettingComponent = ({ navigation }) => {
 
   useEffect(() => {
     HandleGetInfoUser();
-  });
+  }, []);
+
+  useEffect(() => {
+    console.log(user);
+  }, [user]);
 
   // Notification
   useEffect(() => {

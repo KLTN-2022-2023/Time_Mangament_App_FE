@@ -6,19 +6,11 @@ export const userSlice = createSlice({
   initialState: {
     _id: null,
     name: null,
-    email: null,
-    age: null,
-    address: null,
-    avatar: null,
   },
   reducers: {
     getUser: (state, action) => {
       state._id = action.payload ? action.payload._id : null;
       state.name = action.payload ? action.payload.name : null;
-      state.email = action.payload ? action.payload.email : null;
-      state.address = action.payload ? action.payload.address : null;
-      state.age = action.payload ? action.payload.age : null;
-      state.avatar = action.payload ? action.payload.avatar : null;
     },
   },
 });
@@ -46,7 +38,7 @@ export const getInfoUser = async (req, token) => {
     result = null;
   }
   return result;
-}
+};
 
 export const signUp = async (req) => {
   let result = null;
@@ -59,13 +51,13 @@ export const signUp = async (req) => {
     result = null;
   }
   return result;
-}
+};
 
 export const verifyAccount = async (req) => {
   let result = null;
   try {
     const response = await APIService.user().verify(req);
-    console.log("abc", response)
+    console.log("abc", response);
     if (response) {
       result = response;
     }
@@ -73,22 +65,23 @@ export const verifyAccount = async (req) => {
     result = null;
   }
   return result;
-}
+};
+
 export const forgotPass = async (req) => {
   let result = null;
   try {
-    console.log("Nam")
-    console.log(req)
+    console.log("Nam");
+    console.log(req);
     const response = await APIService.user().forgotPassword(req);
     if (response) {
-      console.log("abc", response)
+      console.log("abc", response);
       result = response;
     }
   } catch (err) {
     result = null;
   }
   return result;
-}
+};
 export const verifyForgotPass = async (req) => {
   let result = null;
   try {
@@ -100,7 +93,7 @@ export const verifyForgotPass = async (req) => {
     result = null;
   }
   return result;
-}
+};
 export const HandleLogin = async (req) => {
   let result = null;
   try {
