@@ -218,8 +218,6 @@ const StatictisComponent = ({ navigation }) => {
       <Center>
         <Box safeArea p="2" py="2" w="100%" maxW="350">
           <ScrollView>
-
-            <Button onPress={validateDay}>Test</Button>
             <View paddingTop={10}>
 
               <Text fontSize={18} fontWeight={500} color={"#00BFFF"}>Statistics of jobs in the current month</Text>

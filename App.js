@@ -15,6 +15,8 @@ import TaskListDetailScreen from "./Screen/TaskListDetail/TaskListDetailScreen";
 import AddTaskScreen from "./Screen/AddTaskScreen/AddTaskScreen";
 import AddTypeScreen from "./Screen/AddTypeScreen/AddTypeScreen";
 import SettingScreen from "./Screen/SettingScreen/SettingScreen";
+import StatictisScreen from "./Screen/Statictis/StatictisScreen";
+import TaskDetailSceen from "./Screen/TaskDetailScreen/TaskDetailSceen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -91,9 +93,6 @@ export default function App() {
           }}
         >
           <Stack.Screen name="LoginScreen" component={LoginScreen} />
-
-          <Stack.Screen name="LoginScreen" component={LoginScreen} />
-          <Stack.Screen name="AddTaskScreen" component={AddTaskScreen} />
           <Stack.Screen name="Statictis" component={StatictisScreen} />
           <Stack.Screen name="TaskListScreen" component={TaskListScreen} />
 

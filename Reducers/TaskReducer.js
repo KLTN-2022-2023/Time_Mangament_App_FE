@@ -1,6 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
 import APIService from "../Service/APIService";
-import { createSlice } from "@reduxjs/toolkit";
 
 export const tasksSlice = createSlice({
   name: "task",
