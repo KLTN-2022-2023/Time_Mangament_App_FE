@@ -137,7 +137,10 @@ export default ({ navigation, taskId, namePath }) => {
 
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log("Received");
+        console.log(
+          "Received Create",
+          response.notification.request.content.data
+        );
       });
 
     return () => {
@@ -260,7 +263,9 @@ export default ({ navigation, taskId, namePath }) => {
         content: {
           title: title,
           body: content,
-          data: null,
+          data: {
+            id: idTask,
+          },
         },
         trigger: { seconds: secs },
       });
@@ -466,7 +471,7 @@ export default ({ navigation, taskId, namePath }) => {
           (request.startTime.getTime() - new Date().getTime()) / 1000;
         await schedulePushNotification(
           "Remind",
-          request.name + ", start Time: " + dueTimeString,
+          request.name + ", start Time: " + startTimeString,
           secsBefore,
           mode,
           response.data._id
