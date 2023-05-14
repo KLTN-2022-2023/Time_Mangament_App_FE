@@ -1,92 +1,130 @@
 import moment from 'moment';
-import { Box, Button, Center, CheckIcon, HStack, NativeBaseProvider, Radio, ScrollView, Select, Text, VStack, View } from 'native-base';
+import { Box, Button, Center, CheckIcon, HStack, NativeBaseProvider, ScrollView, Select, Text, VStack, View } from 'native-base';
 import { memo, useEffect } from 'react';
 import { useState } from 'react';
-import { Dimensions, StyleSheet } from 'react-native';
-import { BarChart, PieChart } from 'react-native-chart-kit';
-import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { StyleSheet } from 'react-native';
+
+import BarChart from 'react-native-bar-chart';
+import PieChart from 'react-native-pie-chart';
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getAllTask } from '../../Reducers/TaskReducer';
 import jwt_decode from "jwt-decode";
-import { reportDate } from '../../Reducers/ReportReducer';
+import { reportMonth, reportYear } from '../../Reducers/ReportReducer';
+import { getTypeWork } from '../../Reducers/TypeReducer';
+import { TouchableOpacity } from 'react-native';
 
 const StatictisComponent = ({ navigation }) => {
   const [dayStart, setDayStart] = useState(moment(new Date()).format("YYYY-MM-DD"));
   const [dayEnd, setDayEnd] = useState(moment(new Date()).format("YYYY-MM-DD"));
-  const [selectDateStart, setSelectDateStart] = useState(new Date());
-  const [selectDateEnd, setSelectDateEnd] = useState(new Date());
-  const [calendarStart, setCalendarStart] = useState(false);
-  const [calendarEnd, setCalendarEnd] = useState(false);
+
   const [color, setColor] = useState("#ffffff");
-  const [selectMonth, setSelectMonth] = useState("");
-  const [radioValue, setRadioValue] = useState("All");
+  const [selectMonth, setSelectMonth] = useState(moment(new Date()).format("YYYY-MM-DD").toString().substring(5, 7));
+  const [selectPieMonth, setSelectPieMonth] = useState(false);
   const [labelDay, setLabelDay] = useState([]);
   const [countTask, setCountTask] = useState();
   const [completeTask, setCompleteTask] = useState();
   const [uncompleteTask, setUncompleteTask] = useState();
-  const [month, setMonth] = useState();
+  const [pieChart, setPieChart] = useState(false);
   const [labelMonth, setLabelMonth] = useState([]);
-  const [dataLabel, setDataLabel] = useState([]);
-  const [data, setData] = useState([]);
+
   const [allYear, setAllYear] = useState([]);
-  const [selectYear, setSelectYear] = useState("");
+  const [selectYear, setSelectYear] = useState(moment(new Date()).format("YYYY-MM-DD").toString().substring(0, 4));
   const [totalTaskYear, setTotalTaskYear] = useState();
-
-
-  const hideDatePicker = () => {
-    setCalendarStart(false);
-    setCalendarEnd(false);
-  };
-  const confirmDayStart = (date) => {
-    setDayStart(moment(date).format("YYYY-MM-DD"));
-    setSelectDateStart(date);
-    hideDatePicker();
-  }
-
-  const confirmDayEnd = (date) => {
-    setDayEnd(moment(date).format("YYYY-MM-DD"));
-    setSelectDateEnd(date)
-    hideDatePicker();
-  }
+  const [dataReportByYear, setDataReportByYear] = useState([]);
+  const [tickYear, setTickYear] = useState([]);
+  const [chartByYear, setChartByYear] = useState(false);
+  const [chartByMonth, setChartByMonth] = useState(false);
+  const [chartY, setChartY] = useState([]);
+  const [barChart, setBarChart] = useState(false);
+  const [countType, setCountType] = useState([]);
+  const [nameType, setNameType] = useState([]);
+  const [selectStatictis, setSelectStatistic] = useState();
+  const [chart, setChart] = useState(false);
+  const [chartMonth, setChartMonth] = useState(false);
+  const [chartYear, setChartYear] = useState(false);
+  const [pieMonth, setPieMonth] = useState(moment(new Date()).format("YYYY-MM-DD").toString().substring(5, 7));
+  const [noJob, setNoJob] = useState(false);
 
   const handleGetAllTasks = async () => {
     const token = await AsyncStorage.getItem("Token");
     if (token) {
       const decoded = jwt_decode(token);
-      const result = await getAllTask({ userId: decoded._id }, token);
+      const result = await reportMonth({ userId: decoded._id, month: pieMonth }, token);
       const data = result.data;
-      var countComplete = 0;
-      var countUncomplete = 0;
+      var complete = 0;
+      var uncomplete = 0;
       data.forEach(element => {
-
         if (element.status === "New") {
-          countUncomplete++;
+          uncomplete++;
         }
         if (element.status === "Done") {
-          countComplete++;
+          complete++;
         }
       });
-      setUncompleteTask(countUncomplete);
-      setCompleteTask(countComplete);
+      if (complete === 0 || uncomplete === 0) {
+        setUncompleteTask(1);
+        setCompleteTask(1);
+        setNoJob(true);
+        setSelectPieMonth(false);
+      }
+      else if (complete !== 0 && uncomplete !== 0) {
+        setUncompleteTask(uncomplete);
+        setCompleteTask(complete);
+        setSelectPieMonth(true);
+        setNoJob(false);
+      }
     }
   };
+
+  const handleTypeWork = async () => {
+    const token = await AsyncStorage.getItem("Token");
+    if (token) {
+      const decoded = jwt_decode(token);
+      const response = await getTypeWork({ userId: decoded._id }, token);
+      const type = response.data;
+      var arrType = [];
+      const a = moment(new Date()).format("YYYY-MM-DD").toString().substring(5, 7);
+      const result = await reportMonth({ userId: decoded._id, month: a }, token);
+      const data = result.data;
+      var arrNameType = [];
+      type.forEach(e => {
+        arrType.push({ id: e._id });
+        arrNameType.push(e.name);
+      })
+      setNameType(arrNameType);
+      var totalType = 0;
+      var abc = [];
+      arrType.forEach(e => {
+        data.forEach(i => {
+          if (e.id === i.typeId) {
+            totalType++;
+          }
+
+        })
+        abc.push(totalType)
+        totalType = 0;
+      })
+      setCountType(abc);
+    }
+  }
   const dropdownYear = () => {
     let thisYear = (new Date()).getFullYear();
     let allYears = [];
     for (let i = 0; i <= 10; i++) {
-      allYears.push(thisYear - i)
+      const obj = { year: `${thisYear - i}` };
+      allYears.push(obj)
     }
     setAllYear(allYears);
-
   }
 
   useEffect(() => {
-    handleGetAllTasks();
+    handleTypeWork();
   }, []);
-
   useEffect(() => {
-    dropdownYear()
-  }, [])
+
+    dropdownYear();
+  }, []);
 
   const totalTaskByYear = async () => {
     const token = await AsyncStorage.getItem("Token");
@@ -103,9 +141,7 @@ const StatictisComponent = ({ navigation }) => {
       setTotalTaskYear(total);
     }
   }
-  useEffect(() => {
-    totalTaskByYear();
-  }, [selectYear]);
+
   const validateDay = () => {
     const endMonth = dayEnd.toString().substring(5, 7);
     const startMonth = dayStart.toString().substring(5, 7);
@@ -119,11 +155,6 @@ const StatictisComponent = ({ navigation }) => {
     }
   }
 
-  useEffect(() => {
-    validateDay();
-    validateMonth();
-    handleDay();
-  }, [selectMonth, dayEnd, dayStart]);
 
   const styles = StyleSheet.create({
     container: {
@@ -152,208 +183,280 @@ const StatictisComponent = ({ navigation }) => {
     setLabelMonth(data);
   }
 
-  const dataMonth = [20, 30, 25, 11, 23, 55, 36, 14, 25, 13, 15, 53];
   const arrayMonth = [{ month: "01" }, { month: "02" }, { month: "03" }, { month: "04" }, { month: "05" }, { month: "06" }, { month: "07" }, { month: "08" }, { month: "09" }, { month: "10" }, { month: "11" }, { month: "12" }]
   const validateMonth = () => {
     if (selectMonth === "04" || selectMonth === "06" || selectMonth === "09" || selectMonth === "11") {
-      setLabelDay(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30'])
+      setLabelDay(['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30'])
     }
-    else if (selectMonth === "2") {
-      setLabelDay(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28'])
+    else if (selectMonth === "02") {
+      setLabelDay(['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28'])
     }
     else if (selectMonth === "01" || selectMonth === "03" || selectMonth === "05" || selectMonth === "07" || selectMonth === "08" || selectMonth === "10" || selectMonth === "12") {
-      setLabelDay(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'])
-    }
-  }
-  const handleReportByDate = async () => {
-    const token = await AsyncStorage.getItem("Token");
-
-    if (token) {
-      const decoded = jwt_decode(token);
-      const result = await reportDate({
-        userId: decoded._id, startDate: new Date(dayStart), endDate: new Date(dayEnd)
-      }, token)
-      const data = result.data;
-      var total = 0;
-      let arrTotal = [];
-      var start = dayStart.toString().substring(8, 10);
-      var end = dayEnd.toString().substring(8, 10);
-      var arrDay = [];
-      for (let i = start; i <= end; i++) {
-        arrDay.push(i);
-      }
-      data.forEach(e => {
-        arrDay.forEach(i => {
-          if (Number(e.startTime.toString().substring(8, 10)) === i) {
-            total++;
-          }
-          else {
-            total = 0;
-          }
-          arrTotal.push(total);
-        })
-      })
-      setData(arrTotal);
+      setLabelDay(['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'])
     }
   }
   useEffect(() => {
-    handleReportByDate();
-  }, [dayStart, dayEnd])
+    validateMonth();
+  }, [])
+
+  const handleReportByMonth = async () => {
+    const token = await AsyncStorage.getItem("Token");
+    if (token) {
+      const decoded = jwt_decode(token);
+      const result = await reportMonth({ userId: decoded._id, month: selectMonth }, token);
+      const dataByMonth = result.data;
+      console.log(result)
+      var totalNew = 0;
+      var totalDone = 0;
+      var totalY = 0;
+      var arrTaskNew = [];
+      var arrTaskDone = [];
+      var arrY = [];
+      let label;
+      if (selectMonth === "04" || selectMonth === "06" || selectMonth === "09" || selectMonth === "11") {
+        label = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30'];
+      }
+      else if (selectMonth === "02") {
+        label = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28'];
+      }
+      else if (selectMonth === "01" || selectMonth === "03" || selectMonth === "05" || selectMonth === "07" || selectMonth === "08" || selectMonth === "10" || selectMonth === "12") {
+        label = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'];
+      }
+
+      label.forEach(i => {
+        dataByMonth.forEach(e => {
+          if (e.startTime.toString().substring(8, 10) === i && e.status === "New") {
+            totalNew++;
+          }
+          if (e.startTime.toString().substring(8, 10) === i && e.status === "Done") {
+            totalDone++;
+          }
+          if (e.startTime.toString().substring(8, 10)) {
+            totalY++;
+          }
+        })
+
+        arrY.push([totalNew, totalDone]);
+        totalNew = 0;
+        totalDone = 0;
+        totalY = 0;
+
+      })
+      setChartY(arrY);
+      console.log("arrayY", chartY)
+      if (arrY) {
+        // setDataTaskNew(arrTaskNew);
+        // setDataTaskDone(arrTaskDone);
+        setChartMonth(true);
+      }
+    }
+  }
+  useEffect(() => {
+    handleReportByMonth();
+  }, [])
+
+  const hanldeReportByYear = async () => {
+    const token = await AsyncStorage.getItem("Token");
+    if (token) {
+      const decoded = jwt_decode(token);
+      const result = await reportYear({ userId: decoded._id, year: selectYear }, token);
+      const data = result.data;
+      var total = 0;
+      var arrtotal = [];
+      var arrYear = [];
+      var a = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
+      a.forEach(i => {
+        data.forEach(e => {
+
+          if (e.startTime.toString().substring(5, 7) === i) {
+            total++;
+          }
+        })
+        arrtotal.push(total);
+        arrYear.push(total);
+        total = 0;
+      })
+      setDataReportByYear(arrtotal);
+      setTickYear(arrYear);
+
+      if (arrtotal.length != 0 && selectYear != undefined) {
+        setChartYear(true);
+      }
+    }
+  }
+  //   const token = await AsyncStorage.getItem("Token");
+  //   if (token) {
+  //     const decoded = jwt_decode(token);
+  //     const response = await getTypeWork({ userId: decoded._id }, token);
+  //     const data = response.data;
+  //   }
+  // };
+
+
+  const widthAndHeight = 200;
+
+  const xyz = () => {
+    // validateMonth();
+    if (selectStatictis === "typework") {
+      setPieChart(false);
+      setChartByMonth(false);
+      setChartByYear(false);
+      setBarChart(true);
+      setChart(true);
+    }
+    else if (selectStatictis === "year") {
+      setPieChart(false);
+      setChartByMonth(false);
+      setChartByYear(true);
+      setBarChart(false);
+      setChart(true);
+    }
+    else if (selectStatictis === "month") {
+      setPieChart(false);
+      setChartByMonth(true);
+      setChartByYear(false);
+      setBarChart(false);
+      setChart(true);
+    }
+    else if (selectStatictis === "currentMonth") {
+      setPieChart(true);
+      setChartByMonth(false);
+      setChartByYear(false);
+      setBarChart(false);
+      setChart(true);
+    }
+  }
+
+
+  const horizontalData = ['Jan', 'Jeb', 'March', 'April', 'May', 'June', 'July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return (
 
     <NativeBaseProvider>
       <Center>
-        <Box safeArea p="2" py="2" w="100%" maxW="350">
-          <ScrollView>
-            <View paddingTop={10}>
-
-              <Text fontSize={18} fontWeight={500} color={"#00BFFF"}>Statistics of jobs in the current month</Text>
+        <Box safeArea py="2" w="100%" maxW="350">
+          <ScrollView width={350} >
+            <Text fontSize={25} fontWeight={500} color={"#0000FF"}>Please choose type statictis</Text>
+            <HStack w={"100%"}>
+              <Select selectedValue={selectStatictis} minWidth="300" accessibilityLabel="Type statictis" placeholder="Type statictis" _selectedItem={{
+                bg: "teal.600",
+                endIcon: <CheckIcon size="5" />
+              }} mt={1} onValueChange={itemValue => setSelectStatistic(itemValue)} >
+                <Select.Item label={"Statistic tasks global in the current month"} value={"currentMonth"} />
+                <Select.Item label={"Statistic tasks by type work"} value={"typework"} />
+                <Select.Item label={"Statictis tasks by year"} value={"year"} />
+                <Select.Item label={"Statictis tasks by month"} value={"month"} />
+              </Select>
+              <Button onPress={xyz} marginTop={1} >OK</Button>
+            </HStack>
+            {chart ?
               <View>
-                <PieChart
-                  data={[
-                    {
-                      name: 'Uncomplete',
-                      //population: Number(uncompleteTask),
-                      population: 30,
-                      color: 'rgba(131, 167, 234, 1)',
-                      legendFontColor: '#7F7F7F',
-                      legendFontSize: 12,
-                    },
-                    {
-                      name: 'Complete',
-                      //population: Number(completeTask),
-                      population: 10,
-                      color: '#F00',
-                      legendFontColor: '#7F7F7F',
-                      legendFontSize: 12,
-                    },
-
-                  ]}
-                  width={Dimensions.get('window').width - 16}
-                  height={220}
-                  chartConfig={{
-                    backgroundColor: '#1cc910',
-                    backgroundGradientFrom: '#eff3ff',
-                    backgroundGradientTo: '#efefef',
-                    decimalPlaces: 2,
-                    color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                    style: {
-                      borderRadius: 16,
-                    },
-                  }}
-                  style={{
-                    marginVertical: 8,
-                    borderRadius: 16,
-                  }}
-                  accessor="population"
-                  backgroundColor="transparent"
-                  paddingLeft="15"
-                  absolute //for the absolute number remove if you want percentage
-                />
+                {pieChart ?
+                  <View>
+                    <Text fontSize={18} fontWeight={500} color={"#00BFFF"}>Statistics of jobs in the month current </Text>
+                    <HStack paddingBottom={5}>
+                      <Select selectedValue={pieMonth} minWidth="300" accessibilityLabel="Month" placeholder="Month" _selectedItem={{
+                        bg: "teal.600",
+                        endIcon: <CheckIcon size="5" />
+                      }} mt={1} onValueChange={itemValue => setPieMonth(itemValue)} >
+                        {arrayMonth.map((e) => <Select.Item label={e.month} value={e.month} />)}
+                      </Select>
+                      <Button onPress={handleGetAllTasks} marginTop={1}>OK</Button>
+                    </HStack>
+                    {selectPieMonth ?
+                      <View alignItems={"center"}>
+                        <PieChart
+                          widthAndHeight={widthAndHeight}
+                          series={[uncompleteTask, completeTask]}
+                          sliceColor={['#fbd203', '#ffb300']}
+                        />
+                        <TouchableOpacity>
+                          <HStack>
+                            <Button backgroundColor={"#fbd203"} disabled={true}></Button>
+                            <Text paddingLeft={5}> {uncompleteTask} Task uncomplete</Text>
+                          </HStack>
+                          <HStack paddingTop={2}>
+                            <Button backgroundColor={"#ffb300"} disabled={true}></Button>
+                            <Text paddingLeft={5}>{completeTask} Task complete</Text>
+                          </HStack>
+                        </TouchableOpacity>
+                      </View>
+                      : null}
+                    {noJob ? <TouchableOpacity >
+                      <Text color={"#FF0000"} fontSize={15} paddingLeft={5}>There are no jobs created in the current month </Text>
+                    </TouchableOpacity> : null}
+                  </View>
+                  : null
+                }
+                {barChart ?
+                  <View>
+                    <Text fontSize={18} fontWeight={500} color={"#00BFFF"}>Statictis task by type work in the month current</Text>
+                    <ScrollView horizontal={true} >
+                      <View width={350}>
+                        <BarChart data={countType} horizontalData={nameType} />
+                      </View>
+                    </ScrollView>
+                  </View>
+                  : null}
+                {chartByMonth ?
+                  <View>
+                    <Text fontSize={18} fontWeight={500} color={"#00BFFF"}> Statictis task by month in 2023</Text>
+                    <HStack>
+                      <Select selectedValue={selectMonth} minWidth="300" accessibilityLabel="Month" placeholder="Month" _selectedItem={{
+                        bg: "teal.600",
+                        endIcon: <CheckIcon size="5" />
+                      }} mt={1} onValueChange={itemValue => setSelectMonth(itemValue)} >
+                        {arrayMonth.map((e) => <Select.Item label={e.month} value={e.month} />)}
+                      </Select>
+                      <Button onPress={handleReportByMonth} marginTop={1}>OK</Button>
+                    </HStack>
+                    {chartMonth ?
+                      <View>
+                        <ScrollView horizontal={true}>
+                          <View width={1200} marginLeft={-50}>
+                            <BarChart data={chartY} horizontalData={labelDay} />
+                          </View>
+                        </ScrollView>
+                        <TouchableOpacity>
+                          <HStack>
+                            <Button backgroundColor={"#FFCC00"} disabled={true}></Button>
+                            <Text paddingLeft={5}>Task uncomplete</Text>
+                          </HStack>
+                          <HStack paddingTop={2}>
+                            <Button backgroundColor={"#FF0000"} disabled={true}></Button>
+                            <Text paddingLeft={5}>Task complete</Text>
+                          </HStack>
+                        </TouchableOpacity>
+                      </View>
+                      : null}
+                  </View>
+                  : null
+                }
+                {chartByYear ?
+                  <View>
+                    <Text fontSize={20} fontWeight={500} color={"#00BFFF"}>Year Statictis </Text>
+                    <HStack >
+                      <Select selectedValue={selectYear} minWidth="300" accessibilityLabel="Year" placeholder="Year" _selectedItem={{
+                        bg: "teal.600",
+                        endIcon: <CheckIcon size="5" />
+                      }} mt={1} onValueChange={itemValue => setSelectYear(itemValue)} >
+                        {allYear.map((e) => <Select.Item label={e.year} value={e.year} />)}
+                      </Select>
+                      <Button onPress={hanldeReportByYear} marginTop={1}>OK</Button>
+                    </HStack>
+                    {chartYear ?
+                      <ScrollView horizontal={true}>
+                        <View width={500}>
+                          <BarChart data={dataReportByYear} horizontalData={horizontalData} />
+                        </View>
+                      </ScrollView>
+                      : null
+                    }
+                  </View>
+                  : null}
               </View>
-            </View>
-            <View paddingTop={5}>
-              <Text fontSize={18} fontWeight={500} color={"#00BFFF"}>Job statistics by selected date</Text>
-              <HStack justifyContent={"space-between"} paddingTop={5} paddingBottom={5}>
-                <Button width={130} onPress={() => setCalendarStart(true)}><Text fontWeight={500} color={color} >{moment(dayStart).format("YYYY-MM-DD").toString()}</Text></Button>
-                <Button width={130} onPress={() => setCalendarEnd(true)}><Text fontWeight={500} color={color}>{moment(dayEnd).format("YYYY-MM-DD").toString()}</Text></Button>
-              </HStack>
-              <DateTimePickerModal
-                isVisible={calendarStart}
-                mode="date"
-                onConfirm={confirmDayStart}
-                onCancel={hideDatePicker}
-              />
-              <DateTimePickerModal
-                isVisible={calendarEnd}
-                mode="date"
-                onConfirm={confirmDayEnd}
-                onCancel={hideDatePicker}
-              />
-              <ScrollView horizontal={true}>
-                <BarChart
-                  data={{
-                    labels: labelMonth,
-                    datasets: [
-                      {
-                        data: data
-                      },
-                    ],
-                  }}
-                  width={Dimensions.get('window').width + 350}
-                  height={250}
-                  yAxisLabel={'Tasks: '}
-                  chartConfig={{
-                    backgroundColor: '#1cc910',
-                    backgroundGradientFrom: '#eff3ff',
-                    backgroundGradientTo: '#efefef',
-                    decimalPlaces: 0,
-                    color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                    style: {
-                      borderRadius: 16,
-                    },
-                  }}
-                  style={{
-                    marginVertical: 8,
-                    borderRadius: 16,
-                  }}
-                />
-              </ScrollView>
-            </View>
-            <View>
-              <Text fontSize={20} fontWeight={500} color={"#00BFFF"}> Monthly Statictis</Text>
-              <Select selectedValue={selectMonth} minWidth="200" accessibilityLabel="Month" placeholder="Month" _selectedItem={{
-                bg: "teal.600",
-                endIcon: <CheckIcon size="5" />
-              }} mt={1} onValueChange={itemValue => setSelectMonth(itemValue)} >
-                {arrayMonth.map((e) => <Select.Item key={e} label={e.month} value={e.month} />)}
-              </Select>
-              <Radio.Group name="myRadioGroup" accessibilityLabel="favorite number" value={radioValue} onChange={nextValue => {
-                setRadioValue(nextValue);
-              }}>
-                <Radio value="All" my={1}>All</Radio>
-                <Radio value="Complete" my={1}>Complete</Radio>
-                <Radio value="Uncomplete" my={1}>Uncomplete</Radio>
-              </Radio.Group>
-              <ScrollView horizontal={true}>
-                <BarChart data={{
-                  labels: labelDay,
-                  datasets: [
-                    {
-                      data: [20, 45, 28, 80, 99, 43, 7, 9, 41, 23, 6, 42, 5, 6, 8, 6, 7, 21, 32, 14, 2, 19, 36, 2, 3, 4, 6, 9, 5, 6, 3],
-                    },
-                  ],
-                }}
-                  width={Dimensions.get('window').width + 900}
-                  height={250}
-                  yAxisLabel={'Tasks: '}
-                  chartConfig={{
-                    backgroundColor: '#1cc910',
-                    backgroundGradientFrom: '#eff3ff',
-                    backgroundGradientTo: '#efefef',
-                    decimalPlaces: 0,
-                    color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                    style: {
-                      borderRadius: 16,
-                    },
-                  }}
-                  style={{
-                    marginVertical: 8,
-                    borderRadius: 16,
-                  }}
-                />
-              </ScrollView>
-            </View>
-            <View>
-              <Text fontSize={20} fontWeight={500} color={"#00BFFF"}>Year Statictis </Text>
-              <Select selectedValue={selectYear} minWidth="200" accessibilityLabel="Year" placeholder="Year" _selectedItem={{
-                bg: "teal.600",
-                endIcon: <CheckIcon size="5" />
-              }} mt={1} onValueChange={itemValue => setSelectYear(itemValue)} >
-                {allYear.map((e) => <Select.Item key={e} label={e} value={e} />)}
-              </Select>
-              <Text fontWeight={500} fontSize={18}>Total number of tasks in the year is<Text color={"#FF0000"}> {totalTaskYear}</Text></Text>
-            </View>
+              : null
+            }
+
           </ScrollView>
         </Box>
       </Center>

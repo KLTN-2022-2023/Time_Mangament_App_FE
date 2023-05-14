@@ -11,16 +11,19 @@ import {
   Center,
 } from "native-base";
 import { HandleLogin } from "../../Reducers/UserReducer";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Spinner from "react-native-loading-spinner-overlay";
 import { StyleSheet } from "react-native";
 
 export default ({ navigation }) => {
-  const [email, setEmail] = useState("h2212000@gmail.com");
+  const [phone, setPhone] = useState("0369548201");
   const [password, setPassword] = useState("123456");
   const [isLoading, setIsLoading] = useState(false);
-
+  const [validatePhone, setValidatePhone] = useState(false);
+  const [validatePassword, setValidatePassword] = useState(false);
+  const [textPassword, setTextPassword] = useState("Password is not empty");
+  const [textError, setTextError] = useState(false);
   const Login = async () => {
     setIsLoading(true);
 
@@ -35,6 +38,12 @@ export default ({ navigation }) => {
       if (value) {
         await AsyncStorage.setItem("Token", value);
         navigation.navigate("HomeTab");
+      } else {
+        if (validatePhone || validatePassword) {
+          setTextError(false);
+        } else {
+          setTextError(true);
+        }
       }
     } catch (err) {
       console.log(err);
@@ -42,7 +51,30 @@ export default ({ navigation }) => {
 
     setIsLoading(false);
   };
-
+  const validateNumberPhone = (phone) => {
+    var re = /(0[3|5|7|8|9])+([0-9]{8})\b/g;
+    return re.test(phone);
+  };
+  const validatePass = (password) => {
+    var re = /^[0-9]{6}\b/g;
+    //var re = /(0[3|5|7|8|9])+([0-9]{8})\b/g;
+    return re.test(password);
+  };
+  const validate = () => {
+    if (!validateNumberPhone(phone)) {
+      setValidatePhone(true);
+    } else {
+      setValidatePhone(false);
+    }
+    if (!validatePass(password)) {
+      setValidatePassword(true);
+    } else {
+      setValidatePassword(false);
+    }
+  };
+  useEffect(() => {
+    validate();
+  }, [phone, password]);
   return (
     <Center w="100%">
       <Spinner visible={isLoading}></Spinner>
@@ -71,11 +103,12 @@ export default ({ navigation }) => {
 
         <VStack space={3} mt="5">
           <FormControl>
-            <FormControl.Label>Email ID</FormControl.Label>
+            <FormControl.Label>Number Phone</FormControl.Label>
             <Input
-              value={email || ""}
-              onChange={(text) => setEmail(text.nativeEvent.text)}
+              value={phone || ""}
+              onChange={(text) => setPhone(text.nativeEvent.text)}
             />
+            {validatePhone && <Text color={"#FF0000"}>Phone is not empty</Text>}
           </FormControl>
           <FormControl>
             <FormControl.Label>Password</FormControl.Label>
@@ -84,6 +117,10 @@ export default ({ navigation }) => {
               type="password"
               onChange={(text) => setPassword(text.nativeEvent.text)}
             />
+            {validatePassword && <Text color={"#FF0000"}>{textPassword}</Text>}
+            {textError && (
+              <Text color={"#FF0000"}>Phone or password is incorrect</Text>
+            )}
             <Link
               _text={{
                 fontSize: "xs",
@@ -92,6 +129,7 @@ export default ({ navigation }) => {
               }}
               alignSelf="flex-end"
               mt="1"
+              onPress={() => navigation.navigate("ForgotPasswordScreen")}
             >
               Forgot Password?
             </Link>

@@ -34,6 +34,73 @@ export const getUserById = (req, token) => (dispatch) => {
     .catch((err) => console.log(err));
 };
 
+export const getInfoUser = async (req, token) => {
+  let result = null;
+  try {
+    if (!req) return;
+    const response = await APIService.user().getById(req, token);
+    if (response && response.data && response.data.data) {
+      result = response.data.data;
+    }
+  } catch (err) {
+    result = null;
+  }
+  return result;
+}
+
+export const signUp = async (req) => {
+  let result = null;
+  try {
+    const response = await APIService.user().signup(req);
+    if (response && response.data) {
+      result = response.data;
+    }
+  } catch (err) {
+    result = null;
+  }
+  return result;
+}
+
+export const verifyAccount = async (req) => {
+  let result = null;
+  try {
+    const response = await APIService.user().verify(req);
+    console.log("abc", response)
+    if (response) {
+      result = response;
+    }
+  } catch (err) {
+    result = null;
+  }
+  return result;
+}
+export const forgotPass = async (req) => {
+  let result = null;
+  try {
+    console.log("Nam")
+    console.log(req)
+    const response = await APIService.user().forgotPassword(req);
+    if (response) {
+      console.log("abc", response)
+      result = response;
+    }
+  } catch (err) {
+    result = null;
+  }
+  return result;
+}
+export const verifyForgotPass = async (req) => {
+  let result = null;
+  try {
+    const response = await APIService.user().verifyForgot(req);
+    if (response) {
+      result = response;
+    }
+  } catch (err) {
+    result = null;
+  }
+  return result;
+}
 export const HandleLogin = async (req) => {
   let result = null;
   try {
@@ -58,11 +125,9 @@ export const UpdateProfile = async (req, token) => {
       result = response.data.data;
     }
   } catch (err) {
-    console.log(err);
     result = null;
   }
   return result;
-
-}
+};
 
 export default userSlice.reducer;
