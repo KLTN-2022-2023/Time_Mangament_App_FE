@@ -33,7 +33,7 @@ export default ({ isOpen, actionFunction, closeFunction }) => {
     <Modal isOpen={isOpen} onClose={() => closeFunction()} size="lg">
       <Modal.Content maxWidth="400">
         <Modal.CloseButton />
-        <Modal.Header>{"Month selector"}</Modal.Header>
+        <Modal.Header>{"Filter"}</Modal.Header>
         <Modal.Body>
           <View style={styles.customModal}>
             {/* Header */}
@@ -43,6 +43,9 @@ export default ({ isOpen, actionFunction, closeFunction }) => {
               </TouchableOpacity>
             </View>
             {/* Input */}
+            <View style={styles.filterLabel}>
+              <Text style={styles.filterText}>Select month</Text>
+            </View>
             <View style={styles.customInput}>
               {/* Months */}
               <View style={styles.customInputItem}>
@@ -136,7 +139,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     height: 200,
     gap: 10,
-    paddingTop: 20,
   },
   customInputItem: {
     flex: 1,
@@ -155,5 +157,11 @@ const styles = StyleSheet.create({
   dotText: {
     fontSize: 20,
     fontWeight: "500",
+  },
+  filterLabel: {
+    marginTop: 20,
+  },
+  filterText: {
+    fontSize: 16,
   },
 });

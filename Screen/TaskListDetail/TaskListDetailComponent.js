@@ -20,7 +20,7 @@ import Color from "../../Style/Color";
 import { useSelector, useDispatch } from "react-redux";
 import CommonData from "../../CommonData/CommonData";
 import { convertDateTime } from "../../helper/Helper";
-import PopupSelectMonth from "../../Component/Common/PopupSelectMonth";
+import PopupFilter from "../../Component/Common/PopupFilter";
 
 export default ({ route, navigation }) => {
   const [showModalSort, setShowModalSort] = useState({
@@ -120,13 +120,12 @@ export default ({ route, navigation }) => {
             <Popover
               trigger={(triggerProps) => {
                 return (
-                  <View style={styles.view} >
+                  <View style={styles.view}>
                     <TouchableOpacity {...triggerProps}>
                       <IconICon
                         size={25}
                         color={Color.Header().Main}
                         name="ellipsis-vertical"
-
                       />
                     </TouchableOpacity>
                   </View>
@@ -202,7 +201,7 @@ export default ({ route, navigation }) => {
             </View>
           </TouchableOpacity>
         </View>
-        <PopupSelectMonth
+        <PopupFilter
           isOpen={show}
           closeFunction={() => {
             setShow(false);
