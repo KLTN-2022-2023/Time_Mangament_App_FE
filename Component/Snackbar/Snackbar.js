@@ -4,7 +4,7 @@ import { Snackbar, Text } from "react-native-paper"
 
 
 
-const SnackBar = ({onPress}) => {
+const SnackBar = ({ onPress, label, backgroundColor }) => {
 
   const [alertSyle, setAlertStyle] = useState({
     backgroundColor: "blue"
@@ -38,19 +38,20 @@ const SnackBar = ({onPress}) => {
 
   return (
     <>
-    
-        <Snackbar
-          style={alertSyle}
-          visible
-          onDismiss={onPress}
-          action={{
-            label: "Ok",
-            onPress: onPress
-          }}
-        >
-          <Text style={{ color: "white" }}>Successfully</Text>
-        </Snackbar>
-  
+
+      <Snackbar
+
+        style={backgroundColor}
+        visible
+        onDismiss={onPress}
+        action={{
+          label: "Ok",
+          onPress: onPress
+        }}
+      >
+        <Text style={{ color: "white" }}>{label}</Text>
+      </Snackbar>
+
     </>
   )
 }

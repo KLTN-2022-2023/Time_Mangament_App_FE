@@ -22,6 +22,42 @@ export default {
             Authorization: token,
           },
         }),
+      signup: (req) =>
+        axios.post(url + "SignUp", JSON.stringify(req), {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }),
+      verify: (req) =>
+        axios.post(url + "Verify", JSON.stringify(req), {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }),
+      forgotPassword: (req) =>
+        axios.post(url + "ForgotPassword", JSON.stringify(req), {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }),
+      verifyForgot: (req) =>
+        axios.post(url + "VerifyForgot", JSON.stringify(req), {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }),
+      updateProfile: (req, token) =>
+        axios.post(url + "UpdateProfile", JSON.stringify(req), {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        }),
     };
   },
   task(url = baseApi + "Task/") {
@@ -131,16 +167,22 @@ export default {
         }),
     };
   },
-  reportByDate(url = baseApi + "Report/") {
+  report(url = baseApi + "Report/") {
     return {
-      reportByDate: (req, token) =>
-        axios.post(url + "ReportByDate", req, {
+      reportByYear: (req, token) =>
+        axios.post(url + "ReportByYear", req, {
           headers: {
-            // Accept: "application/json",
             "Content-Type": "application/json",
-            "Authorization": token
-          }
-        })
-    }
-  }
+            Authorization: token,
+          },
+        }),
+      reportByMonth: (req, token) =>
+        axios.post(url + "ReportByMonth", req, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        }),
+    };
+  },
 };

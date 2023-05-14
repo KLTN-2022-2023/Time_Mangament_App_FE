@@ -27,6 +27,20 @@ export const getListAllTypesByUserId = (req, token) => (dispatch) => {
     .catch((err) => console.log(err));
 };
 
+export const getTypeWork = async (req, token) => {
+  let result = null;
+  try {
+    const response = await APIService.type().getListAllTypes(req, token);
+    if (response && response.data) {
+      result = response.data;
+    }
+  } catch (err) {
+    result = null;
+  }
+  return result;
+
+}
+
 export const CreateType = async (req, token) => {
   let result = null;
   try {
