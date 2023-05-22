@@ -20,8 +20,10 @@ export default ({ navigation, listTasks, date, typeId, filter, monthYear }) => {
     let m = monthYear.split("-")[0];
     let y = monthYear.split("-")[1];
     return (
-      (startString.includes(m) && startString.includes(y)) ||
-      (dueString.includes(m) && dueString.includes(y))
+      (startString.split("-")[1].includes(m) &&
+        startString.split("-")[0].includes(y)) ||
+      (dueString.split("-")[1].includes(m) &&
+        dueString.split("-")[0].includes(y))
     );
   };
 

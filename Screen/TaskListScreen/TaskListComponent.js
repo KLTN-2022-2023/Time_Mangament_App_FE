@@ -114,6 +114,7 @@ export default ({ navigation }) => {
       let result = allTasks.filter((x) => !x.isDeleted && x.typeId === type);
 
       if (result && result.length > 0) {
+        console.log(result.length);
         return result.length;
       }
     }
