@@ -389,7 +389,7 @@ const StatictisComponent = ({ navigation }) => {
                     </HStack>
                     <ScrollView horizontal={true} >
                       <View width={350}>
-                        <BarChart data={countType} horizontalData={nameType} />
+                        <BarChart data={countType} horizontalData={nameType} labelColor='#000000' />
                       </View>
                     </ScrollView>
                   </View>
@@ -418,7 +418,7 @@ const StatictisComponent = ({ navigation }) => {
                       <View>
                         <ScrollView horizontal={true}>
                           <View width={1200} marginLeft={-50}>
-                            <BarChart data={chartY} horizontalData={labelDay} />
+                            <BarChart data={chartY} horizontalData={labelDay} labelColor='#000000' />
                           </View>
                         </ScrollView>
                         <TouchableOpacity>
@@ -451,7 +451,7 @@ const StatictisComponent = ({ navigation }) => {
                     {chartYear ?
                       <ScrollView horizontal={true}>
                         <View width={500}>
-                          <BarChart data={dataReportByYear} horizontalData={horizontalData} />
+                          <BarChart data={dataReportByYear} horizontalData={horizontalData} labelColor='#000000' />
                         </View>
                       </ScrollView>
                       : null
