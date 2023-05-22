@@ -19,7 +19,7 @@ import SnackBar from "../../Component/Snackbar/Snackbar";
 
 
 export default ({ navigation }) => {
-  const [name, setName] = useState();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState();
   const [phone, setPhone] = useState();
 
@@ -27,7 +27,6 @@ export default ({ navigation }) => {
   const [confirmPassword, setConfirmPassword] = useState();
   const [modalOTP, setModalOTP] = useState(true);
   const [validateName, setValidateName] = useState(false);
-  const [validateEmail, setValidateEmail] = useState(false);
   const [validateNumberPhone, setValidateNumberPhone] = useState(false);
   const [validateConfirmPassword, setValidateConfirmPassword] = useState(false);
   const [textConfirmPassword, setTextConfirmPassword] = useState("Confirm password is invalid");
@@ -40,13 +39,9 @@ export default ({ navigation }) => {
 
   const handleSignUp = async () => {
     if (!validate()) {
-
-      if (confirmPassword === password && confirmPassword && name && password && phone && email) {
-
-        if (!validateEmail && !validateName && !validateNumberPhone && !validateConfirmPassword && !validatePass) {
-          console.log("abc")
-          const result = await signUp({ name: name, email: email, phone: phone, password: password });
-          console.log("bcd")
+      if (confirmPassword === password && confirmPassword && name && password && phone) {
+        if (!validateName && !validateNumberPhone && !validateConfirmPassword && !validatePass) {
+          const result = await signUp({ name: name, phone: phone, password: password });
           if (result) {
             if (result.msg === "Phone already exist") {
               setValidateNumberPhone(true);
@@ -65,11 +60,7 @@ export default ({ navigation }) => {
           console.log("aaaaaaaaaaaa")
         }
       }
-      // } else {
-      //   console.log("ABC")
-      // }
     }
-    // else { console.log("Nam") }
   }
 
   const handleVerify = async () => {
@@ -87,18 +78,11 @@ export default ({ navigation }) => {
     }
   }
 
-  const validateMail = (email) => {
-    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    return re.test(email);
-  }
   const validatePhone = (phone) => {
     var re = /(0[3|5|7|8|9])+([0-9]{8})\b/g;
     return re.test(phone)
   }
-  const valName = (name) => {
-    var re = /^[a-zA-Z]{6}\b/g;
-    return re.test(name);
-  }
+
   const valPassword = (password) => {
     var re = /^[0-9]{6}\b/g;
     return re.test(password)
@@ -108,17 +92,11 @@ export default ({ navigation }) => {
     return re.test(confirmPassword)
   }
   const validate = () => {
-    if (!valName(name)) {
+    if (name.length <= 0) {
       setValidateName(true)
     }
     else {
       setValidateName(false);
-    }
-    if (!validateMail(email)) {
-      setValidateEmail(true)
-    }
-    else {
-      setValidateEmail(false)
     }
     if (!validatePhone(phone)) {
       setValidateNumberPhone(true);
@@ -138,8 +116,8 @@ export default ({ navigation }) => {
     else {
       setValidateConfirmPassword(false);
     }
-
   }
+
   return (
     <Center w="100%">
       <Box safeArea p="2" w="90%" maxW="290" py="8">
@@ -169,22 +147,14 @@ export default ({ navigation }) => {
             <VStack space={3} mt="5">
               <FormControl>
                 <FormControl.Label>Name</FormControl.Label>
-                <Input value={name} onChangeText={e => { setName(e), setValidateName(false) }} />
+                <Input value={name} onChangeText={e => { setName(e), setValidateName(false), validate() }} />
                 {validateName && (
                   <Text color={"#FF0000"}> Name is invalid </Text>
                 )}
               </FormControl>
-
-              <FormControl>
-                <FormControl.Label>Email</FormControl.Label>
-                <Input value={email} onChangeText={e => { setEmail(e), setValidateEmail(false) }} />
-                {validateEmail && (
-                  <Text color={"#FF0000"}>Email is invalid</Text>
-                )}
-              </FormControl>
               <FormControl>
                 <FormControl.Label>Phone</FormControl.Label>
-                <Input value={phone} onChangeText={e => { setPhone(e), setValidateNumberPhone(false) }} />
+                <Input value={phone} onChangeText={e => { setPhone(e), setValidateNumberPhone(false), validate() }} />
                 {validateNumberPhone && (
                   <Text color={"#FF0000"}>{textPhone}</Text>
                 )}
@@ -192,14 +162,14 @@ export default ({ navigation }) => {
 
               <FormControl>
                 <FormControl.Label>Password</FormControl.Label>
-                <Input value={password} secureTextEntry={true} onChangeText={e => { setPassword(e), setValidatePass(false) }} />
+                <Input value={password} secureTextEntry={true} onChangeText={e => { setPassword(e), setValidatePass(false), validate() }} />
                 {validatePass && (
                   <Text color={"#FF0000"}>Password is invalid</Text>
                 )}
               </FormControl>
               <FormControl>
                 <FormControl.Label>Confirm password</FormControl.Label>
-                <Input value={confirmPassword} secureTextEntry={true} onChangeText={e => { setConfirmPassword(e), setValidateConfirmPassword(false) }} />
+                <Input value={confirmPassword} secureTextEntry={true} onChangeText={e => { setConfirmPassword(e), setValidateConfirmPassword(false), validate() }} />
                 {validateConfirmPassword && (
                   <Text color={"#FF0000"}>{textConfirmPassword}</Text>
                 )}
@@ -263,9 +233,7 @@ export default ({ navigation }) => {
               </HStack>
             </VStack>
           }
-
         </ScrollView>
-
       </Box>
       {snackBar ? <SnackBar backgroundColor={{ backgroundColor: "red" }} onPress={() => setSnackBar(false)} label={message} /> : null}
       {snackBarVerify ? <SnackBar backgroundColor={{ backgroundColor: "green" }} onPress={() => navigation.navigate("LoginScreen")} label={"Sign up new account successfully"} /> : null}

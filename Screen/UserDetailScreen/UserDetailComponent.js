@@ -34,11 +34,9 @@ import SnackBar from "../../Component/Snackbar/Snackbar";
 export default ({ navigation }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
-  const [email, setEmail] = useState();
   const [name, setName] = useState();
   const [phone, setPhone] = useState();
   const [update, setUpdate] = useState(false);
-  const [image, setImage] = useState(null);
   const [snackbar, setSnackBar] = useState(false);
 
   const HandleGetInfoUser = async () => {
@@ -47,7 +45,6 @@ export default ({ navigation }) => {
       const decoded = jwt_decode(token);
       const result = await getInfoUser({ userId: decoded._id }, token);
       const data = result;
-      setEmail(data.email);
       setName(data.name);
       setPhone(data.phone);
     }
@@ -58,14 +55,10 @@ export default ({ navigation }) => {
     try {
       const decoded = jwt_decode(token);
       const userId = decoded._id;
-      const response = await UpdateProfile(
-        { userId, email, name, phone },
-        token
-      );
-      console.log(response);
-      dispatch(getUser({ _id: userId, name: name }));
+      const response = await UpdateProfile({ userId, name, phone }, token);
+      console.log(response)
       setSnackBar(true);
-    } catch (err) {}
+    } catch (err) { }
   };
 
   useEffect(() => {
@@ -149,18 +142,7 @@ export default ({ navigation }) => {
               AJ
             </Avatar>
             <View>
-              <HStack alignItems="center" marginTop={5} height={10}>
-                <IconFontisto name="email" size={20} color={"#000000"} />
-                <TextInput
-                  paddingLeft={20}
-                  style={style.text}
-                  value={email}
-                  onChangeText={(e) => {
-                    setEmail(e), setUpdate(true);
-                  }}
-                />
-              </HStack>
-              <HStack alignItems="center" marginTop={5} height={10}>
+              <HStack alignItems="center" marginTop={5} height={10} >
                 <IconFontisto name="male" size={20} color={"#000000"} />
                 <TextInput
                   paddingLeft={20}
