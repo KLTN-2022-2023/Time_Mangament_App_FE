@@ -22,8 +22,8 @@ export default {
   },
   CalendarTask() {
     return {
-      Main: "#dbe4ff",
-      Done: "#d3f9d8",
+      Main: "#339af0",
+      Done: "#40c057",
       BorderBottom: "#adb5bd",
     };
   },

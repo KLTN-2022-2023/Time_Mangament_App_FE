@@ -6,9 +6,6 @@ import {
   Checkbox,
   HStack,
   TextArea,
-  Picker,
-  Select,
-  CheckIcon,
 } from "native-base";
 import { useEffect, useState, useRef } from "react";
 import {
@@ -18,7 +15,7 @@ import {
   PermissionsAndroid,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
-import * as DocumentPicker from "expo-document-picker";
+import IconMaterial from "react-native-vector-icons/MaterialIcons";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import {
   CreateTask,
@@ -37,6 +34,8 @@ import Spinner from "react-native-loading-spinner-overlay";
 import Color from "../../Style/Color";
 import CommonData from "../../CommonData/CommonData";
 import PopupComponent from "../../Component/Common/PopupComponent";
+import PopupDeleteMany from "../../Component/Common/PopupDeleteMany";
+import PopupUpdateMany from "../../Component/Common/PopupUpdateMany";
 import RepeatModal from "../../Component/Task/RepeatModal";
 import TypeModal from "../../Component/Task/TypeModal";
 import CreateTypeModal from "../../Component/Task/CreateTypeModal";
@@ -63,7 +62,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export default ({ navigation, taskId, namePath }) => {
+export default ({ navigation, taskId, selectedDate }) => {
   const [data, setData] = useState(null);
   const [name, setName] = useState("New Task");
   const [note, setNote] = useState("");
@@ -77,6 +76,8 @@ export default ({ navigation, taskId, namePath }) => {
   const [type, setType] = useState(null);
   const [open, setOpen] = useState(false);
   const [dataBackup, setDataBackup] = useState(null);
+  const [warn, setWarn] = useState(false);
+  const [updateMany, setUpdateMany] = useState(false);
 
   // Notification
   const [expoPushToken, setExpoPushToken] = useState("");
@@ -203,10 +204,18 @@ export default ({ navigation, taskId, namePath }) => {
   useEffect(() => {
     if (!taskId) {
       let dateNowString = convertDateTime(new Date());
+      let selectedDateString = null;
+      if (selectedDate) {
+        selectedDateString = selectedDate;
+      }
 
-      setStartDate(dateNowString.split(" ").shift());
+      setStartDate(
+        selectedDate ? selectedDateString : dateNowString.split(" ").shift()
+      );
       setStartTime(dateNowString.split(" ")[1]);
-      setDueDate(dateNowString.split(" ").shift());
+      setDueDate(
+        selectedDate ? selectedDateString : dateNowString.split(" ").shift()
+      );
       setDueTime(dateNowString.split(" ")[1]);
       setEndRepeat(dateNowString.split(" ").shift());
 
@@ -236,7 +245,6 @@ export default ({ navigation, taskId, namePath }) => {
   useEffect(() => {
     // let result = handleValidate(true, false, false, false);
     if (type) {
-      console.log(type);
       setErrorTypeRequired(false);
     }
   }, [type]);
@@ -336,6 +344,11 @@ export default ({ navigation, taskId, namePath }) => {
     setName(v);
   };
 
+  const handleClearText = () => {
+    setName(null);
+    setErrorNameRequired(true);
+  };
+
   const handlePressStar = async () => {
     setIsImportant((prevState) => !prevState);
   };
@@ -384,73 +397,6 @@ export default ({ navigation, taskId, namePath }) => {
 
     setEndRepeat(dateString.split(" ").shift());
     setCalendarEndRepeat(false);
-  };
-
-  const checkPermissions = async () => {
-    try {
-      const result = await PermissionsAndroid.check(
-        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
-      );
-
-      if (!result) {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-          {
-            title:
-              "You need to give storage permission to download and save the file",
-            message: "App needs access to your camera ",
-            buttonNeutral: "Ask Me Later",
-            buttonNegative: "Cancel",
-            buttonPositive: "OK",
-          }
-        );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          console.log("You can use the camera");
-          return true;
-        } else {
-          Alert.alert("Error", I18n.t("PERMISSION_ACCESS_FILE"));
-
-          console.log("Camera permission denied");
-          return false;
-        }
-      } else {
-        return true;
-      }
-    } catch (err) {
-      console.warn(err);
-      return false;
-    }
-  };
-
-  async function selectFile() {
-    try {
-      const result = await checkPermissions();
-
-      if (result) {
-        const result = await DocumentPicker.getDocumentAsync({
-          copyToCacheDirectory: false,
-          type: "image/*",
-        });
-
-        if (result.type === "success") {
-          // Printing the log realted to the file
-          console.log("res : " + JSON.stringify(result));
-          // Setting the state to show single file attributes
-          setFile(result);
-        }
-      }
-    } catch (err) {
-      setFile(null);
-      console.warn(err);
-      return false;
-    }
-  }
-
-  const uploadFile = async () => {
-    const formData = new FormData();
-    formData.append("image", file);
-    const response = await Upload(formData);
-    // alert(response);
   };
 
   const closeModal = () => {
@@ -515,23 +461,53 @@ export default ({ navigation, taskId, namePath }) => {
   };
 
   // CRUD
-  const deleteTask = async () => {
+  const deleteTask = async (many) => {
     setIsLoading(true);
 
     try {
       // delete
       const token = await AsyncStorage.getItem("Token");
       if (token) {
-        const response = await DeleteTask(taskId, token);
+        if (dataBackup.isRepeatedById && many) {
+          let startStringBackup = convertDateTime(dataBackup.startTime);
 
-        if (response) {
-          // Clear Remind
-          await schedulePushNotification(null, null, null, "delete", null);
+          let list = allTasks
+            .filter((x) => {
+              let startString = convertDateTime(x.startTime);
+              return (
+                x.isRepeatedById === dataBackup.isRepeatedById &&
+                startStringBackup <= startString
+              );
+            })
+            .map((y) => y._id);
 
-          await handleGetAllTasks();
+          if (list.length > 0) {
+            let isError = false;
+            for (const id of list) {
+              const response = await DeleteTask(id, token);
+              if (!response) {
+                isError = true;
+                break;
+              }
+            }
 
-          // navigation.navigate("HomeTab", { screen: "Tasks" });
-          navigation.goBack();
+            if (!isError) {
+              // Clear Remind
+              await schedulePushNotification(null, null, null, "delete", null);
+              await handleGetAllTasks();
+              // navigation.navigate("HomeTab", { screen: "Tasks" });
+              navigation.goBack();
+            }
+          }
+        } else {
+          const response = await DeleteTask(taskId, token);
+          if (response) {
+            // Clear Remind
+            await schedulePushNotification(null, null, null, "delete", null);
+            await handleGetAllTasks();
+            // navigation.navigate("HomeTab", { screen: "Tasks" });
+            navigation.goBack();
+          }
         }
       }
     } catch (err) {
@@ -542,94 +518,204 @@ export default ({ navigation, taskId, namePath }) => {
   };
 
   const createTask = async () => {
-    const token = await AsyncStorage.getItem("Token");
-    if (token) {
-      const decoded = jwt_decode(token);
-      let request = {
-        userId: decoded._id,
-        typeId: type._id,
-        name: name,
-        description: note,
-        startTime: new Date(startDate + " " + startTime),
-        dueTime: new Date(dueDate + " " + dueTime),
-        files: [],
-        checkList: [],
-        isImportant: isImportant,
-        status: isDone
-          ? CommonData.TaskStatus().Done
-          : CommonData.TaskStatus().New,
-        remindMode: remind,
-        remindTime: remind ? new Date(remindTime) : null,
-        repeatTime: repeat,
-        endRepeat: repeat ? new Date(endRepeat) : null,
-        isRepeatedById: null,
-        createdDate: new Date(),
-      };
+    try {
+      const token = await AsyncStorage.getItem("Token");
+      if (token) {
+        const decoded = jwt_decode(token);
+        let request = {
+          userId: decoded._id,
+          typeId: type._id,
+          name: name,
+          description: note,
+          startTime: new Date(startDate + " " + startTime),
+          dueTime: new Date(dueDate + " " + dueTime),
+          files: [],
+          checkList: [],
+          isImportant: isImportant,
+          status: isDone
+            ? CommonData.TaskStatus().Done
+            : CommonData.TaskStatus().New,
+          remindMode: remind,
+          remindTime: remind ? new Date(remindTime) : null,
+          repeatTime: repeat,
+          endRepeat: repeat ? new Date(endRepeat) : null,
+          isRepeatedById: null,
+          createdDate: new Date(),
+        };
 
-      // Repeat Setting
-      if (repeat) {
-        let result = getCalculatedList(
-          request.startTime,
-          request.dueTime,
-          new Date(endRepeat + " " + startTime)
-        );
+        // Repeat Setting
+        if (repeat) {
+          let result = getCalculatedList(
+            request.startTime,
+            request.dueTime,
+            new Date(endRepeat + " " + startTime)
+          );
 
-        result.forEach((x) => {
-          console.log(convertDateTime(x.start), convertDateTime(x.end));
-        });
+          result.forEach((x) => {
+            console.log(convertDateTime(x.start), convertDateTime(x.end));
+          });
 
-        // Check overlap task repeat
-        if (!isInValidOverlapRepeat(result)) {
-          result.shift();
+          // Check overlap task repeat
+          if (!isInValidOverlapRepeat(result, null)) {
+            result.shift();
 
-          const repeatRequest = {
-            data: request,
-            datesRepeat: result && result.length > 0 ? result : null,
-          };
-
-          const responseRepeat = await CreateRepeat(repeatRequest, token);
-          if (responseRepeat && responseRepeat.data) {
-            const requestToUpdate = {
-              ...responseRepeat.data,
-              isRepeatedById: responseRepeat.data._id,
+            const repeatRequest = {
+              data: request,
+              datesRepeat: result && result.length > 0 ? result : null,
             };
 
-            const responseUpdate = await UpdateTask(requestToUpdate, token);
-            if (responseUpdate) {
-              // Remind
-              await handleSettingRemind(request, responseRepeat, "create");
+            const responseRepeat = await CreateRepeat(repeatRequest, token);
+            if (responseRepeat && responseRepeat.data) {
+              const requestToUpdate = {
+                ...responseRepeat.data,
+                isRepeatedById: responseRepeat.data._id,
+              };
 
-              // Delay
-              setTimeout(() => {
-                handleGetAllTasks();
-                // navigation.navigate("HomeTab", { screen: "Tasks" });
-                navigation.goBack();
+              const responseUpdate = await UpdateTask(requestToUpdate, token);
+              if (responseUpdate) {
+                // Remind
+                await handleSettingRemind(request, responseRepeat, "create");
 
-                setIsLoading(false);
-              }, 5000);
+                // Delay
+                setTimeout(() => {
+                  handleGetAllTasks();
+                  // navigation.navigate("HomeTab", { screen: "Tasks" });
+                  navigation.goBack();
+
+                  setIsLoading(false);
+                }, 5000);
+              }
             }
+          } else {
+            setIsLoading(false);
+            setErrorRepeatOverlap(true);
           }
-        } else {
-          setIsLoading(false);
-          setErrorRepeatOverlap(true);
+        }
+        // Non repeat
+        else {
+          const response = await CreateTask(request, token);
+          if (response) {
+            // Remind
+            await handleSettingRemind(request, response, "create");
+            await handleGetAllTasks();
+            // navigation.navigate("HomeTab", { screen: "Tasks" });
+            navigation.goBack();
+            setIsLoading(false);
+          }
         }
       }
-      // Non repeat
-      else {
-        const response = await CreateTask(request, token);
-        if (response) {
-          // Remind
-          await handleSettingRemind(request, response, "create");
-          await handleGetAllTasks();
-          // navigation.navigate("HomeTab", { screen: "Tasks" });
-          navigation.goBack();
-          setIsLoading(false);
-        }
-      }
+    } catch (err) {
+      console.log(err);
     }
   };
 
-  const updateTask = async () => {
+  const updateTask = async (clearRepeat, req) => {
+    try {
+      const token = await AsyncStorage.getItem("Token");
+      if (token) {
+        let request = {
+          ...data,
+          typeId: type._id,
+          name: name,
+          description: note,
+          startTime: new Date(startDate + " " + startTime),
+          dueTime: new Date(dueDate + " " + dueTime),
+          files: [],
+          checkList: [],
+          isImportant: isImportant,
+          status: isDone
+            ? CommonData.TaskStatus().Done
+            : CommonData.TaskStatus().New,
+          remindMode: remind,
+          remindTime: remind ? new Date(remindTime) : null,
+          repeatTime: repeat,
+          endRepeat: repeat ? new Date(endRepeat) : null,
+          isRepeatedById: clearRepeat ? null : dataBackup.isRepeatedById,
+          updatedDate: new Date(),
+        };
+
+        if (req) {
+          request = req;
+        }
+
+        // Repeat Setting
+        if (
+          request.repeatTime &&
+          (request.repeatTime !== dataBackup.repeatTime ||
+            convertDateTime(request.endRepeat) !==
+              convertDateTime(dataBackup.endRepeat))
+        ) {
+          let result = getCalculatedList(
+            request.startTime,
+            request.dueTime,
+            new Date(endRepeat + " " + startTime)
+          );
+
+          // Check overlap task repeat
+          if (
+            !isInValidOverlapRepeat(result, null) &&
+            !handleValidateOverlap()
+          ) {
+            result.shift();
+
+            const response = await UpdateTask(request, token);
+            if (response) {
+              const repeatRequest = {
+                data: { ...request, isRepeatedById: request._id },
+                datesRepeat: result && result.length > 0 ? result : null,
+              };
+
+              const responseRepeat = await CreateRepeatAfterUpdate(
+                repeatRequest,
+                token
+              );
+              if (responseRepeat) {
+                // Remind
+                if (request.remindTime !== dataBackup.remindTime) {
+                  await handleSettingRemind(request, response, "update");
+                }
+
+                // Delay
+                setTimeout(() => {
+                  handleGetAllTasks();
+                  // navigation.navigate("HomeTab", { screen: "Tasks" });
+                  navigation.goBack();
+
+                  setIsLoading(false);
+                }, 5000);
+              }
+            }
+          } else {
+            setIsLoading(false);
+            setErrorRepeatOverlap(true);
+          }
+        }
+        // Non-repeat setting
+        else {
+          const response = await UpdateTask(request, token);
+          if (response) {
+            // Remind
+            if (
+              convertDateTime(request.remindTime) !==
+              convertDateTime(dataBackup.remindTime)
+            ) {
+              await handleSettingRemind(request, response, "update");
+            }
+
+            await handleGetAllTasks();
+            // navigation.navigate("HomeTab", { screen: "Tasks" });
+            navigation.goBack();
+            setIsLoading(false);
+          }
+        }
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const updateManyRepeat = async () => {
+    setIsLoading(true);
     const token = await AsyncStorage.getItem("Token");
     if (token) {
       let request = {
@@ -653,86 +739,129 @@ export default ({ navigation, taskId, namePath }) => {
         updatedDate: new Date(),
       };
 
-      // Repeat Setting
-      if (
-        request.repeat &&
-        (request.repeatTime !== dataBackup.repeatTime ||
-          request.endRepeat !== dataBackup.endRepeat)
-      ) {
-        console.log(request.endRepeat, dataBackup.endRepeat);
-        console.log(request.repeatTime, dataBackup.repeatTime);
-        let result = getCalculatedList(
-          request.startTime,
-          request.dueTime,
-          new Date(endRepeat + " " + startTime)
+      let startStringBackup = convertDateTime(dataBackup.startTime);
+
+      //future task
+      let listFutureTask = allTasks.filter((x) => {
+        let startString = convertDateTime(x.startTime);
+        return (
+          x.isRepeatedById === dataBackup.isRepeatedById &&
+          x._id !== dataBackup._id &&
+          startStringBackup <= startString
         );
+      });
 
-        // Check overlap task repeat
-        if (!isInValidOverlapRepeat(result)) {
-          result.shift();
+      if (listFutureTask.length > 0) {
+        // Update new repeat
+        if (request.repeatTime) {
+          let result = getCalculatedList(
+            request.startTime,
+            request.dueTime,
+            new Date(endRepeat + " " + startTime)
+          );
 
-          const response = await UpdateTask(request, token);
-          if (response) {
-            const repeatRequest = {
-              data: request,
-              datesRepeat: result && result.length > 0 ? result : null,
-            };
+          // Check overlap task repeat
+          if (
+            !isInValidOverlapRepeat(result, listFutureTask) &&
+            !handleValidateOverlap()
+          ) {
+            result.shift();
 
-            const responseRepeat = await CreateRepeatAfterUpdate(
-              repeatRequest,
+            const response = await UpdateTask(
+              { ...request, isRepeatedById: request._id },
               token
             );
-            if (responseRepeat) {
-              // Remind
-              if (request.remindTime !== dataBackup.remindTime) {
-                await handleSettingRemind(request, response, "update");
+            if (response) {
+              // Remove old task task
+              let isError = false;
+              for (const id of listFutureTask.filter(
+                (x) => x._id !== dataBackup._id
+              )) {
+                const response = await DeleteTask(id._id, token);
+                if (!response) {
+                  isError = true;
+                  break;
+                }
               }
+              if (!isError) {
+                const repeatRequest = {
+                  data: { ...request, isRepeatedById: request._id },
+                  datesRepeat: result && result.length > 0 ? result : null,
+                };
 
-              // Delay
-              setTimeout(() => {
-                handleGetAllTasks();
-                // navigation.navigate("HomeTab", { screen: "Tasks" });
-                navigation.goBack();
+                const responseRepeat = await CreateRepeatAfterUpdate(
+                  repeatRequest,
+                  token
+                );
+                if (responseRepeat) {
+                  // Remind
+                  if (
+                    convertDateTime(request.remindTime) !==
+                    convertDateTime(dataBackup.remindTime)
+                  ) {
+                    await handleSettingRemind(request, response, "update");
+                  }
 
-                setIsLoading(false);
-              }, 5000);
+                  // Delay
+                  setTimeout(() => {
+                    handleGetAllTasks();
+                    // navigation.navigate("HomeTab", { screen: "Tasks" });
+                    navigation.goBack();
+
+                    setIsLoading(false);
+                  }, 5000);
+                }
+              }
+            }
+          } else {
+            setIsLoading(false);
+            setErrorRepeatOverlap(true);
+          }
+        }
+        // Remove old repeat
+        else {
+          let list = allTasks.filter((x) => {
+            let startString = convertDateTime(x.startTime);
+            return (
+              x.isRepeatedById === dataBackup.isRepeatedById &&
+              x._id !== dataBackup._id &&
+              startStringBackup < startString
+            );
+          });
+          let isError = false;
+          for (const id of list) {
+            const response = await DeleteTask(id._id, token);
+            if (!response) {
+              isError = true;
+              break;
             }
           }
-        } else {
-          setIsLoading(false);
-          setErrorRepeatOverlap(true);
-        }
-      }
-      // Non-repeat setting
-      else {
-        const response = await UpdateTask(request, token);
-        if (response) {
-          // Remind
-          if (request.remindTime !== dataBackup.remindTime) {
-            await handleSettingRemind(request, response, "update");
+          if (!isError) {
+            updateTask(true, request);
           }
-
-          await handleGetAllTasks();
-          // navigation.navigate("HomeTab", { screen: "Tasks" });
-          navigation.goBack();
-          setIsLoading(false);
         }
       }
     }
   };
 
   const save = async () => {
-    setIsLoading(true);
-
     try {
       if (!handleValidate(true, true, true, true)) {
         // create
         if (!taskId) {
-          await createTask();
+          setIsLoading(true);
+
+          if (!handleValidateOverlap()) {
+            await createTask();
+          }
         }
         // Update
         else {
-          await updateTask();
+          if (dataBackup.isRepeatedById) {
+            setUpdateMany(true);
+          } else {
+            await updateTask(true, null);
+          }
         }
       } else {
         setIsLoading(false);
@@ -1071,7 +1200,6 @@ export default ({ navigation, taskId, namePath }) => {
           date = new Date(date);
           let dateString = convertDateTime(date);
           setRemindTime(dateString);
-          console.log(dateString);
         }
         // On start time
         else if (value === CommonData.RemindType().OnStartTime) {
@@ -1146,8 +1274,16 @@ export default ({ navigation, taskId, namePath }) => {
       if (startDate && startTime && dueDate && dueTime) {
         // start time in the future
         if (startTimeString < dateNowString) {
-          setStartPast(true);
-          result = true;
+          // update start date
+          if (dataBackup && startTimeString !== backupStartTimeString) {
+            setStartPast(true);
+            result = true;
+          }
+          // create mode
+          else if (!dataBackup) {
+            setStartPast(true);
+            result = true;
+          }
         } else {
           setStartPast(false);
 
@@ -1169,28 +1305,6 @@ export default ({ navigation, taskId, namePath }) => {
             }
           } else {
             setErrorDates(false);
-          }
-
-          if (!isInValidDates) {
-            let countTask = 0;
-            for (const x of allTasks) {
-              let taskStart = convertDateTime(x.startTime);
-              let taskDue = convertDateTime(x.dueTime);
-
-              if (
-                (taskStart <= startTimeString && startTimeString <= taskDue) ||
-                (taskStart <= dueTimeString && dueTimeString <= taskDue)
-              ) {
-                countTask++;
-                setErrorOverlap(true);
-                result = true;
-                break;
-              }
-            }
-
-            if (countTask === 0) {
-              setErrorOverlap(false);
-            }
           }
         }
       }
@@ -1223,7 +1337,7 @@ export default ({ navigation, taskId, namePath }) => {
       (!dataBackup ||
         startTimeString !== backupStartTimeString ||
         dueTimeString !== backupDueTimeString ||
-        new Date(endRepeat) !== dataBackup.endRepeat)
+        endRepeat !== convertDateTime(dataBackup.endRepeat).split(" ")[0])
     ) {
       if (repeat) {
         if (endRepeat < dateNowString.split(" ")[0] || endRepeat < startDate) {
@@ -1265,7 +1379,6 @@ export default ({ navigation, taskId, namePath }) => {
 
         let dayWeek = "";
         let indexItem = list.findIndex((x) => x.date === startDate);
-        console.log(indexItem);
         if (indexItem === null || indexItem < 0) {
           setInvalidDaysWeek(true);
           result = true;
@@ -1287,7 +1400,6 @@ export default ({ navigation, taskId, namePath }) => {
           }
 
           let find = splitList2.find((x) => x === dayWeek);
-          console.log(find);
 
           if (!find) {
             setInvalidDaysWeek(true);
@@ -1299,6 +1411,40 @@ export default ({ navigation, taskId, namePath }) => {
       } else {
         setInvalidDaysWeek(false);
       }
+    }
+
+    return result;
+  };
+
+  const handleValidateOverlap = () => {
+    let result = false;
+    let startTimeString = startDate + " " + startTime;
+    let dueTimeString = dueDate + " " + dueTime;
+
+    let countTask = 0;
+    for (const x of allTasks) {
+      // update
+      if (dataBackup && dataBackup._id === x._id) {
+        continue;
+      }
+
+      let taskStart = convertDateTime(x.startTime);
+      let taskDue = convertDateTime(x.dueTime);
+
+      if (
+        (taskStart <= startTimeString && startTimeString <= taskDue) ||
+        (taskStart <= dueTimeString && dueTimeString <= taskDue) ||
+        (startTimeString <= taskStart && taskDue <= dueTimeString)
+      ) {
+        countTask++;
+        setErrorOverlap(true);
+        result = true;
+        break;
+      }
+    }
+
+    if (countTask === 0) {
+      setErrorOverlap(false);
     }
 
     return result;
@@ -1318,7 +1464,7 @@ export default ({ navigation, taskId, namePath }) => {
     );
   };
 
-  const isInValidOverlapRepeat = (listDate) => {
+  const isInValidOverlapRepeat = (listDate, listTaskAvoid) => {
     // Check overlap with repeat task
     for (let i = 0; i < listDate.length; i++) {
       let start = i;
@@ -1335,13 +1481,18 @@ export default ({ navigation, taskId, namePath }) => {
 
     // Check overlap with other tasks
     for (let item of allTasks) {
+      if (listTaskAvoid && listTaskAvoid.find((x) => x._id === item._id)) {
+        continue;
+      }
+
       let startString = convertDateTime(item.startTime);
       let endString = convertDateTime(item.dueTime);
 
       let list = listDate.filter((x) => {
         return (
           (x.start <= startString && startString <= x.end) ||
-          (x.end <= startString && endString <= x.end)
+          (x.end <= endString && endString <= x.end) ||
+          (startString <= x.start && x.end <= endString)
         );
       });
 
@@ -1353,21 +1504,213 @@ export default ({ navigation, taskId, namePath }) => {
     return false;
   };
 
+  // Go back
+  const handleGoBack = () => {
+    navigation.goBack();
+    setWarn(false);
+  };
+
+  const closeWarning = () => {
+    setWarn(false);
+  };
+
+  const handleShowWarning = () => {
+    if (dataBackup) {
+      let request = {
+        ...data,
+        typeId: type?._id,
+        name: name,
+        description: note,
+        startTime: new Date(startDate + " " + startTime),
+        dueTime: new Date(dueDate + " " + dueTime),
+        files: [],
+        checkList: [],
+        isImportant: isImportant,
+        status: isDone
+          ? CommonData.TaskStatus().Done
+          : CommonData.TaskStatus().New,
+        remindMode: remind,
+        remindTime: remind ? new Date(remindTime) : null,
+        repeatTime: repeat,
+        endRepeat: repeat ? new Date(endRepeat) : null,
+        isRepeatedById: null,
+        updatedDate: new Date(),
+      };
+
+      console.log("aa");
+
+      if (
+        request.name !== dataBackup.name ||
+        request.typeId !== dataBackup.typeId ||
+        request.description !== dataBackup.description ||
+        convertDateTime(request.startTime) !==
+          convertDateTime(dataBackup.startTime) ||
+        convertDateTime(request.dueTime) !==
+          convertDateTime(dataBackup.dueTime) ||
+        request.typeId !== dataBackup.typeId ||
+        request.isImportant !== dataBackup.isImportant ||
+        request.status !== dataBackup.status ||
+        request.remindMode !== dataBackup.remindMode ||
+        convertDateTime(request.remindTime) !==
+          convertDateTime(dataBackup.remindTime) ||
+        request.repeatTime !== dataBackup.repeatTime ||
+        convertDateTime(request.endRepeat) !==
+          convertDateTime(dataBackup.endRepeat)
+      ) {
+        setWarn(true);
+      } else {
+        handleGoBack();
+      }
+    }
+  };
+
+  // Popup update many
+  const closeModalUpdateMany = () => {
+    setUpdateMany(false);
+  };
+
+  const handleUpdateFutureTask = async () => {
+    const token = await AsyncStorage.getItem("Token");
+    if (token) {
+      let request = {
+        ...data,
+        typeId: type._id,
+        name: name,
+        description: note,
+        startTime: new Date(startDate + " " + startTime),
+        dueTime: new Date(dueDate + " " + dueTime),
+        files: [],
+        checkList: [],
+        isImportant: isImportant,
+        status: isDone
+          ? CommonData.TaskStatus().Done
+          : CommonData.TaskStatus().New,
+        remindMode: remind,
+        remindTime: remind ? new Date(remindTime) : null,
+        repeatTime: repeat,
+        endRepeat: repeat ? new Date(endRepeat) : null,
+        // isRepeatedById: null,
+        updatedDate: new Date(),
+      };
+
+      // Change repeat
+      if (
+        convertDateTime(request.startTime) !==
+          convertDateTime(dataBackup.startTime) ||
+        convertDateTime(request.dueTime) !==
+          convertDateTime(dataBackup.dueTime) ||
+        request.repeatTime !== dataBackup.repeatTime ||
+        convertDateTime(request.endRepeat) !==
+          convertDateTime(dataBackup.endRepeat)
+      ) {
+        await updateManyRepeat();
+      } else {
+        setIsLoading(true);
+        let startStringBackup = convertDateTime(dataBackup.startTime);
+
+        //future task
+        let listFutureTask = allTasks.filter((x) => {
+          let startString = convertDateTime(x.startTime);
+          return (
+            x.isRepeatedById === dataBackup.isRepeatedById &&
+            startStringBackup <= startString
+          );
+        });
+
+        if (listFutureTask.length > 0) {
+          let isError = false;
+          for (const task of listFutureTask) {
+            const requestTask = {
+              ...request,
+              _id: task._id,
+              startTime: task.startTime,
+              dueTime: task.dueTime,
+              repeatTime: task.repeatTime,
+              endRepeat: task.endRepeat,
+            };
+
+            const response = await UpdateTask(requestTask, token);
+            if (response) {
+              // Remind
+              if (
+                convertDateTime(requestTask.remindTime) !==
+                convertDateTime(task.remindTime)
+              ) {
+                await handleSettingRemind(requestTask, response, "update");
+              }
+            } else {
+              isError = true;
+              break;
+            }
+          }
+
+          if (!isError) {
+            await handleGetAllTasks();
+            // navigation.navigate("HomeTab", { screen: "Tasks" });
+            navigation.goBack();
+            setIsLoading(false);
+          }
+        }
+      }
+    }
+  };
+
+  const handleChooseUpdate = async (many) => {
+    if (many) {
+      await handleUpdateFutureTask();
+    } else {
+      updateTask(true, null);
+    }
+  };
+
   return (
     <Center w="100%" h="100%">
       <Spinner visible={isLoading}></Spinner>
 
+      {dataBackup && dataBackup.isRepeatedById ? (
+        <PopupDeleteMany
+          title={"Delete"}
+          content={
+            "Are you sure to delete this task? This is a repeating task."
+          }
+          closeFunction={closeModal}
+          isOpen={open}
+          deleteTask={deleteTask}
+        ></PopupDeleteMany>
+      ) : (
+        <PopupComponent
+          title={"Delete"}
+          content={"Are you sure to delete this task?"}
+          closeFunction={closeModal}
+          isOpen={open}
+          actionFunction={deleteTask.bind(false)}
+          update={false}
+        ></PopupComponent>
+      )}
+
+      {dataBackup && dataBackup.isRepeatedById && (
+        <PopupUpdateMany
+          title={"Update"}
+          content={
+            "Are you sure to update this task? This is a repeating task."
+          }
+          closeFunction={closeModalUpdateMany}
+          isOpen={updateMany}
+          updateTask={handleChooseUpdate}
+        ></PopupUpdateMany>
+      )}
       <PopupComponent
-        title={"Delete"}
-        content={"Are you sure to delete this task?"}
-        closeFunction={closeModal}
-        isOpen={open}
-        actionFunction={deleteTask}
+        title={"Warning"}
+        content={"All unsaved progress will be lost. Are you sure to go back?"}
+        closeFunction={closeWarning}
+        isOpen={warn}
+        actionFunction={handleGoBack}
+        update={false}
       ></PopupComponent>
 
       <Box safeArea height="100%" width="100%" paddingX={1}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
+          <TouchableOpacity onPress={() => handleShowWarning()}>
             <HStack>
               <Icon name="angle-left" size={25} style={styles.icon} />
               <Text paddingLeft={2} fontSize={18} style={styles.textBack}>
@@ -1426,12 +1769,22 @@ export default ({ navigation, taskId, namePath }) => {
           )}
 
           {/* Name */}
-          <TextInput
-            fontSize={18}
-            value={name}
-            onChangeText={(e) => onChangeName(e)}
-            style={styles.checkBoxInput}
-          />
+          <View style={styles.textContainer}>
+            <TextInput
+              fontSize={18}
+              value={name}
+              onChangeText={(e) => onChangeName(e)}
+              style={styles.checkBoxInput}
+            />
+
+            <TouchableOpacity
+              onPress={() => {
+                handleClearText();
+              }}
+            >
+              <IconMaterial name="cancel" color={"gray"} size={25} />
+            </TouchableOpacity>
+          </View>
 
           {isImportant ? (
             <Icon
@@ -1848,11 +2201,19 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   checkBoxInput: {
-    borderColor: Color.Input().Border,
-    borderWidth: 1,
     padding: 10,
     flex: 1,
+  },
+  textContainer: {
+    borderColor: Color.Input().Border,
+    borderWidth: 1,
     borderRadius: 5,
+    display: "flex",
+    flexDirection: "row",
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingRight: 10,
   },
   textArea: {
     borderColor: Color.Input().Border,

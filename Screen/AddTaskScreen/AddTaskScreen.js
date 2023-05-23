@@ -3,11 +3,15 @@ import { Center, NativeBaseProvider } from "native-base";
 import AddTaskComponent from "./AddTaskComponent";
 
 export default ({ navigation, route }) => {
-  const { taskId } = route.params;
+  const { taskId, selectedDate } = route.params;
   return (
     <NativeBaseProvider>
-      <Center flex={1} px="3">
-        <AddTaskComponent navigation={navigation} taskId={taskId} />
+      <Center flex={1} px="3" backgroundColor={"#fff"}>
+        <AddTaskComponent
+          navigation={navigation}
+          taskId={taskId}
+          selectedDate={selectedDate}
+        />
       </Center>
     </NativeBaseProvider>
   );

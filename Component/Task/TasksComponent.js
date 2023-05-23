@@ -6,7 +6,7 @@ import CommonData from "../../CommonData/CommonData";
 import NoData from "../Common/NoData";
 import { convertDateTime } from "../../helper/Helper";
 
-export default ({ navigation, listTasks, date, typeId, filter, monthYear }) => {
+export default ({ navigation, listTasks, date, typeId, filter, daysRange }) => {
   const [tasks, setTasks] = useState([]);
   const [tasksImportant, setTasksImportant] = useState([]);
 
@@ -16,15 +16,8 @@ export default ({ navigation, listTasks, date, typeId, filter, monthYear }) => {
 
   const isTaskContainMonthYear = (x) => {
     let startString = convertDateTime(x.startTime).split(" ")[0];
-    let dueString = convertDateTime(x.dueTime).split(" ")[0];
-    let m = monthYear.split("-")[0];
-    let y = monthYear.split("-")[1];
-    return (
-      (startString.split("-")[1].includes(m) &&
-        startString.split("-")[0].includes(y)) ||
-      (dueString.split("-")[1].includes(m) &&
-        dueString.split("-")[0].includes(y))
-    );
+
+    return daysRange[0] === startString;
   };
 
   const compareDateBetweenTwoDate = (date, date1, date2) => {
@@ -210,15 +203,13 @@ export default ({ navigation, listTasks, date, typeId, filter, monthYear }) => {
   }
 
   const getSection = () => {
-    if (typeId === CommonData.TaskType().InComplete) {
-      return [{ data: [...tasks] }];
-    }
-
     if (typeId === CommonData.TaskType().Completed) {
       return [
         {
+          title: "Completed",
           data: [...tasksImportant],
         },
+        { title: "Incomplete", data: [...tasks] },
       ];
     }
 
