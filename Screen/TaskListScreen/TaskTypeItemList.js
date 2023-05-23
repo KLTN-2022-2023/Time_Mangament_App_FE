@@ -137,6 +137,7 @@ export default ({ items, navigation }) => {
           closeFunction={closeModal}
           isOpen={open}
           actionFunction={deleteType.bind(this, item._id)}
+          update={false}
         ></PopupComponent>
 
         <Swipeable

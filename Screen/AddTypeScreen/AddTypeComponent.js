@@ -327,6 +327,7 @@ export default ({ navigation, typeId }) => {
           closeFunction={closeModal}
           isOpen={open}
           actionFunction={deleteType}
+          update={false}
         ></PopupComponent>
       </Box>
     </Center>

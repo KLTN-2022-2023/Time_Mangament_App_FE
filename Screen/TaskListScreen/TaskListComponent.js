@@ -1,4 +1,5 @@
 import { Box, Center, Button, Input, Icon, Text, View } from "native-base";
+import IconAw from "react-native-vector-icons/FontAwesome";
 import { useState, useEffect } from "react";
 import { TextInput, StyleSheet, TouchableOpacity } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -12,6 +13,12 @@ import jwt_decode from "jwt-decode";
 import { useSelector, useDispatch } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import NoData from "../../Component/Common/NoData";
+import {
+  convertDateTime,
+  getMonDaySunDay,
+  formatDateUI,
+} from "../../helper/Helper";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 export default ({ navigation }) => {
   const dispatch = useDispatch();
@@ -19,11 +26,24 @@ export default ({ navigation }) => {
   const allTypes = useSelector((state) => state.type.allTypes);
   const [items, setItems] = useState([]);
   const [keySearch, setKeySearch] = useState("");
+  const [showWeek, setShowWeek] = useState(false);
+  const [daysRange, setDaysRange] = useState([]);
+  const [selectedDay, setSelectedDay] = useState(new Date());
 
   // Load Data
   useEffect(() => {
     handleGetAllTasks();
     handleGetAllTypes();
+  }, []);
+
+  // set default
+  useEffect(() => {
+    // let days = getMonDaySunDay(new Date());
+    // setDaysRange([
+    //   convertDateTime(days.monday).split(" ")[0],
+    //   convertDateTime(days.sunday).split(" ")[0],
+    // ]);
+    setDaysRange([convertDateTime(new Date()).split(" ")[0]]);
   }, []);
 
   //Parse Data
@@ -40,7 +60,7 @@ export default ({ navigation }) => {
     } else {
       handleParseData(allTypes);
     }
-  }, [allTasks, allTypes, keySearch]);
+  }, [allTasks, allTypes, keySearch, daysRange]);
 
   const handleGetAllTasks = async () => {
     const token = await AsyncStorage.getItem("Token");
@@ -80,16 +100,27 @@ export default ({ navigation }) => {
   };
 
   const showQty = (type) => {
+    let list = [];
+    if (daysRange.length > 0) {
+      list = allTasks.filter((x) => {
+        let startDateString = convertDateTime(x.startTime).split(" ")[0];
+        return (
+          // daysRange[0] <= startDateString && startDateString <= daysRange[1]
+          daysRange[0] === startDateString
+        );
+      });
+    }
+
     if (type == CommonData.TaskType().AllTask) {
-      if (allTasks && allTasks.length > 0) {
-        let result = allTasks.filter((x) => !x.isDeleted);
+      if (list && list.length > 0) {
+        let result = list.filter((x) => !x.isDeleted);
 
         if (result && result.length > 0) {
           return result.length;
         }
       }
     } else if (type == CommonData.TaskType().InComplete) {
-      let result = allTasks.filter(
+      let result = list.filter(
         (x) => !x.isDeleted && x.status === CommonData.TaskStatus().New
       );
 
@@ -97,7 +128,7 @@ export default ({ navigation }) => {
         return result.length;
       }
     } else if (type == CommonData.TaskType().Completed) {
-      let result = allTasks.filter(
+      let result = list.filter(
         (x) => !x.isDeleted && x.status === CommonData.TaskStatus().Done
       );
 
@@ -105,21 +136,91 @@ export default ({ navigation }) => {
         return result.length;
       }
     } else if (type == CommonData.TaskType().Important) {
-      let result = allTasks.filter((x) => !x.isDeleted && x.isImportant);
+      let result = list.filter((x) => !x.isDeleted && x.isImportant);
 
       if (result && result.length > 0) {
         return result.length;
       }
     } else {
-      let result = allTasks.filter((x) => !x.isDeleted && x.typeId === type);
+      let result = list.filter((x) => !x.isDeleted && x.typeId === type);
 
       if (result && result.length > 0) {
-        console.log(result.length);
         return result.length;
       }
     }
 
     return "";
+  };
+
+  const showDaysRange = () => {
+    if (daysRange.length > 0) {
+      // let mon = formatDateUI(daysRange[0]);
+      // let sun = formatDateUI(daysRange[1]);
+
+      // return mon + " - " + sun;
+
+      let select = formatDateUI(daysRange[0]);
+      return select;
+    }
+
+    return "";
+  };
+
+  const hideDatePicker = () => {
+    setShowWeek(false);
+  };
+
+  const confirmDate = (date) => {
+    setSelectedDay(date);
+    // let days = getMonDaySunDay(date);
+    // setDaysRange([
+    //   convertDateTime(days.monday).split(" ")[0],
+    //   convertDateTime(days.sunday).split(" ")[0],
+    // ]);
+
+    setDaysRange([convertDateTime(date).split(" ")[0]]);
+
+    setShowWeek(false);
+  };
+
+  const setDiffWeek = (next) => {
+    if (daysRange.length > 0) {
+      // let mon = new Date(daysRange[0]);
+      // let sun = new Date(daysRange[1]);
+      // let monday = "";
+      // let sunday = "";
+      // if (next) {
+      //   monday = convertDateTime(
+      //     new Date(mon.setDate(mon.getDate() + 7))
+      //   ).split(" ")[0];
+      //   sunday = convertDateTime(
+      //     new Date(sun.setDate(sun.getDate() + 7))
+      //   ).split(" ")[0];
+      // } else {
+      //   monday = convertDateTime(
+      //     new Date(mon.setDate(mon.getDate() - 7))
+      //   ).split(" ")[0];
+      //   sunday = convertDateTime(
+      //     new Date(sun.setDate(sun.getDate() - 7))
+      //   ).split(" ")[0];
+      // }
+
+      // setDaysRange([monday, sunday]);
+      let select = new Date(daysRange[0]);
+      let day = "";
+
+      if (next) {
+        day = convertDateTime(
+          new Date(select.setDate(select.getDate() + 1))
+        ).split(" ")[0];
+      } else {
+        day = convertDateTime(
+          new Date(select.setDate(select.getDate() - 1))
+        ).split(" ")[0];
+      }
+
+      setDaysRange([day]);
+    }
   };
 
   return (
@@ -146,6 +247,50 @@ export default ({ navigation }) => {
             />
           }
         />
+
+        {/* Filter week  */}
+        <View style={styles.sortFilterContainer}>
+          <View style={styles.weekContainer}>
+            <Button
+              colorScheme={"indigo"}
+              size={8}
+              onPress={() => setDiffWeek(false)}
+            >
+              <IconAw
+                name={"caret-left"}
+                size={20}
+                as="Ionicons"
+                color="white"
+              />
+            </Button>
+
+            <TouchableOpacity onPress={() => setShowWeek(true)}>
+              <View style={styles.monthFilter}>
+                <Text style={styles.monthFilterText}>{showDaysRange()}</Text>
+              </View>
+            </TouchableOpacity>
+
+            <Button
+              colorScheme={"indigo"}
+              size={8}
+              onPress={() => setDiffWeek(true)}
+            >
+              <IconAw
+                name={"caret-right"}
+                size={20}
+                as="Ionicons"
+                color="white"
+              />
+            </Button>
+          </View>
+        </View>
+        <DateTimePickerModal
+          isVisible={showWeek}
+          mode="date"
+          onConfirm={confirmDate}
+          onCancel={hideDatePicker}
+        />
+
         {/* space */}
         <View style={styles.searchBar}></View>
         {keySearch && keySearch != "" ? (
@@ -157,24 +302,13 @@ export default ({ navigation }) => {
         ) : (
           <View>
             <TaskTypeItem
-              type={CommonData.TaskType().InComplete}
-              name={"Incomplete"}
-              quantity={showQty(CommonData.TaskType().InComplete)}
-              actionFunc={() => {
-                navigation.navigate("TaskListDetail", {
-                  showDate: null,
-                  typeId: CommonData.TaskType().InComplete,
-                });
-              }}
-            ></TaskTypeItem>
-            <TaskTypeItem
               type={CommonData.TaskType().Completed}
-              name={"Completed"}
-              quantity={showQty(CommonData.TaskType().Completed)}
+              name={"All Tasks"}
+              quantity={showQty(CommonData.TaskType().AllTask)}
               actionFunc={() => {
                 navigation.navigate("TaskListDetail", {
                   showDate: null,
-                  typeId: CommonData.TaskType().Completed,
+                  typeId: CommonData.TaskType().AllTask,
                 });
               }}
             ></TaskTypeItem>
@@ -192,6 +326,18 @@ export default ({ navigation }) => {
 
             {/* Divider */}
             <View style={styles.divider}></View>
+            <View style={{ marginTop: 5 }}>
+              <Text
+                style={{
+                  marginBottom: 15,
+                  fontSize: 16,
+                  color: Color.Button().ButtonActive,
+                  fontWeight: 500,
+                }}
+              >
+                Types
+              </Text>
+            </View>
 
             {/* List */}
             {items && items.length > 0 ? (
@@ -213,8 +359,8 @@ const styles = StyleSheet.create({
   divider: {
     backgroundColor: "#DDDDDD",
     height: 1,
-    marginBottom: 15,
-    marginTop: 5,
+    marginBottom: 10,
+    marginTop: 10,
   },
   button: {
     borderRadius: 30,
@@ -225,5 +371,36 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: Color.Button().Text,
+  },
+  sortFilterContainer: {
+    display: "flex",
+    flexDirection: "column-reverse",
+    justifyContent: "center",
+    alignItems: "flex-end",
+    gap: 10,
+    marginTop: 15,
+    marginBottom: 5,
+  },
+  weekContainer: {
+    display: "flex",
+    flexDirection: "row",
+    gap: 5,
+  },
+  monthFilterText: {
+    color: Color.Button().ButtonActive,
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  monthFilter: {
+    borderColor: Color.Button().ButtonActive,
+    borderWidth: 1,
+    backgroundColor: "#fff",
+    padding: 5,
+    borderRadius: 5,
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 5,
   },
 });
