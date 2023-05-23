@@ -16,13 +16,9 @@ import { ScrollView } from "react-native";
 import { signUp, verifyAccount } from "../../Reducers/UserReducer";
 import SnackBar from "../../Component/Snackbar/Snackbar";
 
-
-
 export default ({ navigation }) => {
   const [name, setName] = useState("");
-  const [email, setEmail] = useState();
   const [phone, setPhone] = useState();
-
   const [password, setPassword] = useState();
   const [confirmPassword, setConfirmPassword] = useState();
   const [modalOTP, setModalOTP] = useState(true);
@@ -39,7 +35,7 @@ export default ({ navigation }) => {
 
   const handleSignUp = async () => {
     if (!validate()) {
-      if (confirmPassword === password && confirmPassword && name && password && phone) {
+      if (confirmPassword && name && password && phone) {
         if (!validateName && !validateNumberPhone && !validateConfirmPassword && !validatePass) {
           const result = await signUp({ name: name, phone: phone, password: password });
           if (result) {
@@ -52,12 +48,10 @@ export default ({ navigation }) => {
               setModalOTP(false);
               setValidateNumberPhone(false);
             }
-          } else {
-            setModalOTP(false)
           }
         }
         else {
-          console.log("aaaaaaaaaaaa")
+          console.log("Data is invalid")
         }
       }
     }
@@ -65,6 +59,7 @@ export default ({ navigation }) => {
 
   const handleVerify = async () => {
     const result = await verifyAccount({ otp: otp });
+    console.log(result);
     if (result) {
       setSnackBarVerify(true)
       setTimeout(() => {
@@ -91,9 +86,10 @@ export default ({ navigation }) => {
     var re = /^[0-9]{6}\b/g;
     return re.test(confirmPassword)
   }
+
   const validate = () => {
-    if (name.length <= 0) {
-      setValidateName(true)
+    if (!name) {
+      setValidateName(true);
     }
     else {
       setValidateName(false);
@@ -110,7 +106,7 @@ export default ({ navigation }) => {
     else {
       setValidatePass(false);
     }
-    if (!valConfirmPassword(confirmPassword)) {
+    if (!valConfirmPassword(confirmPassword) || confirmPassword !== password) {
       setValidateConfirmPassword(true);
     }
     else {
@@ -147,14 +143,14 @@ export default ({ navigation }) => {
             <VStack space={3} mt="5">
               <FormControl>
                 <FormControl.Label>Name</FormControl.Label>
-                <Input value={name} onChangeText={e => { setName(e), setValidateName(false), validate() }} />
+                <Input value={name} onChangeText={e => { setName(e), setValidateName(false) }} />
                 {validateName && (
                   <Text color={"#FF0000"}> Name is invalid </Text>
                 )}
               </FormControl>
               <FormControl>
                 <FormControl.Label>Phone</FormControl.Label>
-                <Input value={phone} onChangeText={e => { setPhone(e), setValidateNumberPhone(false), validate() }} />
+                <Input value={phone} onChangeText={e => { setPhone(e), setValidateNumberPhone(false) }} />
                 {validateNumberPhone && (
                   <Text color={"#FF0000"}>{textPhone}</Text>
                 )}
@@ -162,14 +158,14 @@ export default ({ navigation }) => {
 
               <FormControl>
                 <FormControl.Label>Password</FormControl.Label>
-                <Input value={password} secureTextEntry={true} onChangeText={e => { setPassword(e), setValidatePass(false), validate() }} />
+                <Input value={password} secureTextEntry={true} onChangeText={e => { setPassword(e), setValidatePass(false) }} />
                 {validatePass && (
                   <Text color={"#FF0000"}>Password is invalid</Text>
                 )}
               </FormControl>
               <FormControl>
                 <FormControl.Label>Confirm password</FormControl.Label>
-                <Input value={confirmPassword} secureTextEntry={true} onChangeText={e => { setConfirmPassword(e), setValidateConfirmPassword(false), validate() }} />
+                <Input value={confirmPassword} secureTextEntry={true} onChangeText={e => { setConfirmPassword(e), setValidateConfirmPassword(false) }} />
                 {validateConfirmPassword && (
                   <Text color={"#FF0000"}>{textConfirmPassword}</Text>
                 )}
