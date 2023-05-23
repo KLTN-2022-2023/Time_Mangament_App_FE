@@ -610,7 +610,8 @@ export default ({ navigation, taskId, selectedDate }) => {
     }
   };
 
-  const updateTask = async (clearRepeat, req) => {
+  const updateTask = async (clearRepeat, req, removeRemind) => {
+    setIsLoading(true);
     try {
       const token = await AsyncStorage.getItem("Token");
       if (token) {
@@ -629,8 +630,8 @@ export default ({ navigation, taskId, selectedDate }) => {
             : CommonData.TaskStatus().New,
           remindMode: remind,
           remindTime: remind ? new Date(remindTime) : null,
-          repeatTime: repeat,
-          endRepeat: repeat ? new Date(endRepeat) : null,
+          repeatTime: removeRemind ? null : repeat,
+          endRepeat: removeRemind ? null : repeat ? new Date(endRepeat) : null,
           isRepeatedById: clearRepeat ? null : dataBackup.isRepeatedById,
           updatedDate: new Date(),
         };
@@ -659,7 +660,10 @@ export default ({ navigation, taskId, selectedDate }) => {
           ) {
             result.shift();
 
-            const response = await UpdateTask(request, token);
+            const response = await UpdateTask(
+              { ...request, isRepeatedById: request._id },
+              token
+            );
             if (response) {
               const repeatRequest = {
                 data: { ...request, isRepeatedById: request._id },
@@ -838,7 +842,7 @@ export default ({ navigation, taskId, selectedDate }) => {
             }
           }
           if (!isError) {
-            updateTask(true, request);
+            updateTask(true, request, false);
           }
         }
       }
@@ -863,7 +867,8 @@ export default ({ navigation, taskId, selectedDate }) => {
           if (dataBackup.isRepeatedById) {
             setUpdateMany(true);
           } else {
-            await updateTask(true, null);
+            setIsLoading(true);
+            await updateTask(true, null, false);
           }
         }
       } else {
@@ -1484,7 +1489,13 @@ export default ({ navigation, taskId, selectedDate }) => {
 
     // Check overlap with other tasks
     for (let item of allTasks) {
+      // avoid repeated update
       if (listTaskAvoid && listTaskAvoid.find((x) => x._id === item._id)) {
+        continue;
+      }
+
+      // update
+      if (dataBackup && dataBackup._id === item._id) {
         continue;
       }
 
@@ -1492,15 +1503,18 @@ export default ({ navigation, taskId, selectedDate }) => {
       let endString = convertDateTime(item.dueTime);
 
       let list = listDate.filter((x) => {
+        let s = convertDateTime(x.start);
+        let e = convertDateTime(x.end);
         return (
-          (x.start <= startString && startString <= x.end) ||
-          (x.end <= endString && endString <= x.end) ||
-          (startString <= x.start && x.end <= endString)
+          (startString <= s && s <= endString) ||
+          (startString <= e && e <= endString) ||
+          (s <= startString && endString <= e) ||
+          (startString <= s && e <= endString)
         );
       });
 
       if (list.length > 0) {
-        return false;
+        return true;
       }
     }
 
@@ -1662,7 +1676,7 @@ export default ({ navigation, taskId, selectedDate }) => {
     if (many) {
       await handleUpdateFutureTask();
     } else {
-      updateTask(true, null);
+      updateTask(true, null, true);
     }
   };
 
