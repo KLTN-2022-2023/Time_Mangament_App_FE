@@ -227,6 +227,7 @@ export default ({ navigation, taskId, selectedDate }) => {
   useEffect(() => {
     let result = handleValidate(false, true, true, true);
     setErrorRepeatOverlap(false);
+    setErrorOverlap(false);
   }, [startDate, startTime, dueDate, dueTime]);
 
   // Validate repeat
@@ -853,6 +854,8 @@ export default ({ navigation, taskId, selectedDate }) => {
 
           if (!handleValidateOverlap()) {
             await createTask();
+          } else {
+            setIsLoading(false);
           }
         }
         // Update
@@ -1537,8 +1540,6 @@ export default ({ navigation, taskId, selectedDate }) => {
         updatedDate: new Date(),
       };
 
-      console.log("aa");
-
       if (
         request.name !== dataBackup.name ||
         request.typeId !== dataBackup.typeId ||
@@ -1561,6 +1562,8 @@ export default ({ navigation, taskId, selectedDate }) => {
       } else {
         handleGoBack();
       }
+    } else {
+      handleGoBack();
     }
   };
 

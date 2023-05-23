@@ -5,7 +5,7 @@ import SignUpComponent from "./SignUpComponent";
 export default ({ navigation }) => {
   return (
     <NativeBaseProvider>
-      <Center flex={1} px="3">
+      <Center flex={1} px="3" backgroundColor={"#fff"}>
         <SignUpComponent navigation={navigation} />
       </Center>
     </NativeBaseProvider>
