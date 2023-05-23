@@ -25,11 +25,11 @@ export default ({ navigation }) => {
   const [validateName, setValidateName] = useState(false);
   const [validateNumberPhone, setValidateNumberPhone] = useState(false);
   const [validateConfirmPassword, setValidateConfirmPassword] = useState(false);
-  const [textConfirmPassword, setTextConfirmPassword] = useState("Confirm password is invalid");
+  const [textConfirmPassword, setTextConfirmPassword] = useState("Password is 6 numeric character");
   const [validatePass, setValidatePass] = useState(false);
   const [snackBar, setSnackBar] = useState(false);
   const [snackBarVerify, setSnackBarVerify] = useState(false);
-  const [textPhone, setTextPhone] = useState("Number phone is invalid");
+  const [textPhone, setTextPhone] = useState("Number phone is Phone is 10 numeric character and start with number 0");
   const [otp, setOtp] = useState();
   const [validateOTP, setValidateOTP] = useState(false);
 
@@ -145,7 +145,7 @@ export default ({ navigation }) => {
                 <FormControl.Label>Name</FormControl.Label>
                 <Input value={name} onChangeText={e => { setName(e), setValidateName(false) }} />
                 {validateName && (
-                  <Text color={"#FF0000"}> Name is invalid </Text>
+                  <Text color={"#FF0000"}> Name cannot be left empty </Text>
                 )}
               </FormControl>
               <FormControl>
@@ -160,7 +160,7 @@ export default ({ navigation }) => {
                 <FormControl.Label>Password</FormControl.Label>
                 <Input value={password} secureTextEntry={true} onChangeText={e => { setPassword(e), setValidatePass(false) }} />
                 {validatePass && (
-                  <Text color={"#FF0000"}>Password is invalid</Text>
+                  <Text color={"#FF0000"}>Password is 6 numeric character</Text>
                 )}
               </FormControl>
               <FormControl>

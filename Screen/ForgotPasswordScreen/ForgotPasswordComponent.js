@@ -10,7 +10,7 @@ import {
     HStack,
     Center,
 } from "native-base";
-import { HandleLogin, forgotPass, verifyForgotPass } from "../../Reducers/UserReducer";
+import { HandleLogin, forgotNewPassword, forgotPass, verifyForgotPass } from "../../Reducers/UserReducer";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Spinner from "react-native-loading-spinner-overlay";
@@ -18,39 +18,66 @@ import { StyleSheet } from "react-native";
 import { View } from "react-native";
 import { Icon } from "react-native-vector-icons/AntDesign"
 import SnackBar from "../../Component/Snackbar/Snackbar";
+import { async } from "q";
 
 export default ({ navigation }) => {
     const [phone, setPhone] = useState();
     const [newPassword, setNewPassword] = useState();
+    const [confirmPassword, setConfirmPassword] = useState()
     const [otp, setOtp] = useState("");
-    const [pageOTP, setPageOTP] = useState(true);
-    const [isLoading, setIsLoading] = useState(false);
+    const [pageOTP, setPageOTP] = useState(false);
     const [snackBar, setSnackBar] = useState(false);
     const [validateOTP, setValidateOTP] = useState(false);
     const [validatePhone, setValidatePhone] = useState(false);
     const [validatePassword, setValidatePassword] = useState(false);
-    const [disable, setDisable] = useState(true);
+    const [validateConfirmPassword, setConfirmValidatePassword] = useState(false);
+    const [errorTextConfirmPass, setErrorTextConfirmPass] = useState("Confirm Password is 6 numeric character");
+    const [pagePass, setPagePass] = useState(false);
+    const [pagePhone, setPagePhone] = useState(true);
     const handleForgot = async () => {
         if (!validate()) {
-            if (!validatePassword && !validatePhone) {
-                const response = await forgotPass({ phone: phone, newPass: newPassword });
+            if (!validatePhone) {
+                const response = await forgotPass({ phone: phone });
                 if (response) {
-                    setPageOTP(false);
+                    setPageOTP(true);
+                    setPagePhone(false);
                 }
+
+            } else {
+                console.log("abc")
             }
         }
     }
     const handleVerifyForgot = async () => {
-        setValidateOTP(false);
+        setPagePass(true);
+        setPageOTP(false)
         const response = await verifyForgotPass({ otp: otp });
         if (response) {
-            setSnackBar(true);
-            setTimeout(() => {
-                setSnackBar(false);
-                navigation.navigate("LoginScreen");
-            }, 2000)
+            setPagePass(true);
+
         } else {
             setValidateOTP(true);
+        }
+    }
+    const forgotnewPassword = async () => {
+        if (!validatePass()) {
+            if (confirmPassword !== newPassword) {
+                setErrorTextConfirmPass("Confirm password doesn't match password");
+            } else {
+                if (!validateConfirmPassword && !validatePassword) {
+                    console.log(phone)
+                    console.log(newPassword)
+                    const result = await forgotNewPassword({ phone, newPassword });
+                    if (result) {
+                        setSnackBar(true);
+                        setTimeout(() => {
+                            setSnackBar(false);
+                            navigation.navigate("LoginScreen");
+                        }, 2000)
+                    }
+                }
+            }
+
         }
     }
     const valPhone = (phone) => {
@@ -61,14 +88,27 @@ export default ({ navigation }) => {
         var re = /^[0-9]{6}\b/g;
         return re.test(password)
     }
+    const valConfirmPassword = (confirmpassword) => {
+        var re = /^[0-9]{6}\b/g;
+        return re.test(confirmpassword)
+    }
 
-    const validate = () => {
+    const validatePass = () => {
         if (!valPassword(newPassword)) {
             setValidatePassword(true)
         }
         else {
-            setValidatePassword(false);
+            setValidatePassword(false)
         }
+        if (!valConfirmPassword(confirmPassword) || confirmPassword !== newPassword) {
+            setConfirmValidatePassword(true)
+        }
+        else {
+            setConfirmValidatePassword(false)
+        }
+    }
+
+    const validate = () => {
         if (!valPhone(phone)) {
             setValidatePhone(true)
         }
@@ -103,28 +143,21 @@ export default ({ navigation }) => {
                     Forgot password!
                 </Heading>
                 <VStack space={3} mt="5">
-                    {pageOTP ?
+                    {pagePhone ?
                         <View>
                             <FormControl>
                                 <FormControl.Label>Phone</FormControl.Label>
-                                <Input onChangeText={e => setPhone(e)} />
+                                <Input onChangeText={e => { setPhone(e), setValidatePhone(false) }} />
                                 {validatePhone && (
-                                    <Text color={"#FF0000"}>Phone is invalid</Text>
-                                )}
-                            </FormControl>
-                            <FormControl>
-                                <FormControl.Label>New Password</FormControl.Label>
-                                <Input type="password" onChangeText={e => setNewPassword(e)} />
-                                {validatePassword && (
-                                    <Text color={"#FF0000"}>Password is invalid</Text>
+                                    <Text color={"#FF0000"}>Phone is 10 numeric character and start with number 0</Text>
                                 )}
                             </FormControl>
                             <Button mt="2" colorScheme="indigo" onPress={handleForgot} >
                                 Send
                             </Button>
                         </View>
-
-                        :
+                        : <View></View>}
+                    {pageOTP ?
                         <View>
                             <FormControl>
                                 <FormControl.Label>OTP</FormControl.Label>
@@ -137,20 +170,30 @@ export default ({ navigation }) => {
                                 }
                             </FormControl>
                             <Button mt="2" colorScheme="indigo" onPress={handleVerifyForgot}>Verify</Button>
-                            <Link
-                                paddingTop={5}
-                                alignItems="center"
-                                justifyContent="center"
-                                _text={{
-                                    color: "indigo.500",
-                                    fontWeight: "medium",
-                                    fontSize: "sm",
-                                }}
-                                onPress={() => setPageOTP(true)}
-                            >
-                                Go back
-                            </Link>
                         </View>
+                        : <View></View>
+                    }
+                    {pagePass ?
+                        <View>
+                            <FormControl>
+                                <FormControl.Label>New password</FormControl.Label>
+                                <Input secureTextEntry={true} onChangeText={e => { setNewPassword(e), setValidatePassword(false) }} />
+                                {validatePassword && (
+                                    <Text color={"#FF0000"}>Password is 6 numeric character</Text>
+                                )}
+                            </FormControl>
+                            <FormControl>
+                                <FormControl.Label>Confirm password</FormControl.Label>
+                                <Input secureTextEntry={true} onChangeText={e => { setConfirmPassword(e), setConfirmValidatePassword(false) }} />
+                                {validateConfirmPassword && (
+                                    <Text color={"#FF0000"}>{errorTextConfirmPass}</Text>
+                                )}
+                            </FormControl>
+                            <Button mt="2" colorScheme="indigo" onPress={forgotnewPassword} >
+                                Submit
+                            </Button>
+                        </View>
+                        : <View></View>
                     }
                     <HStack mt="6" justifyContent="center">
                         <Text

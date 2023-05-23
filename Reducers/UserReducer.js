@@ -70,11 +70,21 @@ export const verifyAccount = async (req) => {
 export const forgotPass = async (req) => {
   let result = null;
   try {
-    console.log("Nam");
-    console.log(req);
     const response = await APIService.user().forgotPassword(req);
     if (response) {
       console.log("abc", response);
+      result = response;
+    }
+  } catch (err) {
+    result = null;
+  }
+  return result;
+};
+export const forgotNewPassword = async (req) => {
+  let result = null;
+  try {
+    const response = await APIService.user().forgotNewPass(req);
+    if (response) {
       result = response;
     }
   } catch (err) {
