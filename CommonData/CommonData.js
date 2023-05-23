@@ -38,7 +38,7 @@ export default {
   RemindType() {
     return {
       OnStartTime: "On start time",
-      FiveMinutes: "Before start time 5 mminutes",
+      FiveMinutes: "Before start time 5 minutes",
       OneDay: "Before start time one day",
       Never: "Never",
       Custom: "Custom",

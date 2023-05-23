@@ -2,6 +2,7 @@ import * as React from "react";
 import { Center, NativeBaseProvider } from "native-base";
 import StatictisComponent from "./StatictisComponent";
 import StatisticTest from "./StatisticTest";
+import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { useState, useEffect, useRef } from "react";
 
@@ -74,7 +75,7 @@ export default ({ navigation }) => {
 
   return (
     <NativeBaseProvider>
-      <Center flex={1} px="3">
+      <Center flex={1} px="3" backgroundColor={"#fff"}>
         <StatictisComponent />
       </Center>
     </NativeBaseProvider>

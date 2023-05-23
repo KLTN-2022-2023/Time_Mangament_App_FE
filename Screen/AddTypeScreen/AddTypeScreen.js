@@ -76,7 +76,7 @@ export default ({ route, navigation }) => {
 
   return (
     <NativeBaseProvider>
-      <Center flex={1} px="3">
+      <Center flex={1} px="3" background={"#fff"}>
         <AddTypeComponent navigation={navigation} typeId={typeId} />
       </Center>
     </NativeBaseProvider>

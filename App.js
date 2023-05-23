@@ -59,14 +59,14 @@ function HomeTab() {
       })}
     >
       <Tab.Screen
-        name="Tasks"
-        component={TaskListScreen}
-        options={{ title: "Tasks List" }}
-      />
-      <Tab.Screen
         name="Calendar"
         component={CalendarScreen}
         options={{ title: "Calendar" }}
+      />
+      <Tab.Screen
+        name="Tasks"
+        component={TaskListScreen}
+        options={{ title: "Tasks List" }}
       />
       <Tab.Screen
         name="Statistics"

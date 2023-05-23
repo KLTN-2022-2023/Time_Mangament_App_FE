@@ -22,6 +22,7 @@ import {
 } from "../../Reducers/TaskReducer";
 import jwt_decode from "jwt-decode";
 import { convertDateTime } from "../../helper/Helper";
+import PopupComponent from "../Common/PopupComponent";
 
 export default ({ navigation, item }) => {
   const dispatch = useDispatch();
@@ -31,6 +32,7 @@ export default ({ navigation, item }) => {
   const [isDone, setIsDone] = useState(
     item && item.status === CommonData.TaskStatus().Done ? true : false
   );
+  const [isShow, setIsShow] = useState(false);
 
   useEffect(() => {
     setIsImportant(item && item.isImportant ? true : false);
@@ -46,6 +48,7 @@ export default ({ navigation, item }) => {
 
   const handlePressCheck = async () => {
     setIsDone((prevState) => !prevState);
+    setIsShow(false);
     await handleUpdateStatus();
   };
 
@@ -92,13 +95,22 @@ export default ({ navigation, item }) => {
     return "";
   };
 
-  const showItemStatus = () => {
-    if (item && item.dueTime) {
-      let dateNowString = convertDateTime(item.dueTime);
+  const showItemStatus = (start) => {
+    if (item && item.dueTime && item.startTime) {
+      let dueString = convertDateTime(item.dueTime);
+      let startString = convertDateTime(item.startTime);
 
+      if (start) {
+        return getDateTitle(
+          startString.split(" ")[0],
+          startString.split(" ")[1],
+          start
+        );
+      }
       return getDateTitle(
-        dateNowString.split(" ")[0],
-        dateNowString.split(" ")[1]
+        dueString.split(" ")[0],
+        dueString.split(" ")[1],
+        start
       );
     }
     return "";
@@ -116,16 +128,44 @@ export default ({ navigation, item }) => {
     return false;
   };
 
-  const getDateTitle = (showDate, dueTime) => {
-    if (showDate) {
+  const getDateTitle = (showDate, time, start) => {
+    if (showDate && time) {
+      if (start) {
+        return (
+          "Start time: " +
+          format(new Date(showDate), "EE") +
+          ", " +
+          format(new Date(showDate), "dd MMMM yyyy") +
+          " " +
+          time
+        );
+      }
+
       return (
-        "Due Date: " +
+        "Due time: " +
         format(new Date(showDate), "EE") +
         ", " +
         format(new Date(showDate), "dd MMMM yyyy") +
         " " +
-        dueTime
+        time
       );
+    }
+
+    return "";
+  };
+
+  const closePopup = () => {
+    setIsShow(false);
+  };
+
+  const openPopup = async () => {
+    let startString = convertDateTime(item.startTime);
+    let dateNowString = convertDateTime(new Date());
+
+    if (!isDone && startString > dateNowString) {
+      setIsShow(true);
+    } else {
+      await handlePressCheck();
     }
   };
 
@@ -133,6 +173,17 @@ export default ({ navigation, item }) => {
     <TouchableOpacity
       onPress={() => navigation.navigate("AddTaskScreen", { taskId: item._id })}
     >
+      <PopupComponent
+        title={"Waring"}
+        content={
+          "This task is till in the future. Are you sure to complete this task?"
+        }
+        update={true}
+        isOpen={isShow}
+        actionFunction={handlePressCheck}
+        closeFunction={closePopup}
+      />
+
       <HStack style={styles.root}>
         <HStack>
           <Checkbox
@@ -142,7 +193,7 @@ export default ({ navigation, item }) => {
             size="lg"
             isChecked={isDone}
             accessibilityLabel="Tap me!"
-            onChange={handlePressCheck}
+            onChange={openPopup}
           ></Checkbox>
           <VStack paddingLeft={3}>
             <Text
@@ -159,7 +210,16 @@ export default ({ navigation, item }) => {
                   : styles.validText
               }
             >
-              {showItemStatus()}
+              {showItemStatus(true)}
+            </Text>
+            <Text
+              style={
+                !isDone && checkTaskIsLate(item)
+                  ? styles.invalidText
+                  : styles.validText
+              }
+            >
+              {showItemStatus(false)}
             </Text>
           </VStack>
         </HStack>

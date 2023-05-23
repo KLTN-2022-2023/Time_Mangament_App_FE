@@ -4,12 +4,11 @@ import {
   Center,
   View,
   Text,
-  VStack,
   HStack,
   Popover,
   Modal,
 } from "native-base";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { StyleSheet, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import IconICon from "react-native-vector-icons/Ionicons";
@@ -19,24 +18,35 @@ import { format } from "date-fns";
 import Color from "../../Style/Color";
 import { useSelector, useDispatch } from "react-redux";
 import CommonData from "../../CommonData/CommonData";
-import { convertDateTime } from "../../helper/Helper";
-import PopupFilter from "../../Component/Common/PopupFilter";
+import {
+  convertDateTime,
+  getMonDaySunDay,
+  formatDateUI,
+} from "../../helper/Helper";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 export default ({ route, navigation }) => {
   const [showModalSort, setShowModalSort] = useState({
     data: null,
     isShow: false,
   });
-  const [show, setShow] = useState(false);
-  const [monthYear, setMonthYear] = useState(
-    convertDateTime(new Date()).split(" ")[0].split("-")[1] +
-      "-" +
-      convertDateTime(new Date()).split(" ")[0].split("-")[0]
-  );
   const { showDate, typeId } = route.params;
   const dispatch = useDispatch();
   const allTasks = useSelector((state) => state.task.allTasks);
   const allTypes = useSelector((state) => state.type.allTypes);
+  const [showWeek, setShowWeek] = useState(false);
+  const [daysRange, setDaysRange] = useState([]);
+  const [selectedDay, setSelectedDay] = useState(new Date());
+
+  // set default
+  useEffect(() => {
+    // let days = getMonDaySunDay(new Date());
+    // setDaysRange([
+    //   convertDateTime(days.monday).split(" ")[0],
+    //   convertDateTime(days.sunday).split(" ")[0],
+    // ]);
+    setDaysRange([convertDateTime(new Date()).split(" ")[0]]);
+  }, []);
 
   const getDateTitle = () => {
     if (showDate) {
@@ -89,24 +99,79 @@ export default ({ route, navigation }) => {
     setShowModalSort({ data: null, isShow: false });
   };
 
-  const getMonthYear = (month, year) => {
-    setMonthYear(month + "-" + year);
-    setShow(false);
+  const showDaysRange = () => {
+    if (daysRange.length > 0) {
+      // let mon = formatDateUI(daysRange[0]);
+      // let sun = formatDateUI(daysRange[1]);
+
+      // return mon + " - " + sun;
+
+      let select = formatDateUI(daysRange[0]);
+      return select;
+    }
+
+    return "";
   };
 
-  const isTaskContainMonthYear = (x) => {
-    let startString = convertDateTime(x.startTime).split(" ")[0];
-    let dueString = convertDateTime(x.dueTime).split(" ")[0];
-    let m = monthYear.split("-")[0];
-    let y = monthYear.split("-")[1];
-    return (
-      (startString.includes(m) && startString.includes(y)) ||
-      (dueString.includes(m) && dueString.includes(y))
-    );
+  const hideDatePicker = () => {
+    setShowWeek(false);
+  };
+
+  const confirmDate = (date) => {
+    setSelectedDay(date);
+    // let days = getMonDaySunDay(date);
+    // setDaysRange([
+    //   convertDateTime(days.monday).split(" ")[0],
+    //   convertDateTime(days.sunday).split(" ")[0],
+    // ]);
+
+    setDaysRange([convertDateTime(date).split(" ")[0]]);
+
+    setShowWeek(false);
+  };
+
+  const setDiffWeek = (next) => {
+    if (daysRange.length > 0) {
+      // let mon = new Date(daysRange[0]);
+      // let sun = new Date(daysRange[1]);
+      // let monday = "";
+      // let sunday = "";
+      // if (next) {
+      //   monday = convertDateTime(
+      //     new Date(mon.setDate(mon.getDate() + 7))
+      //   ).split(" ")[0];
+      //   sunday = convertDateTime(
+      //     new Date(sun.setDate(sun.getDate() + 7))
+      //   ).split(" ")[0];
+      // } else {
+      //   monday = convertDateTime(
+      //     new Date(mon.setDate(mon.getDate() - 7))
+      //   ).split(" ")[0];
+      //   sunday = convertDateTime(
+      //     new Date(sun.setDate(sun.getDate() - 7))
+      //   ).split(" ")[0];
+      // }
+
+      // setDaysRange([monday, sunday]);
+      let select = new Date(daysRange[0]);
+      let day = "";
+
+      if (next) {
+        day = convertDateTime(
+          new Date(select.setDate(select.getDate() + 1))
+        ).split(" ")[0];
+      } else {
+        day = convertDateTime(
+          new Date(select.setDate(select.getDate() - 1))
+        ).split(" ")[0];
+      }
+
+      setDaysRange([day]);
+    }
   };
 
   return (
-    <Center w="100%" height="100%">
+    <Center w="100%" height="100%" backgroundColor={"#fff"}>
       <Box safeArea py="2" maxW="350" height="100%">
         {/* Header */}
         <View style={styles.header}>
@@ -160,10 +225,10 @@ export default ({ route, navigation }) => {
           {showModalSort && showModalSort.data ? (
             <View style={styles.filterContainer}>
               <Button
-                rightIcon={
+                leftIcon={
                   <Icon
                     name={showModalSort.data.asc ? "caret-down" : "caret-up"}
-                    size={20}
+                    size={15}
                     as="Ionicons"
                     color="white"
                   />
@@ -178,7 +243,7 @@ export default ({ route, navigation }) => {
               </Button>
               <Button
                 colorScheme={"indigo"}
-                size={10}
+                width={8}
                 onPress={handleClearFilter}
               >
                 <Icon name="close" color={Color.Button().Text} />
@@ -189,25 +254,45 @@ export default ({ route, navigation }) => {
           )}
 
           {/* Filter */}
-          <TouchableOpacity
-            onPress={() => {
-              setShow(true);
-            }}
-          >
-            <View style={styles.monthFilter}>
-              <Text style={styles.monthFilterText}>
-                {"Filter: " + monthYear}
-              </Text>
-            </View>
-          </TouchableOpacity>
+          <View style={styles.weekContainer}>
+            <Button
+              colorScheme={"indigo"}
+              size={8}
+              onPress={() => {
+                setDiffWeek(false);
+              }}
+            >
+              <Icon name={"caret-left"} size={20} as="Ionicons" color="white" />
+            </Button>
+
+            <TouchableOpacity>
+              <View style={styles.monthFilter}>
+                <Text style={styles.monthFilterText}>{showDaysRange()}</Text>
+              </View>
+            </TouchableOpacity>
+
+            <Button
+              colorScheme={"indigo"}
+              size={8}
+              onPress={() => {
+                setDiffWeek(true);
+              }}
+            >
+              <Icon
+                name={"caret-right"}
+                size={20}
+                as="Ionicons"
+                color="white"
+              />
+            </Button>
+          </View>
+          <DateTimePickerModal
+            isVisible={showWeek}
+            mode="date"
+            onConfirm={confirmDate}
+            onCancel={hideDatePicker}
+          />
         </View>
-        <PopupFilter
-          isOpen={show}
-          closeFunction={() => {
-            setShow(false);
-          }}
-          actionFunction={getMonthYear}
-        />
 
         {/* Task */}
         <TasksComponent
@@ -218,7 +303,7 @@ export default ({ route, navigation }) => {
           filter={
             showModalSort && showModalSort.data ? showModalSort.data : null
           }
-          monthYear={monthYear}
+          daysRange={daysRange}
         />
 
         {/* Button plus */}
@@ -295,20 +380,6 @@ export default ({ route, navigation }) => {
                   <Text>Alphabetically</Text>
                 </HStack>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.sort}
-                onPress={() =>
-                  setShowModalSort({
-                    data: { name: "Created Date", acs: true },
-                    isShow: false,
-                  })
-                }
-              >
-                <HStack space={3}>
-                  <Icon style={styles.iconModal} name="folder-open" />
-                  <Text>Created Date</Text>
-                </HStack>
-              </TouchableOpacity>
             </Modal.Body>
           </Modal.Content>
         </Modal>
@@ -355,17 +426,33 @@ const styles = StyleSheet.create({
   },
   sortFilterContainer: {
     display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  monthFilter: {
-    backgroundColor: Color.Button().ButtonActive,
-    padding: 10,
-    borderRadius: 5,
+    flexDirection: "column-reverse",
+    justifyContent: "center",
+    alignItems: "flex-end",
+    gap: 10,
+    marginTop: 5,
+    marginBottom: 5,
   },
   monthFilterText: {
-    color: "#ffffff",
+    color: Color.Button().ButtonActive,
     fontSize: 16,
     fontWeight: "500",
+  },
+  monthFilter: {
+    borderColor: Color.Button().ButtonActive,
+    borderWidth: 1,
+    backgroundColor: "#fff",
+    padding: 5,
+    borderRadius: 5,
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 5,
+  },
+  weekContainer: {
+    display: "flex",
+    flexDirection: "row",
+    gap: 5,
   },
 });

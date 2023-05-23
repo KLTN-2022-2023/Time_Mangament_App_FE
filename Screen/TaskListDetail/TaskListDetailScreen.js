@@ -74,7 +74,7 @@ export default ({ route, navigation }) => {
 
   return (
     <NativeBaseProvider>
-      <Center flex={1}>
+      <Center flex={1} backgroundColor={"#fff"}>
         <TaskListDetailComponent navigation={navigation} route={route} />
       </Center>
     </NativeBaseProvider>
