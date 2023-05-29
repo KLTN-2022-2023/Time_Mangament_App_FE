@@ -25,11 +25,11 @@ export default ({ navigation }) => {
   const [validateName, setValidateName] = useState(false);
   const [validateNumberPhone, setValidateNumberPhone] = useState(false);
   const [validateConfirmPassword, setValidateConfirmPassword] = useState(false);
-  const [textConfirmPassword, setTextConfirmPassword] = useState("Password is 6 numeric character");
+  const [textConfirmPassword, setTextConfirmPassword] = useState("Mật khẩu phải là 6 ký tự số");
   const [validatePass, setValidatePass] = useState(false);
   const [snackBar, setSnackBar] = useState(false);
   const [snackBarVerify, setSnackBarVerify] = useState(false);
-  const [textPhone, setTextPhone] = useState("Number phone is Phone is 10 numeric character and start with number 0");
+  const [textPhone, setTextPhone] = useState("Số điện thoại phải là 10 ký tự số và bắt đầu là ký tự số 0");
   const [otp, setOtp] = useState();
   const [validateOTP, setValidateOTP] = useState(false);
 
@@ -126,7 +126,7 @@ export default ({ navigation }) => {
             }}
             fontWeight="semibold"
           >
-            Sign up new account!
+            Đăng ký tài khoản mới!
           </Heading>
           <Heading
             mt="1"
@@ -137,19 +137,19 @@ export default ({ navigation }) => {
             fontWeight="medium"
             size="xs"
           >
-            Sign up to continue!
+            Đăng ký tài khoản!
           </Heading>
           {modalOTP ?
             <VStack space={3} mt="5">
               <FormControl>
-                <FormControl.Label>Name</FormControl.Label>
+                <FormControl.Label>Tên</FormControl.Label>
                 <Input value={name} onChangeText={e => { setName(e), setValidateName(false) }} />
                 {validateName && (
-                  <Text color={"#FF0000"}> Name cannot be left empty </Text>
+                  <Text color={"#FF0000"}> Tên không được để trống </Text>
                 )}
               </FormControl>
               <FormControl>
-                <FormControl.Label>Phone</FormControl.Label>
+                <FormControl.Label>Số điện thoại</FormControl.Label>
                 <Input value={phone} onChangeText={e => { setPhone(e), setValidateNumberPhone(false) }} />
                 {validateNumberPhone && (
                   <Text color={"#FF0000"}>{textPhone}</Text>
@@ -157,21 +157,21 @@ export default ({ navigation }) => {
               </FormControl>
 
               <FormControl>
-                <FormControl.Label>Password</FormControl.Label>
+                <FormControl.Label>Mật khẩu</FormControl.Label>
                 <Input value={password} secureTextEntry={true} onChangeText={e => { setPassword(e), setValidatePass(false) }} />
                 {validatePass && (
-                  <Text color={"#FF0000"}>Password is 6 numeric character</Text>
+                  <Text color={"#FF0000"}>Mật khẩu là 6 ký tự số </Text>
                 )}
               </FormControl>
               <FormControl>
-                <FormControl.Label>Confirm password</FormControl.Label>
+                <FormControl.Label>Xác nhận mật khẩu</FormControl.Label>
                 <Input value={confirmPassword} secureTextEntry={true} onChangeText={e => { setConfirmPassword(e), setValidateConfirmPassword(false) }} />
                 {validateConfirmPassword && (
                   <Text color={"#FF0000"}>{textConfirmPassword}</Text>
                 )}
               </FormControl>
               <Button mt="2" colorScheme="indigo" onPress={handleSignUp} >
-                Sign up
+                Đăng ký
               </Button>
               <HStack mt="6" justifyContent="center">
                 <Text
@@ -181,7 +181,7 @@ export default ({ navigation }) => {
                     color: "warmGray.200",
                   }}
                 >
-                  Already have an account?{" "}
+                  Đã có sẵn tài khoản?{" "}
                 </Text>
                 <Link
                   _text={{
@@ -191,7 +191,7 @@ export default ({ navigation }) => {
                   }}
                   onPress={() => navigation.navigate("LoginScreen")}
                 >
-                  Login
+                  Đăng nhập
                 </Link>
               </HStack>
             </VStack>
@@ -200,11 +200,11 @@ export default ({ navigation }) => {
                 <FormControl.Label>OTP</FormControl.Label>
                 <Input value={otp} onChangeText={e => setOtp(e)} />
                 {validateOTP && (
-                  <Text color={"#FF0000"}>OTP is incorrect</Text>
+                  <Text color={"#FF0000"}>Mã OTP không chính xác</Text>
                 )}
               </FormControl>
               <Button mt="2" colorScheme="indigo" onPress={handleVerify}>
-                Verify
+                Xác nhận
               </Button>
               <HStack mt="6" justifyContent="center">
                 <Text
@@ -214,7 +214,7 @@ export default ({ navigation }) => {
                     color: "warmGray.200",
                   }}
                 >
-                  Already have an account?{" "}
+                  Đã có sẵn tài khoản?{" "}
                 </Text>
                 <Link
                   _text={{
@@ -224,7 +224,7 @@ export default ({ navigation }) => {
                   }}
                   onPress={() => navigation.navigate("LoginScreen")}
                 >
-                  Login
+                  Đăng nhập
                 </Link>
               </HStack>
             </VStack>
@@ -232,7 +232,7 @@ export default ({ navigation }) => {
         </ScrollView>
       </Box>
       {snackBar ? <SnackBar backgroundColor={{ backgroundColor: "red" }} onPress={() => setSnackBar(false)} label={message} /> : null}
-      {snackBarVerify ? <SnackBar backgroundColor={{ backgroundColor: "green" }} onPress={() => navigation.navigate("LoginScreen")} label={"Sign up new account successfully"} /> : null}
+      {snackBarVerify ? <SnackBar backgroundColor={{ backgroundColor: "green" }} onPress={() => navigation.navigate("LoginScreen")} label={"Đăng ký tài khoản thành công"} /> : null}
     </Center>
 
   );

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Your IP Address
-const localApi = "http://192.168.1.13:3000/";
+const localApi = "http://192.168.1.5:3000/";
 const baseApi = localApi;
 
 export default {

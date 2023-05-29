@@ -4,6 +4,7 @@ import {
   Button,
   Center,
   CheckIcon,
+  Checkbox,
   HStack,
   NativeBaseProvider,
   ScrollView,
@@ -14,10 +15,11 @@ import {
 } from "native-base";
 import { memo, useEffect } from "react";
 import { useState } from "react";
-import { StyleSheet } from "react-native";
+import { SectionList, StyleSheet } from "react-native";
 import Spinner from "react-native-loading-spinner-overlay";
 import BarChart from "react-native-bar-chart";
 import PieChart from "react-native-pie-chart";
+import Color from "../../Style/Color";
 import { convertDateTime } from "../../helper/Helper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getAllTask } from "../../Reducers/TaskReducer";
@@ -25,8 +27,10 @@ import jwt_decode from "jwt-decode";
 import { reportMonth, reportYear } from "../../Reducers/ReportReducer";
 import { getTypeWork } from "../../Reducers/TypeReducer";
 import { TouchableOpacity } from "react-native";
+import Icon from "react-native-vector-icons/FontAwesome";
+import Task from "../../Component/Task/Task";
 
-const StatictisComponent = ({ navigation }) => {
+const StatictisComponent = ({ navigation, abc }) => {
   const [selectMonth, setSelectMonth] = useState(
     moment(new Date()).format("YYYY-MM-DD").toString().substring(5, 7)
   );
@@ -63,6 +67,7 @@ const StatictisComponent = ({ navigation }) => {
   const [typeYear, setTypeYear] = useState(
     moment(new Date()).format("YYYY-MM-DD").toString().substring(0, 4)
   );
+
   const [noJob, setNoJob] = useState(false);
   const [yearByMonth, setYearByMonth] = useState(
     moment(new Date()).format("YYYY-MM-DD").toString().substring(0, 4)
@@ -97,7 +102,17 @@ const StatictisComponent = ({ navigation }) => {
   ];
   const widthAndHeight = 200;
   const [isLoading, setIsLoading] = useState(false);
-  const [text, setText] = useState(false);
+  const [detailType, setDetailType] = useState([]);
+  const [detailMonth, setDetailMonth] = useState([]);
+  const [detailYear, setDetailYear] = useState([]);
+  const [detailModalType, setDetailModalType] = useState(false);
+  const [detailModalMonth, setDetailModalMonth] = useState(false);
+  const [detailTypeComplete, setDetailTypeComplete] = useState([]);
+  const [detailTypeUncomplete, setDetailTypeUncomplete] = useState([]);
+  const [detailMonthComplete, setDetailMonthComplete] = useState([]);
+  const [detailMonthUncomplete, setDetailMonthUncomplete] = useState([]);
+  const [mainChart, setMainChart] = useState(true);
+
 
   const handleGetAllTasks = async () => {
     const token = await AsyncStorage.getItem("Token");
@@ -119,7 +134,6 @@ const StatictisComponent = ({ navigation }) => {
           complete++;
         }
       });
-      console.log(complete, uncomplete);
       if (complete === 0 && uncomplete === 0) {
         setUncompleteTask(1);
         setCompleteTask(1);
@@ -148,6 +162,19 @@ const StatictisComponent = ({ navigation }) => {
         token
       );
       const data = result.data;
+      setDetailType(data);
+      var a = [];
+      var b = [];
+      data.forEach((e) => {
+        if (e.status === "New") {
+          a.push(e);
+        }
+        else {
+          b.push(e);
+        }
+      })
+      setDetailTypeComplete(b);
+      setDetailTypeUncomplete(a);
       var arrNameType = [];
       type.forEach((e) => {
         arrType.push({ id: e._id });
@@ -187,6 +214,24 @@ const StatictisComponent = ({ navigation }) => {
   }, []);
 
   const styles = StyleSheet.create({
+    root: {
+      borderColor: "#DDDDDD",
+      justifyContent: "space-between",
+      borderWidth: 1,
+      borderRadius: 10,
+      marginBottom: 10,
+      padding: 10,
+    },
+    nameTask: {
+      fontSize: 15,
+    },
+    nameTaskDone: {
+      fontSize: 15,
+    },
+    checkbox: {
+      marginTop: 5,
+    },
+
     container: {
       flex: 1,
       backgroundColor: "white",
@@ -200,6 +245,13 @@ const StatictisComponent = ({ navigation }) => {
       fontSize: 18,
       padding: 16,
       marginTop: 16,
+    },
+    iconStarCheck: {
+      marginTop: 5,
+      color: Color.Button().ButtonActive,
+    },
+    iconStarUnCheck: {
+      marginTop: 5,
     },
   });
 
@@ -336,6 +388,18 @@ const StatictisComponent = ({ navigation }) => {
       var totalNew = 0;
       var totalDone = 0;
       var arrY = [];
+      var monthComplete = [];
+      var monthUncomplete = [];
+      dataByMonth.forEach((e) => {
+        if (e.status === "New") {
+          monthUncomplete.push(e);
+        }
+        else {
+          monthComplete.push(e)
+        }
+      })
+      setDetailMonthComplete(monthComplete);
+      setDetailMonthUncomplete(monthUncomplete);
       var label;
       if (
         selectMonth === "04" ||
@@ -485,7 +549,7 @@ const StatictisComponent = ({ navigation }) => {
       } else {
         // setChartMonth(false);
         label.forEach((i) => {
-          dataByMonth.forEach((e) => {});
+          dataByMonth.forEach((e) => { });
           arrY.push([totalNew, totalDone]);
         });
         console.log(arrY);
@@ -579,324 +643,390 @@ const StatictisComponent = ({ navigation }) => {
     }
   };
 
+  const getSection = () => {
+    return [
+      {
+        title: "Uncomplete",
+        data: [...detailTypeUncomplete],
+      },
+      {
+        title: "Complete",
+        data: [...detailTypeComplete]
+      }
+    ]
+  }
+  const getSectionMonth = () => {
+    return [
+      {
+        title: "Uncomplete",
+        data: [...detailMonthUncomplete],
+      },
+      {
+        title: "Complete",
+        data: [...detailMonthComplete]
+      }
+    ]
+  }
   return (
     <NativeBaseProvider>
       <Center>
-        <Spinner visible={isLoading}></Spinner>
+        {/* <Spinner visible={isLoading}></Spinner> */}
         <Box safeArea py="2" w="100%" maxW="350">
           <ScrollView width={350}>
-            <HStack w={"100%"}>
-              <Select
-                selectedValue={selectStatictis}
-                minWidth="300"
-                accessibilityLabel="Choose type statictis"
-                placeholder="Choose type statictis"
-                _selectedItem={{
-                  bg: "teal.600",
-                  endIcon: <CheckIcon size="5" />,
-                }}
-                mt={1}
-                onValueChange={(itemValue) => setSelectStatistic(itemValue)}
-              >
-                <Select.Item
-                  label={"Statistic tasks global"}
-                  value={"currentMonth"}
-                />
-                <Select.Item
-                  label={"Statistic tasks by type work"}
-                  value={"typework"}
-                />
-                <Select.Item label={"Statictis tasks by year"} value={"year"} />
-                <Select.Item
-                  label={"Statictis tasks by month"}
-                  value={"month"}
-                />
-              </Select>
-              <Button marginLeft={2} onPress={xyz} marginTop={1}>
-                OK
-              </Button>
-            </HStack>
-            {chart ? (
+            {mainChart ?
               <View>
-                {pieChart ? (
+                <HStack w={"100%"}>
+                  <Select
+                    selectedValue={selectStatictis}
+                    minWidth="260"
+                    accessibilityLabel="Chọn loại thống kê"
+                    placeholder="Chọn loại thống kê"
+                    _selectedItem={{
+                      bg: "teal.600",
+                      endIcon: <CheckIcon size="5" />,
+                    }}
+                    mt={1}
+                    onValueChange={(itemValue) => setSelectStatistic(itemValue)}
+                  >
+                    <Select.Item
+                      label={"Thống kê công việc tổng quát"}
+                      value={"currentMonth"}
+                    />
+                    <Select.Item
+                      label={"Thống kê công việc theo loại"}
+                      value={"typework"}
+                    />
+                    <Select.Item label={"Thống kê công việc theo năm"} value={"year"} />
+                    <Select.Item
+                      label={"Thống kê công việc theo tháng"}
+                      value={"month"}
+                    />
+                  </Select>
+                  <Button marginLeft={2} onPress={xyz} marginTop={1}>
+                    Xác nhận
+                  </Button>
+                </HStack>
+                {chart ? (
                   <View>
-                    <Text fontSize={18} fontWeight={500} color={"#00BFFF"}>
-                      Statistics of jobs global{" "}
-                    </Text>
-                    <HStack
-                      alignItems={"center"}
-                      paddingBottom={5}
-                      justifyContent={"space-between"}
-                    >
-                      <Text fontWeight={500}>Month</Text>
-                      <Select
-                        selectedValue={pieMonth}
-                        minWidth="100"
-                        accessibilityLabel="Month"
-                        placeholder="Month"
-                        _selectedItem={{
-                          bg: "teal.600",
-                          endIcon: <CheckIcon size="5" />,
-                        }}
-                        mt={1}
-                        onValueChange={(itemValue) => setPieMonth(itemValue)}
-                      >
-                        {arrayMonth.map((e) => (
-                          <Select.Item label={e.month} value={e.month} />
-                        ))}
-                      </Select>
-                      <Text fontWeight={500}>Year</Text>
-                      <Select
-                        selectedValue={pieYear}
-                        minWidth="100"
-                        accessibilityLabel="Year"
-                        placeholder="Year"
-                        _selectedItem={{
-                          bg: "teal.600",
-                          endIcon: <CheckIcon size="5" />,
-                        }}
-                        mt={1}
-                        onValueChange={(itemValue) => setPieYear(itemValue)}
-                      >
-                        {allYear.map((e) => (
-                          <Select.Item label={e.year} value={e.year} />
-                        ))}
-                      </Select>
-                      <Button onPress={handleGetAllTasks} marginTop={1}>
-                        OK
-                      </Button>
-                    </HStack>
-                    {selectPieMonth ? (
-                      <View alignItems={"center"}>
-                        <PieChart
-                          widthAndHeight={widthAndHeight}
-                          series={[uncompleteTask, completeTask]}
-                          sliceColor={["#FFCC00", "#FF0000"]}
-                        />
-                        <TouchableOpacity>
-                          <HStack>
-                            <Button
-                              backgroundColor={"#FFCC00"}
-                              disabled={true}
-                            ></Button>
-                            <Text paddingLeft={5}>
-                              {uncompleteTask} Task incomplete
-                            </Text>
-                          </HStack>
-                          <HStack paddingTop={2}>
-                            <Button
-                              backgroundColor={"#FF0000"}
-                              disabled={true}
-                            ></Button>
-                            <Text paddingLeft={5}>
-                              {completeTask} Task complete
-                            </Text>
-                          </HStack>
-                        </TouchableOpacity>
-                      </View>
-                    ) : null}
-                    {noJob ? (
-                      <TouchableOpacity>
-                        <Text color={"#FF0000"} fontSize={15} paddingLeft={5}>
-                          There are no jobs created in the current month{" "}
+                    {pieChart ? (
+                      <View >
+                        <Text textAlign={"center"} paddingTop={5} fontSize={18} fontWeight={500} color={"#00BFFF"}>
+                          Thống kê công việc tổng quát{" "}
                         </Text>
-                      </TouchableOpacity>
-                    ) : null}
-                  </View>
-                ) : null}
-                {barChart ? (
-                  <View>
-                    <Text
-                      alignItems={"center"}
-                      paddingTop={5}
-                      fontSize={18}
-                      fontWeight={500}
-                      color={"#00BFFF"}
-                    >
-                      Statictis task by type work
-                    </Text>
-                    <HStack
-                      alignItems={"center"}
-                      paddingBottom={5}
-                      justifyContent={"space-between"}
-                    >
-                      <Text fontWeight={500}>Month</Text>
-                      <Select
-                        selectedValue={typeMonth}
-                        minWidth="100"
-                        accessibilityLabel="Month"
-                        placeholder="Month"
-                        _selectedItem={{
-                          bg: "teal.600",
-                          endIcon: <CheckIcon size="5" />,
-                        }}
-                        mt={1}
-                        onValueChange={(itemValue) => setTypeMonth(itemValue)}
-                      >
-                        {arrayMonth.map((e) => (
-                          <Select.Item label={e.month} value={e.month} />
-                        ))}
-                      </Select>
-                      <Text fontWeight={500}>Year</Text>
-                      <Select
-                        selectedValue={typeYear}
-                        minWidth="100"
-                        accessibilityLabel="Year"
-                        placeholder="Year"
-                        _selectedItem={{
-                          bg: "teal.600",
-                          endIcon: <CheckIcon size="5" />,
-                        }}
-                        mt={1}
-                        onValueChange={(itemValue) => setTypeYear(itemValue)}
-                      >
-                        {allYear.map((e) => (
-                          <Select.Item label={e.year} value={e.year} />
-                        ))}
-                      </Select>
-                      <Button onPress={handleTypeWork} marginTop={1}>
-                        OK
-                      </Button>
-                    </HStack>
-                    <ScrollView horizontal={true}>
-                      <View width={350}>
-                        <BarChart
-                          data={countType}
-                          horizontalData={nameType}
-                          labelColor="#000000"
-                        />
+                        <HStack
+                          alignItems={"center"}
+                          paddingBottom={5}
+                          justifyContent={"space-between"}
+                        >
+                          <Text fontWeight={500}>Tháng</Text>
+                          <Select
+                            selectedValue={pieMonth}
+                            minWidth="90"
+                            accessibilityLabel="Month"
+                            placeholder="Month"
+                            _selectedItem={{
+                              bg: "teal.600",
+                              endIcon: <CheckIcon size="5" />,
+                            }}
+                            mt={1}
+                            onValueChange={(itemValue) => setPieMonth(itemValue)}
+                          >
+                            {arrayMonth.map((e) => (
+                              <Select.Item label={e.month} value={e.month} />
+                            ))}
+                          </Select>
+                          <Text fontWeight={500}>Năm</Text>
+                          <Select
+                            selectedValue={pieYear}
+                            minWidth="90"
+                            accessibilityLabel="Year"
+                            placeholder="Year"
+                            _selectedItem={{
+                              bg: "teal.600",
+                              endIcon: <CheckIcon size="5" />,
+                            }}
+                            mt={1}
+                            onValueChange={(itemValue) => setPieYear(itemValue)}
+                          >
+                            {allYear.map((e) => (
+                              <Select.Item label={e.year} value={e.year} />
+                            ))}
+                          </Select>
+                          <Button onPress={handleGetAllTasks} marginTop={1}>
+                            Xác nhận
+                          </Button>
+                        </HStack>
+                        {selectPieMonth ? (
+                          <View alignItems={"center"}>
+                            <PieChart
+                              widthAndHeight={widthAndHeight}
+                              series={[uncompleteTask, completeTask]}
+                              sliceColor={["#FFCC00", "#FF0000"]}
+                            />
+                            <TouchableOpacity>
+                              <HStack>
+                                <Button
+                                  backgroundColor={"#FFCC00"}
+                                  disabled={true}
+                                ></Button>
+                                <Text paddingLeft={5}>
+                                  {uncompleteTask} Công việc chưa hoàn thành
+                                </Text>
+                              </HStack>
+                              <HStack paddingTop={2}>
+                                <Button
+                                  backgroundColor={"#FF0000"}
+                                  disabled={true}
+                                ></Button>
+                                <Text paddingLeft={5}>
+                                  {completeTask} Công việc hoàn thành
+                                </Text>
+                              </HStack>
+                            </TouchableOpacity>
+                          </View>
+                        ) : null}
+                        {noJob ? (
+                          <TouchableOpacity>
+                            <Text color={"#FF0000"} fontSize={15} paddingLeft={5}>
+                              Không có công việc nào được thực hiện trong tháng này{" "}
+                            </Text>
+                          </TouchableOpacity>
+                        ) : null}
                       </View>
-                    </ScrollView>
-                  </View>
-                ) : null}
-                {chartByMonth ? (
-                  <View>
-                    <Text fontSize={18} fontWeight={500} color={"#00BFFF"}>
-                      {" "}
-                      Statictis task by month in 2023
-                    </Text>
-                    <HStack
-                      alignItems={"center"}
-                      justifyContent={"space-between"}
-                    >
-                      <Text fontWeight={500}>Month</Text>
-                      <Select
-                        selectedValue={selectMonth}
-                        minWidth="100"
-                        accessibilityLabel="Month"
-                        placeholder="Month"
-                        _selectedItem={{
-                          bg: "teal.600",
-                          endIcon: <CheckIcon size="5" />,
-                        }}
-                        mt={1}
-                        onValueChange={(itemValue) => setSelectMonth(itemValue)}
-                      >
-                        {arrayMonth.map((e) => (
-                          <Select.Item label={e.month} value={e.month} />
-                        ))}
-                      </Select>
-                      <Text fontWeight={500}>Year</Text>
-                      <Select
-                        selectedValue={yearByMonth}
-                        minWidth="100"
-                        accessibilityLabel="Year"
-                        placeholder="Year"
-                        _selectedItem={{
-                          bg: "teal.600",
-                          endIcon: <CheckIcon size="5" />,
-                        }}
-                        mt={1}
-                        onValueChange={(itemValue) => setYearByMonth(itemValue)}
-                      >
-                        {allYear.map((e) => (
-                          <Select.Item label={e.year} value={e.year} />
-                        ))}
-                      </Select>
-                      <Button onPress={handleReportByMonth} marginTop={1}>
-                        OK
-                      </Button>
-                    </HStack>
-                    {chartMonth ? (
+                    ) : null}
+                    {barChart ? (
                       <View>
+                        <Text
+                          textAlign={"center"}
+                          alignItems={"center"}
+                          paddingTop={5}
+                          fontSize={18}
+                          fontWeight={500}
+                          color={"#00BFFF"}
+
+                        >
+                          Thống kê công việc theo loại công việc
+                        </Text>
+                        <HStack
+                          alignItems={"center"}
+                          paddingBottom={5}
+                          justifyContent={"space-between"}
+                        >
+                          <Text fontWeight={500}>Tháng</Text>
+                          <Select
+                            selectedValue={typeMonth}
+                            minWidth="90"
+                            accessibilityLabel="Month"
+                            placeholder="Month"
+                            _selectedItem={{
+                              bg: "teal.600",
+                              endIcon: <CheckIcon size="5" />,
+                            }}
+                            mt={1}
+                            onValueChange={(itemValue) => setTypeMonth(itemValue)}
+                          >
+                            {arrayMonth.map((e) => (
+                              <Select.Item label={e.month} value={e.month} />
+                            ))}
+                          </Select>
+                          <Text fontWeight={500}>Năm</Text>
+                          <Select
+                            selectedValue={typeYear}
+                            minWidth="90"
+                            accessibilityLabel="Năm"
+                            placeholder="Năm"
+                            _selectedItem={{
+                              bg: "teal.600",
+                              endIcon: <CheckIcon size="5" />,
+                            }}
+                            mt={1}
+                            onValueChange={(itemValue) => setTypeYear(itemValue)}
+                          >
+                            {allYear.map((e) => (
+                              <Select.Item label={e.year} value={e.year} />
+                            ))}
+                          </Select>
+                          <Button onPress={handleTypeWork} marginTop={1} marginLeft={1}>
+                            Xác nhận
+                          </Button>
+                        </HStack>
+                        {/* <Button onPress={() => { setMainChart(false), setDetailModalType(true) }}>Xem chi tiết thống kê</Button> */}
                         <ScrollView horizontal={true}>
-                          <View width={1200} marginLeft={-50}>
+                          <View width={350}>
                             <BarChart
-                              data={chartY}
-                              horizontalData={labelDay}
+                              data={countType}
+                              horizontalData={nameType}
                               labelColor="#000000"
                             />
                           </View>
                         </ScrollView>
-                        <TouchableOpacity>
-                          <HStack>
-                            <Button
-                              backgroundColor={"#FFCC00"}
-                              disabled={true}
-                            ></Button>
-                            <Text paddingLeft={5}>Task incomplete</Text>
-                          </HStack>
-                          <HStack paddingTop={2}>
-                            <Button
-                              backgroundColor={"#FF0000"}
-                              disabled={true}
-                            ></Button>
-                            <Text paddingLeft={5}>Task complete</Text>
-                          </HStack>
-                        </TouchableOpacity>
+                      </View>
+                    ) : null}
+                    {chartByMonth ? (
+                      <View>
+                        <Text textAlign={"center"} paddingTop={5} fontSize={18} fontWeight={500} color={"#00BFFF"}>
+                          {" "}
+                          Thống kê công việc theo tháng
+                        </Text>
+                        <HStack
+                          alignItems={"center"}
+                          justifyContent={"space-between"}
+                        >
+                          <Text fontWeight={500}>Tháng</Text>
+                          <Select
+                            selectedValue={selectMonth}
+                            minWidth="90"
+                            accessibilityLabel="Tháng"
+                            placeholder="Tháng"
+                            _selectedItem={{
+                              bg: "teal.600",
+                              endIcon: <CheckIcon size="5" />,
+                            }}
+                            mt={1}
+                            onValueChange={(itemValue) => setSelectMonth(itemValue)}
+                          >
+                            {arrayMonth.map((e) => (
+                              <Select.Item label={e.month} value={e.month} />
+                            ))}
+                          </Select>
+                          <Text fontWeight={500}>Năm</Text>
+                          <Select
+                            selectedValue={yearByMonth}
+                            minWidth="90"
+                            accessibilityLabel="Năm"
+                            placeholder="Năm"
+                            _selectedItem={{
+                              bg: "teal.600",
+                              endIcon: <CheckIcon size="5" />,
+                            }}
+                            mt={1}
+                            onValueChange={(itemValue) => setYearByMonth(itemValue)}
+                          >
+                            {allYear.map((e) => (
+                              <Select.Item label={e.year} value={e.year} />
+                            ))}
+                          </Select>
+                          <Button onPress={handleReportByMonth} marginTop={1}>
+                            Xác nhận
+                          </Button>
+                        </HStack>
+                        {/* <Button onPress={() => { setMainChart(false), setDetailModalMonth(true) }}>Xem chi tiết thống kê</Button> */}
+                        {chartMonth ? (
+                          <View>
+                            <ScrollView horizontal={true}>
+                              <View width={1200} marginLeft={-50}>
+                                <BarChart
+                                  data={chartY}
+                                  horizontalData={labelDay}
+                                  labelColor="#000000"
+                                />
+                              </View>
+                            </ScrollView>
+                            <TouchableOpacity>
+                              <HStack>
+                                <Button
+                                  backgroundColor={"#FFCC00"}
+                                  disabled={true}
+                                ></Button>
+                                <Text paddingLeft={5}>Công việc chưa hoàn thành</Text>
+                              </HStack>
+                              <HStack paddingTop={2}>
+                                <Button
+                                  backgroundColor={"#FF0000"}
+                                  disabled={true}
+                                ></Button>
+                                <Text paddingLeft={5}>Công việc hoàn thành</Text>
+                              </HStack>
+                            </TouchableOpacity>
+                          </View>
+                        ) : null}
+                      </View>
+                    ) : null}
+                    {chartByYear ? (
+                      <View>
+                        <Text textAlign={"center"} paddingTop={5} fontSize={20} fontWeight={500} color={"#00BFFF"}>
+                          Thống kê công việc theo năm{" "}
+                        </Text>
+                        <HStack>
+                          <Select
+                            selectedValue={selectYear}
+                            minWidth="260"
+                            accessibilityLabel="Năm"
+                            placeholder="Năm"
+                            _selectedItem={{
+                              bg: "teal.600",
+                              endIcon: <CheckIcon size="5" />,
+                            }}
+                            mt={1}
+                            onValueChange={(itemValue) => setSelectYear(itemValue)}
+                          >
+                            {allYear.map((e) => (
+                              <Select.Item label={e.year} value={e.year} />
+                            ))}
+                          </Select>
+                          <Button
+                            onPress={hanldeReportByYear}
+                            marginLeft={2}
+                            marginTop={1}
+                          >
+                            Xác nhận
+                          </Button>
+                        </HStack>
+                        {chartYear ? (
+                          <ScrollView horizontal={true}>
+                            <View width={500}>
+                              <BarChart
+                                data={dataReportByYear}
+                                horizontalData={horizontalData}
+                                labelColor="#000000"
+                              />
+                            </View>
+                          </ScrollView>
+                        ) : null}
                       </View>
                     ) : null}
                   </View>
-                ) : null}
-                {chartByYear ? (
-                  <View>
-                    <Text fontSize={20} fontWeight={500} color={"#00BFFF"}>
-                      Year Statictis{" "}
-                    </Text>
-                    <HStack>
-                      <Select
-                        selectedValue={selectYear}
-                        minWidth="300"
-                        accessibilityLabel="Year"
-                        placeholder="Year"
-                        _selectedItem={{
-                          bg: "teal.600",
-                          endIcon: <CheckIcon size="5" />,
-                        }}
-                        mt={1}
-                        onValueChange={(itemValue) => setSelectYear(itemValue)}
-                      >
-                        {allYear.map((e) => (
-                          <Select.Item label={e.year} value={e.year} />
-                        ))}
-                      </Select>
-                      <Button
-                        onPress={hanldeReportByYear}
-                        marginLeft={2}
-                        marginTop={1}
-                      >
-                        OK
-                      </Button>
-                    </HStack>
-                    {chartYear ? (
-                      <ScrollView horizontal={true}>
-                        <View width={500}>
-                          <BarChart
-                            data={dataReportByYear}
-                            horizontalData={horizontalData}
-                            labelColor="#000000"
-                          />
-                        </View>
-                      </ScrollView>
-                    ) : null}
-                  </View>
-                ) : null}
+
+                ) : <View></View>}
+              </View> : <View></View>
+            }
+
+            {detailModalMonth ?
+              <View>
+                <Icon size={20} name="arrow-left" onPress={() => { setDetailModalMonth(false), setMainChart(true) }} />
+                <Text fontSize={20} fontWeight={800}>Thống kê chi tiết theo tháng</Text>
+                <SectionList
+                  sections={getSectionMonth()}
+                  keyExtractor={(item, index) => item + index}
+                  renderItem={({ item }) => (
+                    <Task navigation={navigation} item={item} />
+                  )}
+                  renderSectionHeader={({ section }) => (
+                    <Text fontSize={15} fontWeight={600}>{section.title}</Text>
+                  )}
+                />
               </View>
-            ) : null}
+              : <View></View>}
+            {detailModalType ?
+              <View>
+                <Icon size={20} name="arrow-left" onPress={() => { setDetailModalType(false), setMainChart(true) }} />
+                <Text fontSize={20} fontWeight={800}>Thống kê chi tiết theo loại công việc</Text>
+                <SectionList
+                  sections={getSection()}
+                  keyExtractor={(item, index) => item + index}
+                  renderItem={({ item }) => (
+                    <Task navigation={navigation} item={item} />
+                  )}
+                  renderSectionHeader={({ section }) => (
+                    <Text fontSize={15} fontWeight={600}>{section.title}</Text>
+                  )}
+                />
+              </View>
+              : <View></View>}
           </ScrollView>
         </Box>
       </Center>
-    </NativeBaseProvider>
+    </NativeBaseProvider >
   );
 };
 export default memo(StatictisComponent);

@@ -118,7 +118,7 @@ export default ({ navigation }) => {
                 fontSize={20}
                 paddingLeft={5}
               >
-                Profile
+                Thông tin cá nhân
               </Text>
             </HStack>
             {update ? (
@@ -127,7 +127,7 @@ export default ({ navigation }) => {
                 fontWeight={500}
                 onPress={HandleUpdateProfile}
               >
-                Save
+                Cập nhật
               </Text>
             ) : null}
           </HStack>

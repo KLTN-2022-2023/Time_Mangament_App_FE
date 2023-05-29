@@ -170,14 +170,14 @@ const SettingComponent = ({ route, navigation }) => {
                 borderBottomWidth: StyleSheet.hairlineWidth,
               }}
             />
-            <Text color={"#C0C0C0"}>Account settings</Text>
+            <Text color={"#C0C0C0"}>Cài đặt tài khoản</Text>
             <HStack
               alignItems={"center"}
               justifyContent={"space-between"}
               height={50}
             >
               <Text fontSize={18} fontWeight={500}>
-                Edit profile
+                Chỉnh sửa thông tin cá nhân
               </Text>
               <IconEntypo
                 size={18}
@@ -191,7 +191,7 @@ const SettingComponent = ({ route, navigation }) => {
               height={50}
             >
               <Text fontSize={18} fontWeight={500}>
-                Log out
+                Đăng xuất
               </Text>
               <IconEntypo
                 size={18}

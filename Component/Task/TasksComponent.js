@@ -170,8 +170,8 @@ export default ({ navigation, listTasks, date, typeId, filter, daysRange }) => {
               ? 1
               : -1
             : x.isImportant
-            ? -1
-            : 1
+              ? -1
+              : 1
         );
         dataImportantFilterCon = dataImportantFilter.sort((x, y) =>
           x.isImportant === y.isImportant
@@ -179,8 +179,8 @@ export default ({ navigation, listTasks, date, typeId, filter, daysRange }) => {
               ? 1
               : -1
             : x.isImportant
-            ? -1
-            : 1
+              ? -1
+              : 1
         );
       }
 
@@ -225,7 +225,7 @@ export default ({ navigation, listTasks, date, typeId, filter, daysRange }) => {
   return (
     <View style={styles.safe}>
       {(tasks && tasks.length > 0) ||
-      (tasksImportant && tasksImportant.length > 0) ? (
+        (tasksImportant && tasksImportant.length > 0) ? (
         <SectionList
           sections={getSection()}
           renderItem={({ item }) => (

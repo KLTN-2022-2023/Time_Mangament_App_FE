@@ -31,22 +31,24 @@ export default ({ navigation }) => {
     const [validatePhone, setValidatePhone] = useState(false);
     const [validatePassword, setValidatePassword] = useState(false);
     const [validateConfirmPassword, setConfirmValidatePassword] = useState(false);
-    const [errorTextConfirmPass, setErrorTextConfirmPass] = useState("Confirm Password is 6 numeric character");
+    const [errorTextConfirmPass, setErrorTextConfirmPass] = useState("Xác nhận mật khẩu là 6 kí tự số");
     const [pagePass, setPagePass] = useState(false);
     const [pagePhone, setPagePhone] = useState(true);
     const handleForgot = async () => {
-        if (!validate()) {
-            if (!validatePhone) {
-                const response = await forgotPass({ phone: phone });
-                if (response) {
-                    setPageOTP(true);
-                    setPagePhone(false);
-                }
+        setPagePhone(false)
+        setPageOTP(true);
+        // if (!validate()) {
+        //     if (!validatePhone) {
+        //         const response = await forgotPass({ phone: phone });
+        //         if (response) {
+        //             setPageOTP(true);
+        //             setPagePhone(false);
+        //         }
 
-            } else {
-                console.log("abc")
-            }
-        }
+        //     } else {
+        //         console.log("abc")
+        //     }
+        // }
     }
     const handleVerifyForgot = async () => {
         setPagePass(true);
@@ -62,7 +64,7 @@ export default ({ navigation }) => {
     const forgotnewPassword = async () => {
         if (!validatePass()) {
             if (confirmPassword !== newPassword) {
-                setErrorTextConfirmPass("Confirm password doesn't match password");
+                setErrorTextConfirmPass("Xác nhận mật khẩu không giống mật khẩu");
             } else {
                 if (!validateConfirmPassword && !validatePassword) {
                     console.log(phone)
@@ -129,7 +131,7 @@ export default ({ navigation }) => {
                         color: "warmGray.50",
                     }}
                 >
-                    You forgot your password!
+                    Bạn quên mật khẩu tài khoản!
                 </Heading>
                 <Heading
                     mt="1"
@@ -140,57 +142,57 @@ export default ({ navigation }) => {
                     fontWeight="medium"
                     size="xs"
                 >
-                    Forgot password!
+                    Quên mật khẩu!
                 </Heading>
                 <VStack space={3} mt="5">
                     {pagePhone ?
                         <View>
                             <FormControl>
-                                <FormControl.Label>Phone</FormControl.Label>
+                                <FormControl.Label>Số điện thoại</FormControl.Label>
                                 <Input onChangeText={e => { setPhone(e), setValidatePhone(false) }} />
                                 {validatePhone && (
-                                    <Text color={"#FF0000"}>Phone is 10 numeric character and start with number 0</Text>
+                                    <Text color={"#FF0000"}>Số điện thoại gồm 10 kí tự số và bắt đầu là kí tự số 0</Text>
                                 )}
                             </FormControl>
                             <Button mt="2" colorScheme="indigo" onPress={handleForgot} >
-                                Send
+                                Xác nhận
                             </Button>
                         </View>
                         : <View></View>}
                     {pageOTP ?
                         <View>
                             <FormControl>
-                                <FormControl.Label>OTP</FormControl.Label>
+                                <FormControl.Label>Mã xác thực OTP</FormControl.Label>
                                 <Input value={otp} onChangeText={I => setOtp(I)} />
                                 {validateOTP && (
-                                    <Text color={"#FF0000"}>OTP is incorrect</Text>
+                                    <Text color={"#FF0000"}> Mã xác thực OTP không chính xác</Text>
                                 )
 
 
                                 }
                             </FormControl>
-                            <Button mt="2" colorScheme="indigo" onPress={handleVerifyForgot}>Verify</Button>
+                            <Button mt="2" colorScheme="indigo" onPress={handleVerifyForgot}>Xác nhận</Button>
                         </View>
                         : <View></View>
                     }
                     {pagePass ?
                         <View>
                             <FormControl>
-                                <FormControl.Label>New password</FormControl.Label>
+                                <FormControl.Label>Mật khẩu mới</FormControl.Label>
                                 <Input secureTextEntry={true} onChangeText={e => { setNewPassword(e), setValidatePassword(false) }} />
                                 {validatePassword && (
-                                    <Text color={"#FF0000"}>Password is 6 numeric character</Text>
+                                    <Text color={"#FF0000"}>Mật khẩu là 6 kí tự số</Text>
                                 )}
                             </FormControl>
                             <FormControl>
-                                <FormControl.Label>Confirm password</FormControl.Label>
+                                <FormControl.Label>Xác nhận mật khẩu</FormControl.Label>
                                 <Input secureTextEntry={true} onChangeText={e => { setConfirmPassword(e), setConfirmValidatePassword(false) }} />
                                 {validateConfirmPassword && (
                                     <Text color={"#FF0000"}>{errorTextConfirmPass}</Text>
                                 )}
                             </FormControl>
                             <Button mt="2" colorScheme="indigo" onPress={forgotnewPassword} >
-                                Submit
+                                Xác nhận
                             </Button>
                         </View>
                         : <View></View>
@@ -203,7 +205,7 @@ export default ({ navigation }) => {
                                 color: "warmGray.200",
                             }}
                         >
-                            Already have an account?{" "}
+                            Đã có tài khoản ?{" "}
                         </Text>
                         <Link
                             _text={{
@@ -213,12 +215,12 @@ export default ({ navigation }) => {
                             }}
                             onPress={() => navigation.navigate("LoginScreen")}
                         >
-                            Login
+                            Đăng nhập
                         </Link>
                     </HStack>
                 </VStack>
             </Box>
-            {snackBar ? <SnackBar backgroundColor={{ backgroundColor: "green" }} onPress={() => navigation.navigate("LoginScreen")} label={"Forgot password successfully"} /> : null}
+            {snackBar ? <SnackBar backgroundColor={{ backgroundColor: "green" }} onPress={() => navigation.navigate("LoginScreen")} label={"Quên mật khẩu thành công"} /> : null}
         </Center>
     );
 };

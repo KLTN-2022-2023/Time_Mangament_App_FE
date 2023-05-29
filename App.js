@@ -61,22 +61,22 @@ function HomeTab() {
       <Tab.Screen
         name="Calendar"
         component={CalendarScreen}
-        options={{ title: "Calendar" }}
+        options={{ title: "Lịch" }}
       />
       <Tab.Screen
         name="Tasks"
         component={TaskListScreen}
-        options={{ title: "Tasks List" }}
+        options={{ title: "Danh sách công việc" }}
       />
       <Tab.Screen
         name="Statistics"
         component={StatictisScreen}
-        options={{ title: "Statistics" }}
+        options={{ title: "Thống kê" }}
       />
       <Tab.Screen
         name="Settings"
         component={SettingScreen}
-        options={{ title: "Settings" }}
+        options={{ title: "Cài đặt" }}
       />
     </Tab.Navigator>
   );
