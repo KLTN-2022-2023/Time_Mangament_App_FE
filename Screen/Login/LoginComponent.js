@@ -143,7 +143,7 @@ export default ({ navigation }) => {
                 color: "warmGray.200",
               }}
             >
-              Tôi lầ người mới sử dụng.{" "}
+              Tôi là người mới sử dụng.{" "}
             </Text>
             <Link
               _text={{
