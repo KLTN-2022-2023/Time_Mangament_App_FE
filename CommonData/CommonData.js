@@ -28,7 +28,7 @@ export default {
   RepeatType() {
     return {
       Daily: "Hằng ngày",
-      Weekly: "Hăng tuần",
+      Weekly: "Hằng tuần",
       Monthly: "Hằng tháng",
       Yearly: "Hằng năm",
       Custom: "Tùy chọn",

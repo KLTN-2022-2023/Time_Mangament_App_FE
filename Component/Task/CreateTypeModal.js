@@ -174,7 +174,7 @@ export default ({ isOpen, actionFunction, closeFunction }) => {
                       : styles.customText
                   }
                 >
-                  Save
+                  Lưu
                 </Text>
               </TouchableOpacity>
             </View>

@@ -67,7 +67,7 @@ Notifications.setNotificationHandler({
 
 export default ({ navigation, taskId, selectedDate, isView }) => {
   const [data, setData] = useState(null);
-  const [name, setName] = useState("New Task");
+  const [name, setName] = useState("Công việc mới");
   const [note, setNote] = useState("");
   const [isDone, setIsDone] = useState(false);
   const [isImportant, setIsImportant] = useState(false);
