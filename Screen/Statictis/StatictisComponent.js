@@ -119,7 +119,6 @@ const StatictisComponent = ({ navigation }) => {
           complete++;
         }
       });
-      console.log(complete, uncomplete);
       if (complete === 0 && uncomplete === 0) {
         setUncompleteTask(1);
         setCompleteTask(1);
@@ -466,7 +465,6 @@ const StatictisComponent = ({ navigation }) => {
                 totalDone++;
               }
             } else {
-              console.log("cmn");
             }
           });
 
@@ -474,9 +472,7 @@ const StatictisComponent = ({ navigation }) => {
           totalNew = 0;
           totalDone = 0;
         });
-        console.log(arrY);
         setChartY(arrY);
-        console.log("chartY", chartY);
         if (chartY) {
           setChartMonth(true);
         } else {
@@ -488,10 +484,7 @@ const StatictisComponent = ({ navigation }) => {
           dataByMonth.forEach((e) => {});
           arrY.push([totalNew, totalDone]);
         });
-        console.log(arrY);
-        console.log(chartY);
         setChartY(arrY);
-        console.log(chartY);
         if (chartY.length > 0) {
           setChartMonth(true);
         }
@@ -617,9 +610,6 @@ const StatictisComponent = ({ navigation }) => {
               <View>
                 {pieChart ? (
                   <View>
-                    {/* <Text fontSize={18} fontWeight={500} color={"#00BFFF"}>
-                      Statistics of jobs global{" "}
-                    </Text> */}
                     <HStack
                       alignItems={"center"}
                       paddingBottom={5}
@@ -640,7 +630,11 @@ const StatictisComponent = ({ navigation }) => {
                         onValueChange={(itemValue) => setPieMonth(itemValue)}
                       >
                         {arrayMonth.map((e) => (
-                          <Select.Item label={e.month} value={e.month} />
+                          <Select.Item
+                            label={e.month}
+                            value={e.month}
+                            key={e.month}
+                          />
                         ))}
                       </Select>
                       <Text fontWeight={500}>Năm</Text>
@@ -657,7 +651,11 @@ const StatictisComponent = ({ navigation }) => {
                         onValueChange={(itemValue) => setPieYear(itemValue)}
                       >
                         {allYear.map((e) => (
-                          <Select.Item label={e.year} value={e.year} />
+                          <Select.Item
+                            label={e.year}
+                            value={e.year}
+                            key={e.year}
+                          />
                         ))}
                       </Select>
                       <Button onPress={handleGetAllTasks} marginTop={1}>
@@ -700,19 +698,34 @@ const StatictisComponent = ({ navigation }) => {
                         </Text>
                       </TouchableOpacity>
                     ) : null}
+
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {selectPieMonth && (
+                        <Button
+                          marginTop={10}
+                          width={100}
+                          onPress={() => {
+                            navigation.navigate("StatisticDetail", {
+                              month: pieMonth,
+                              year: pieYear,
+                              type: false,
+                            });
+                          }}
+                        >
+                          Xem chi tiết
+                        </Button>
+                      )}
+                    </View>
                   </View>
                 ) : null}
                 {barChart ? (
                   <View>
-                    {/* <Text
-                      alignItems={"center"}
-                      paddingTop={5}
-                      fontSize={18}
-                      fontWeight={500}
-                      color={"#00BFFF"}
-                    >
-                      Statictis task by type work
-                    </Text> */}
                     <HStack
                       alignItems={"center"}
                       paddingBottom={5}
@@ -732,7 +745,11 @@ const StatictisComponent = ({ navigation }) => {
                         onValueChange={(itemValue) => setTypeMonth(itemValue)}
                       >
                         {arrayMonth.map((e) => (
-                          <Select.Item label={e.month} value={e.month} />
+                          <Select.Item
+                            label={e.month}
+                            value={e.month}
+                            key={e.month}
+                          />
                         ))}
                       </Select>
                       <Text fontWeight={500}>Năm</Text>
@@ -749,7 +766,11 @@ const StatictisComponent = ({ navigation }) => {
                         onValueChange={(itemValue) => setTypeYear(itemValue)}
                       >
                         {allYear.map((e) => (
-                          <Select.Item label={e.year} value={e.year} />
+                          <Select.Item
+                            label={e.year}
+                            value={e.year}
+                            key={e.year}
+                          />
                         ))}
                       </Select>
                       <Button onPress={handleTypeWork} marginTop={1}>
@@ -765,14 +786,32 @@ const StatictisComponent = ({ navigation }) => {
                         />
                       </View>
                     </ScrollView>
+
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Button
+                        marginTop={10}
+                        width={100}
+                        onPress={() => {
+                          navigation.navigate("StatisticDetail", {
+                            month: typeMonth,
+                            year: typeYear,
+                            type: true,
+                          });
+                        }}
+                      >
+                        Xem chi tiết
+                      </Button>
+                    </View>
                   </View>
                 ) : null}
                 {chartByMonth ? (
                   <View>
-                    {/* <Text fontSize={18} fontWeight={500} color={"#00BFFF"}>
-                      {" "}
-                      Statictis task by month in 2023
-                    </Text> */}
                     <HStack
                       alignItems={"center"}
                       justifyContent={"space-between"}
@@ -791,7 +830,11 @@ const StatictisComponent = ({ navigation }) => {
                         onValueChange={(itemValue) => setSelectMonth(itemValue)}
                       >
                         {arrayMonth.map((e) => (
-                          <Select.Item label={e.month} value={e.month} />
+                          <Select.Item
+                            label={e.month}
+                            value={e.month}
+                            key={e.month}
+                          />
                         ))}
                       </Select>
                       <Text fontWeight={500}>Năm</Text>
@@ -808,7 +851,11 @@ const StatictisComponent = ({ navigation }) => {
                         onValueChange={(itemValue) => setYearByMonth(itemValue)}
                       >
                         {allYear.map((e) => (
-                          <Select.Item label={e.year} value={e.year} />
+                          <Select.Item
+                            label={e.year}
+                            value={e.year}
+                            key={e.year}
+                          />
                         ))}
                       </Select>
                       <Button onPress={handleReportByMonth} marginTop={1}>
@@ -844,6 +891,28 @@ const StatictisComponent = ({ navigation }) => {
                             <Text paddingLeft={5}>Công việc đã hoàn thành</Text>
                           </HStack>
                         </TouchableOpacity>
+
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Button
+                            marginTop={10}
+                            width={100}
+                            onPress={() => {
+                              navigation.navigate("StatisticDetail", {
+                                month: selectMonth,
+                                year: yearByMonth,
+                                type: false,
+                              });
+                            }}
+                          >
+                            Xem chi tiết
+                          </Button>
+                        </View>
                       </View>
                     ) : null}
                   </View>
@@ -867,7 +936,11 @@ const StatictisComponent = ({ navigation }) => {
                         onValueChange={(itemValue) => setSelectYear(itemValue)}
                       >
                         {allYear.map((e) => (
-                          <Select.Item label={e.year} value={e.year} />
+                          <Select.Item
+                            label={e.year}
+                            value={e.year}
+                            key={e.year}
+                          />
                         ))}
                       </Select>
                       <Button
@@ -893,26 +966,6 @@ const StatictisComponent = ({ navigation }) => {
                 ) : null}
               </View>
             ) : null}
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Button
-                marginTop={10}
-                width={100}
-                onPress={() => {
-                  navigation.navigate("StatisticDetail", {
-                    month: "05",
-                    year: "2023",
-                  });
-                }}
-              >
-                Xem chi tiết
-              </Button>
-            </View>
           </ScrollView>
         </Box>
       </Center>

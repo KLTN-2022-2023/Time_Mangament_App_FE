@@ -12,7 +12,7 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  PermissionsAndroid,
+  ScrollView,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import IconMaterial from "react-native-vector-icons/MaterialIcons";
@@ -41,6 +41,10 @@ import TypeModal from "../../Component/Task/TypeModal";
 import CreateTypeModal from "../../Component/Task/CreateTypeModal";
 import { formatDateUI } from "../../helper/Helper";
 import { DaysRemind } from "../../CommonData/Data";
+import {
+  CreateNotification,
+  DeleteNotification,
+} from "../../Reducers/NotificationTriggerReducer";
 
 // Warning
 import { LogBox } from "react-native";
@@ -62,7 +66,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export default ({ navigation, taskId, selectedDate }) => {
+export default ({ navigation, taskId, selectedDate, isView }) => {
   const [data, setData] = useState(null);
   const [name, setName] = useState("New Task");
   const [note, setNote] = useState("");
@@ -263,6 +267,7 @@ export default ({ navigation, taskId, selectedDate }) => {
   async function schedulePushNotification(title, content, secs, mode, idTask) {
     let list = [];
     lits = allTriggers;
+    const token = await AsyncStorage.getItem("Token");
 
     // Mode update
     if (mode === "update" || mode === "delete") {
@@ -274,6 +279,9 @@ export default ({ navigation, taskId, selectedDate }) => {
           );
 
           list = list.filter((x) => x.taskId != taskId);
+
+          const token = await AsyncStorage.getItem("Token");
+          await DeleteNotification(taskId, token);
         }
       }
     }
@@ -294,7 +302,21 @@ export default ({ navigation, taskId, selectedDate }) => {
         trigger: identifier,
         isSeen: false,
         content: content,
+        remindTime: remindTime,
       });
+
+      const decoded = jwt_decode(token);
+      await CreateNotification(
+        {
+          userId: decoded._id,
+          taskId: idTask,
+          title: title,
+          content: content,
+          isSeen: false,
+          remindTime: new Date(remindTime),
+        },
+        token
+      );
     }
 
     dispatch(SetNotificationTriggerList(list));
@@ -355,7 +377,9 @@ export default ({ navigation, taskId, selectedDate }) => {
   };
 
   const handlePressStar = async () => {
-    setIsImportant((prevState) => !prevState);
+    if (!isView) {
+      setIsImportant((prevState) => !prevState);
+    }
   };
 
   const hideDatePicker = () => {
@@ -1741,377 +1765,454 @@ export default ({ navigation, taskId, selectedDate }) => {
             </HStack>
           </TouchableOpacity>
 
-          <View style={styles.buttonContainer}>
-            {taskId && (
-              <TouchableOpacity onPress={() => openModal()}>
+          {!isView && (
+            <View style={styles.buttonContainer}>
+              {taskId && (
+                <TouchableOpacity onPress={() => openModal()}>
+                  <HStack>
+                    <Text
+                      paddingLeft={2}
+                      fontSize={18}
+                      color="red.500"
+                      fontWeight={500}
+                    >
+                      Xóa
+                    </Text>
+                  </HStack>
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity
+                disabled={isInValidModel()}
+                onPress={() => save()}
+              >
                 <HStack>
                   <Text
                     paddingLeft={2}
                     fontSize={18}
-                    color="red.500"
+                    color="blue.500"
                     fontWeight={500}
+                    style={isInValidModel() && styles.saveButtonDisable}
                   >
-                    Xóa
+                    Lưu
                   </Text>
                 </HStack>
               </TouchableOpacity>
-            )}
-
-            <TouchableOpacity
-              disabled={isInValidModel()}
-              onPress={() => save()}
-            >
-              <HStack>
-                <Text
-                  paddingLeft={2}
-                  fontSize={18}
-                  color="blue.500"
-                  fontWeight={500}
-                  style={isInValidModel() && styles.saveButtonDisable}
-                >
-                  Lưu
-                </Text>
-              </HStack>
-            </TouchableOpacity>
-          </View>
+            </View>
+          )}
         </View>
 
-        <HStack style={styles.title}>
-          {/* Name */}
-          <View style={styles.textContainer}>
-            <TextInput
-              fontSize={18}
-              value={name}
-              onChangeText={(e) => onChangeName(e)}
-              style={styles.checkBoxInput}
-            />
+        <ScrollView>
+          <HStack style={styles.title}>
+            {/* Name */}
+            <View
+              style={!isView ? styles.textContainer : styles.textContainerView}
+            >
+              {!isView ? (
+                <TextInput
+                  fontSize={18}
+                  value={name}
+                  onChangeText={(e) => onChangeName(e)}
+                  style={styles.checkBoxInput}
+                />
+              ) : (
+                <View>
+                  <Text style={{ fontSize: 18, marginLeft: 10 }}>{name}</Text>
+                </View>
+              )}
 
-            <TouchableOpacity
-              onPress={() => {
-                handleClearText();
+              {!isView && (
+                <TouchableOpacity
+                  onPress={() => {
+                    handleClearText();
+                  }}
+                >
+                  <IconMaterial name="cancel" color={"gray"} size={25} />
+                </TouchableOpacity>
+              )}
+            </View>
+          </HStack>
+
+          {/* Validate Name */}
+          {errorNameRequired && (
+            <View style={taskId && styles.errorContainer}>
+              <Text style={styles.errorText}>
+                {CommonData.ErrorTaskName().Required}
+              </Text>
+            </View>
+          )}
+
+          {/* Is completed */}
+          {taskId && (
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                gap: 10,
+                marginTop: 5,
+                marginLeft: 5,
               }}
             >
-              <IconMaterial name="cancel" color={"gray"} size={25} />
-            </TouchableOpacity>
-          </View>
-        </HStack>
+              <Checkbox
+                colorScheme="indigo"
+                borderRadius={20}
+                size="lg"
+                accessibilityLabel="Tap me!"
+                my={2}
+                isChecked={isDone}
+                onChange={() => {
+                  if (!isView) {
+                    setIsDone((prevState) => !prevState);
+                  }
+                }}
+              ></Checkbox>
+              <Text style={{ fontSize: 16, marginTop: 10 }}>Đã hoàn thành</Text>
+            </View>
+          )}
 
-        {/* Validate Name */}
-        {errorNameRequired && (
-          <View style={taskId && styles.errorContainer}>
-            <Text style={styles.errorText}>
-              {CommonData.ErrorTaskName().Required}
-            </Text>
-          </View>
-        )}
-
-        {/* Is completed */}
-        {taskId && (
+          {/* Is Important */}
           <View
             style={{
               display: "flex",
               flexDirection: "row",
               gap: 10,
+              marginBottom: 5,
               marginTop: 5,
               marginLeft: 5,
             }}
           >
-            <Checkbox
-              colorScheme="indigo"
-              borderRadius={20}
-              size="lg"
-              accessibilityLabel="Tap me!"
-              my={2}
-              isChecked={isDone}
-              onChange={() => setIsDone((prevState) => !prevState)}
-            ></Checkbox>
-            <Text style={{ fontSize: 16, marginTop: 10 }}>Đã hoàn thành</Text>
+            {isImportant ? (
+              <Icon
+                name="star"
+                size={30}
+                style={styles.iconStarCheck}
+                onPress={handlePressStar}
+              />
+            ) : (
+              <Icon
+                name="star-o"
+                size={30}
+                style={styles.iconStarUnCheck}
+                onPress={handlePressStar}
+              />
+            )}
+            <Text style={{ fontSize: 16, marginTop: 10 }}>
+              Công việc quan trọng
+            </Text>
           </View>
-        )}
 
-        {/* Is Important */}
-        <View
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            gap: 10,
-            marginBottom: 5,
-            marginTop: 5,
-            marginLeft: 5,
-          }}
-        >
-          {isImportant ? (
-            <Icon
-              name="star"
-              size={30}
-              style={styles.iconStarCheck}
-              onPress={handlePressStar}
-            />
-          ) : (
-            <Icon
-              name="star-o"
-              size={30}
-              style={styles.iconStarUnCheck}
-              onPress={handlePressStar}
-            />
-          )}
-          <Text style={{ fontSize: 16, marginTop: 10 }}>
-            Công việc quan trọng
-          </Text>
-        </View>
-
-        <View style={styles.viewGroup}>
-          {/* Type */}
-          <View style={styles.viewOnGroup}>
-            <Text style={styles.iconOld}>{"Loại                    "}</Text>
-            <View style={styles.typeContainer}>
-              <TouchableOpacity onPress={() => setModalType(true)}>
-                <View style={styles.remindContainer}>
-                  <Text style={styles.fieldText}>{type ? type.name : ""}</Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={() => setModalCreateType(true)}>
-                <Icon
-                  name="plus-square"
-                  size={26}
-                  style={styles.iconStarCheck}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-          {/* Modal Type */}
-          <TypeModal
-            isOpen={modalType}
-            closeFunction={handleCloseType}
-            actionFunction={handleChooseType}
-            selected={type}
-          />
-          {/* Modal Create Type */}
-          <CreateTypeModal
-            isOpen={modalCreateType}
-            closeFunction={handleCloseCreateType}
-            actionFunction={handleChooseCreateType}
-          />
-
-          {/* Validate Type */}
-          {errorTypeRequired && (
-            <View style={styles.errorDateContainer}>
-              <Text style={styles.errorText}>
-                {CommonData.ErrorTaskType().Required}
-              </Text>
-            </View>
-          )}
-
-          {/* Start time */}
-          <View style={styles.viewOnGroup}>
-            <Text style={styles.iconOld}>{"Bắt đầu             "}</Text>
-            <View style={styles.dateTimeContainer}>
-              {/* Date */}
-              <TouchableOpacity onPress={() => setCalendarStartDate(true)}>
-                <View style={styles.dateContainer}>
-                  <Text style={styles.dateTimeText}>
-                    {formatDateUI(startDate)}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-
-              {/* Time */}
-              <TouchableOpacity onPress={() => setCalendarStartTime(true)}>
-                <View style={styles.timeContainer}>
-                  <Text style={styles.dateTimeText}>{startTime}</Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
-          <DateTimePickerModal
-            isVisible={calendarStartDate}
-            mode="date"
-            onConfirm={confirmStartDate}
-            onCancel={hideDatePicker}
-          />
-          <DateTimePickerModal
-            isVisible={calendarStartTime}
-            mode="time"
-            onConfirm={confirmStartTime}
-            onCancel={hideTimePicker}
-          />
-
-          {/* Validate start */}
-          {errorStartPast && (
-            <View style={styles.errorDateContainer}>
-              <Text style={styles.errorText}>
-                {CommonData.ErrorCompareDate().StartPast}
-              </Text>
-            </View>
-          )}
-
-          {/* Due time */}
-          <View style={styles.viewOnGroup}>
-            <Text style={styles.iconOld}>{"Hoàn thành      "}</Text>
-            <View style={styles.dateTimeContainer}>
-              {/* Date */}
-              <TouchableOpacity onPress={() => setCalendarDueDate(true)}>
-                <View style={styles.dateContainer}>
-                  <Text style={styles.dateTimeText}>
-                    {formatDateUI(dueDate)}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-
-              {/* Time */}
-              <TouchableOpacity onPress={() => setCalendarDueTime(true)}>
-                <View style={styles.timeContainer}>
-                  <Text style={styles.dateTimeText}>{dueTime}</Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
-          <DateTimePickerModal
-            isVisible={calendarDueDate}
-            mode="date"
-            onConfirm={confirmDueDate}
-            onCancel={hideDatePicker}
-          />
-          <DateTimePickerModal
-            isVisible={calendarDueTime}
-            mode="time"
-            onConfirm={confirmDueTime}
-            onCancel={hideTimePicker}
-          />
-
-          {/* Validate Dates */}
-          {errorDates && (
-            <View style={styles.errorDateContainer}>
-              <Text style={styles.errorText}>
-                {CommonData.ErrorCompareDate().GreaterOrEqual}
-              </Text>
-            </View>
-          )}
-          {/* Validate overlap */}
-          {errorOverlap && (
-            <View style={styles.errorDateContainer}>
-              <Text style={styles.errorText}>
-                {CommonData.ErrorCompareDate().Overlap}
-              </Text>
-            </View>
-          )}
-
-          {/* Remind */}
-          <View style={styles.viewOnGroup}>
-            <Text style={styles.iconOld}>{"Nhắc nhở          "}</Text>
-            <View style={styles.dateTimeContainer}>
-              {/* Date */}
-              <TouchableOpacity onPress={() => setModalRemind(true)}>
-                <View style={styles.remindContainer}>
-                  <Text style={styles.fieldText}>
-                    {remind && remind != "" ? remind : "Không"}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
-          {/* Modal Remind */}
-          <RemindModal
-            isOpen={modalRemind}
-            closeFunction={handleCloseRemind}
-            actionFunction={handleChooseRemind}
-            selected={remind}
-          />
-
-          {/* Validate remind */}
-          {errorRemindPast && (
-            <View style={styles.errorDateContainer}>
-              <Text style={styles.errorText}>
-                {CommonData.ErrorRemind().Past}
-              </Text>
-            </View>
-          )}
-
-          {/* Repeat */}
-          <View style={styles.viewOnGroup}>
-            <Text style={styles.iconOld}>{"Lặp lại               "}</Text>
-            <View style={styles.dateTimeContainer}>
-              <TouchableOpacity onPress={() => setModalRepeat(true)}>
-                <View style={styles.remindContainer}>
-                  <Text style={styles.fieldText}>
-                    {repeat && repeat != "" ? repeat : "Không"}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
-          {/* Modal Repeat */}
-          <RepeatModal
-            selected={repeat}
-            isOpen={modalRepeat}
-            actionFunction={handleChooseRepeat}
-            closeFunction={handleCloseRepeat}
-          />
-
-          {/* Overlapping */}
-          {errorRepeatOverlap && (
-            <View style={styles.errorDateContainer}>
-              <Text style={styles.errorText}>
-                {CommonData.ErrorRepeat().overlap}
-              </Text>
-            </View>
-          )}
-
-          {/* Validate day week repeat */}
-          {errorInvalidDaysWeek && (
-            <View style={styles.errorDateContainer}>
-              <Text style={styles.errorText}>
-                {CommonData.ErrorRepeat().InvalidDayWeek}
-              </Text>
-            </View>
-          )}
-
-          {/* End Repeat */}
-          <View style={styles.viewOnGroup}>
-            <Text style={styles.iconOld}>{"Ngừng lặp        "}</Text>
-            <View style={styles.dateTimeContainer}>
-              {repeat && (
-                <TouchableOpacity onPress={() => setCalendarEndRepeat(true)}>
-                  <View style={styles.dateContainer}>
-                    <Text style={styles.dateTimeText}>
-                      {formatDateUI(endRepeat)}
+          <View style={styles.viewGroup}>
+            {/* Type */}
+            <View style={styles.viewOnGroup}>
+              <Text style={styles.iconOld}>{"Loại                    "}</Text>
+              <View style={styles.typeContainer}>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (!isView) {
+                      setModalType(true);
+                    }
+                  }}
+                >
+                  <View style={styles.remindContainer}>
+                    <Text style={styles.fieldText}>
+                      {type ? type.name : ""}
                     </Text>
                   </View>
                 </TouchableOpacity>
-              )}
+
+                <TouchableOpacity
+                  onPress={() => {
+                    if (!isView) {
+                      setModalCreateType(true);
+                    }
+                  }}
+                >
+                  <Icon
+                    name="plus-square"
+                    size={26}
+                    style={styles.iconStarCheck}
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
+            {/* Modal Type */}
+            <TypeModal
+              isOpen={modalType}
+              closeFunction={handleCloseType}
+              actionFunction={handleChooseType}
+              selected={type}
+            />
+            {/* Modal Create Type */}
+            <CreateTypeModal
+              isOpen={modalCreateType}
+              closeFunction={handleCloseCreateType}
+              actionFunction={handleChooseCreateType}
+            />
+
+            {/* Validate Type */}
+            {errorTypeRequired && (
+              <View style={styles.errorDateContainer}>
+                <Text style={styles.errorText}>
+                  {CommonData.ErrorTaskType().Required}
+                </Text>
+              </View>
+            )}
+
+            {/* Start time */}
+            <View style={styles.viewOnGroup}>
+              <Text style={styles.iconOld}>{"Bắt đầu             "}</Text>
+              <View style={styles.dateTimeContainer}>
+                {/* Date */}
+                <TouchableOpacity
+                  onPress={() => {
+                    if (!isView) {
+                      setCalendarStartDate(true);
+                    }
+                  }}
+                >
+                  <View style={styles.dateContainer}>
+                    <Text style={styles.dateTimeText}>
+                      {formatDateUI(startDate)}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                {/* Time */}
+                <TouchableOpacity
+                  onPress={() => {
+                    if (!isView) {
+                      setCalendarStartTime(true);
+                    }
+                  }}
+                >
+                  <View style={styles.timeContainer}>
+                    <Text style={styles.dateTimeText}>{startTime}</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <DateTimePickerModal
+              isVisible={calendarStartDate}
+              mode="date"
+              onConfirm={confirmStartDate}
+              onCancel={hideDatePicker}
+            />
+            <DateTimePickerModal
+              isVisible={calendarStartTime}
+              mode="time"
+              onConfirm={confirmStartTime}
+              onCancel={hideTimePicker}
+            />
+
+            {/* Validate start */}
+            {errorStartPast && (
+              <View style={styles.errorDateContainer}>
+                <Text style={styles.errorText}>
+                  {CommonData.ErrorCompareDate().StartPast}
+                </Text>
+              </View>
+            )}
+
+            {/* Due time */}
+            <View style={styles.viewOnGroup}>
+              <Text style={styles.iconOld}>{"Hoàn thành      "}</Text>
+              <View style={styles.dateTimeContainer}>
+                {/* Date */}
+                <TouchableOpacity
+                  onPress={() => {
+                    if (!isView) {
+                      setCalendarDueDate(true);
+                    }
+                  }}
+                >
+                  <View style={styles.dateContainer}>
+                    <Text style={styles.dateTimeText}>
+                      {formatDateUI(dueDate)}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                {/* Time */}
+                <TouchableOpacity
+                  onPress={() => {
+                    if (!isView) {
+                      setCalendarDueTime(true);
+                    }
+                  }}
+                >
+                  <View style={styles.timeContainer}>
+                    <Text style={styles.dateTimeText}>{dueTime}</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <DateTimePickerModal
+              isVisible={calendarDueDate}
+              mode="date"
+              onConfirm={confirmDueDate}
+              onCancel={hideDatePicker}
+            />
+            <DateTimePickerModal
+              isVisible={calendarDueTime}
+              mode="time"
+              onConfirm={confirmDueTime}
+              onCancel={hideTimePicker}
+            />
+
+            {/* Validate Dates */}
+            {errorDates && (
+              <View style={styles.errorDateContainer}>
+                <Text style={styles.errorText}>
+                  {CommonData.ErrorCompareDate().GreaterOrEqual}
+                </Text>
+              </View>
+            )}
+            {/* Validate overlap */}
+            {errorOverlap && (
+              <View style={styles.errorDateContainer}>
+                <Text style={styles.errorText}>
+                  {CommonData.ErrorCompareDate().Overlap}
+                </Text>
+              </View>
+            )}
+
+            {/* Remind */}
+            <View style={styles.viewOnGroup}>
+              <Text style={styles.iconOld}>{"Nhắc nhở          "}</Text>
+              <View style={styles.dateTimeContainer}>
+                {/* Date */}
+                <TouchableOpacity
+                  onPress={() => {
+                    if (!isView) {
+                      setModalRemind(true);
+                    }
+                  }}
+                >
+                  <View style={styles.remindContainer}>
+                    <Text style={styles.fieldText}>
+                      {remind && remind != "" ? remind : "Không"}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </View>
+            {/* Modal Remind */}
+            <RemindModal
+              isOpen={modalRemind}
+              closeFunction={handleCloseRemind}
+              actionFunction={handleChooseRemind}
+              selected={remind}
+            />
+
+            {/* Validate remind */}
+            {errorRemindPast && (
+              <View style={styles.errorDateContainer}>
+                <Text style={styles.errorText}>
+                  {CommonData.ErrorRemind().Past}
+                </Text>
+              </View>
+            )}
+
+            {/* Repeat */}
+            <View style={styles.viewOnGroup}>
+              <Text style={styles.iconOld}>{"Lặp lại               "}</Text>
+              <View style={styles.dateTimeContainer}>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (!isView) {
+                      setModalRepeat(true);
+                    }
+                  }}
+                >
+                  <View style={styles.remindContainer}>
+                    <Text style={styles.fieldText}>
+                      {repeat && repeat != "" ? repeat : "Không"}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </View>
+            {/* Modal Repeat */}
+            <RepeatModal
+              selected={repeat}
+              isOpen={modalRepeat}
+              actionFunction={handleChooseRepeat}
+              closeFunction={handleCloseRepeat}
+            />
+
+            {/* Overlapping */}
+            {errorRepeatOverlap && (
+              <View style={styles.errorDateContainer}>
+                <Text style={styles.errorText}>
+                  {CommonData.ErrorRepeat().overlap}
+                </Text>
+              </View>
+            )}
+
+            {/* Validate day week repeat */}
+            {errorInvalidDaysWeek && (
+              <View style={styles.errorDateContainer}>
+                <Text style={styles.errorText}>
+                  {CommonData.ErrorRepeat().InvalidDayWeek}
+                </Text>
+              </View>
+            )}
+
+            {/* End Repeat */}
+            <View style={styles.viewOnGroup}>
+              <Text style={styles.iconOld}>{"Ngừng lặp        "}</Text>
+              <View style={styles.dateTimeContainer}>
+                {repeat && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (!isView) {
+                        setCalendarEndRepeat(true);
+                      }
+                    }}
+                  >
+                    <View style={styles.dateContainer}>
+                      <Text style={styles.dateTimeText}>
+                        {formatDateUI(endRepeat)}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+            <DateTimePickerModal
+              isVisible={calendarEndRepeat}
+              mode="date"
+              onConfirm={confirmEndRepeat}
+              onCancel={hideDatePicker}
+            />
+
+            {/* Validate day week repeat */}
+            {errorRepeatTimePast && (
+              <View style={styles.errorDateContainer}>
+                <Text style={styles.errorText}>
+                  {CommonData.ErrorRepeat().EndRepeatPast}
+                </Text>
+              </View>
+            )}
           </View>
-          <DateTimePickerModal
-            isVisible={calendarEndRepeat}
-            mode="date"
-            onConfirm={confirmEndRepeat}
-            onCancel={hideDatePicker}
-          />
 
-          {/* Validate day week repeat */}
-          {errorRepeatTimePast && (
-            <View style={styles.errorDateContainer}>
-              <Text style={styles.errorText}>
-                {CommonData.ErrorRepeat().EndRepeatPast}
-              </Text>
-            </View>
-          )}
-        </View>
+          {/* Note */}
+          <View marginTop={4}>
+            <TextArea
+              isDisabled={!!isView}
+              onChangeText={(e) => setNote(e)}
+              value={note}
+              fontSize={16}
+              h={200}
+              placeholder="Thêm ghi chú"
+              w="100%"
+              maxW="400"
+              style={styles.textArea}
+            />
+          </View>
 
-        {/* Note */}
-        <View marginTop={4}>
-          <TextArea
-            onChangeText={(e) => setNote(e)}
-            value={note}
-            fontSize={16}
-            h={200}
-            placeholder="Thêm ghi chú"
-            w="100%"
-            maxW="400"
-            style={styles.textArea}
-          />
-        </View>
+          <View style={{ height: 500 }}></View>
+        </ScrollView>
       </Box>
     </Center>
   );
@@ -2262,6 +2363,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingRight: 10,
+  },
+  textContainerView: {
+    borderColor: Color.Input().Border,
+    borderWidth: 1,
+    borderRadius: 5,
+    display: "flex",
+    flexDirection: "row",
+    flex: 1,
+    justifyContent: "flex-start",
+    alignItems: "center",
+    paddingRight: 10,
+    paddingVertical: 10,
   },
   textArea: {
     borderColor: Color.Input().Border,

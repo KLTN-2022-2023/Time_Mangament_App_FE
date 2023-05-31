@@ -56,9 +56,9 @@ export default ({ navigation }) => {
       const decoded = jwt_decode(token);
       const userId = decoded._id;
       const response = await UpdateProfile({ userId, name, phone }, token);
-      console.log(response)
+      console.log(response);
       setSnackBar(true);
-    } catch (err) { }
+    } catch (err) {}
   };
 
   useEffect(() => {
@@ -118,7 +118,7 @@ export default ({ navigation }) => {
                 fontSize={20}
                 paddingLeft={5}
               >
-                Profile
+                Thông tin cá nhân
               </Text>
             </HStack>
             {update ? (
@@ -127,7 +127,7 @@ export default ({ navigation }) => {
                 fontWeight={500}
                 onPress={HandleUpdateProfile}
               >
-                Save
+                Cập nhật
               </Text>
             ) : null}
           </HStack>
@@ -142,7 +142,7 @@ export default ({ navigation }) => {
               AJ
             </Avatar>
             <View>
-              <HStack alignItems="center" marginTop={5} height={10} >
+              <HStack alignItems="center" marginTop={5} height={10}>
                 <IconFontisto name="male" size={20} color={"#000000"} />
                 <TextInput
                   paddingLeft={20}

@@ -163,6 +163,32 @@ export default {
         }),
     };
   },
+  notification(url = baseApi + "Notification/") {
+    return {
+      getListNotificationByUserId: (req, token) =>
+        axios.post(url + "GetNotificationsByUserId/", JSON.stringify(req), {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        }),
+      createNotification: (req, token) =>
+        axios.post(url + "CreateNotification/", JSON.stringify(req), {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+        }),
+      deleteNotification: (id, token) =>
+        axios.delete(url + "DeleteNotification/" + id, {
+          headers: {
+            Authorization: token,
+          },
+        }),
+    };
+  },
   s3(url = baseApi + "S3") {
     return {
       upload: (req) =>

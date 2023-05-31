@@ -3,7 +3,6 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Provider } from "react-redux";
 import Store from "./Store/Store";
-import { StyleSheet } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import Color from "./Style/Color";
 import LoginScreen from "./Screen/Login/LoginScreen";
@@ -18,8 +17,7 @@ import SettingScreen from "./Screen/SettingScreen/SettingScreen";
 import StatictisScreen from "./Screen/Statictis/StatictisScreen";
 import ForgotPasswordScreen from "./Screen/ForgotPasswordScreen/ForgotPasswordScreen";
 import StatisticDetailScreen from "./Screen/StatisticDetail/StatisticDetailScreen";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState, useRef } from "react";
+import MainLayout from "./Layout/MainLayout";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -86,9 +84,6 @@ function HomeTab() {
 }
 
 export default function App() {
-  // read notifications after 3 minutes
-  useEffect(() => {}, []);
-
   return (
     <Provider store={Store}>
       <NavigationContainer>

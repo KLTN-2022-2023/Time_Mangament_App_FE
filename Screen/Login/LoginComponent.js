@@ -17,14 +17,13 @@ import Spinner from "react-native-loading-spinner-overlay";
 import { StyleSheet } from "react-native";
 
 export default ({ navigation }) => {
-  const [phone, setPhone] = useState();
-  const [password, setPassword] = useState();
+  const [phone, setPhone] = useState("0794443245");
+  const [password, setPassword] = useState("123456");
   const [isLoading, setIsLoading] = useState(false);
   const [validatePhone, setValidatePhone] = useState(false);
   const [validatePassword, setValidatePassword] = useState(false);
   const [disable, setDisable] = useState(true);
   const Login = async () => {
-
     try {
       if (!validate()) {
         if (!validatePassword && !validatePhone) {
@@ -36,9 +35,8 @@ export default ({ navigation }) => {
             await AsyncStorage.setItem("Token", value);
             navigation.navigate("HomeTab");
           }
-        }
-        else {
-          console.log("abc")
+        } else {
+          console.log("abc");
         }
       } else {
         setValidatePassword(true);
@@ -51,26 +49,24 @@ export default ({ navigation }) => {
   };
   const validateNumberPhone = (phone) => {
     var re = /(0[3|5|7|8|9])+([0-9]{8})\b/g;
-    return re.test(phone)
-  }
+    return re.test(phone);
+  };
   const validatePass = (password) => {
     var re = /^[0-9]{6}\b/g;
-    return re.test(password)
-  }
+    return re.test(password);
+  };
   const validate = () => {
     if (!validateNumberPhone(phone)) {
       setValidatePhone(true);
-    }
-    else {
+    } else {
       setValidatePhone(false);
     }
     if (!validatePass(password)) {
-      setValidatePassword(true)
-    }
-    else {
+      setValidatePassword(true);
+    } else {
       setValidatePassword(false);
     }
-  }
+  };
 
   return (
     <Center w="100%">
@@ -84,7 +80,7 @@ export default ({ navigation }) => {
             color: "warmGray.50",
           }}
         >
-          Welcome
+          Chào mừng
         </Heading>
         <Heading
           mt="1"
@@ -95,26 +91,28 @@ export default ({ navigation }) => {
           fontWeight="medium"
           size="xs"
         >
-          Sign in to continue!
+          Đăng nhập để tiếp tục!
         </Heading>
 
         <VStack space={3} mt="5">
           <FormControl>
-            <FormControl.Label>Number Phone</FormControl.Label>
+            <FormControl.Label>Số điện thoại</FormControl.Label>
             <Input
               value={phone || ""}
-              onChangeText={async (text) => { setPhone(text), setValidatePhone(false) }}
+              onChangeText={async (text) => {
+                setPhone(text), setValidatePhone(false);
+              }}
             />
-            {validatePhone && (
-              <Text color={"#FF0000"}>Phone is invalid</Text>
-            )}
+            {validatePhone && <Text color={"#FF0000"}>Phone is invalid</Text>}
           </FormControl>
           <FormControl>
-            <FormControl.Label>Password</FormControl.Label>
+            <FormControl.Label>Mật khẩu</FormControl.Label>
             <Input
               value={password || ""}
               type="password"
-              onChangeText={async (text) => { setPassword(text), setValidatePassword(false) }}
+              onChangeText={async (text) => {
+                setPassword(text), setValidatePassword(false);
+              }}
             />
             {validatePassword && (
               <Text color={"#FF0000"}>Password is invalid</Text>
@@ -129,11 +127,11 @@ export default ({ navigation }) => {
               mt="1"
               onPress={() => navigation.navigate("ForgotPasswordScreen")}
             >
-              Forgot Password?
+              Quên mật khẩu?
             </Link>
           </FormControl>
-          <Button mt="2" colorScheme="indigo" onPress={Login} >
-            Sign in
+          <Button mt="2" colorScheme="indigo" onPress={Login}>
+            Đăng nhập
           </Button>
           <HStack mt="6" justifyContent="center">
             <Text
@@ -143,7 +141,7 @@ export default ({ navigation }) => {
                 color: "warmGray.200",
               }}
             >
-              I'm a new user.{" "}
+              Tôi là người mới sử dụng.{" "}
             </Text>
             <Link
               _text={{
@@ -153,7 +151,7 @@ export default ({ navigation }) => {
               }}
               onPress={() => navigation.navigate("SignUpScreen")}
             >
-              Sign Up
+              Đăng ký
             </Link>
           </HStack>
         </VStack>
