@@ -583,7 +583,7 @@ const StatictisComponent = ({ navigation }) => {
                 selectedValue={selectStatictis}
                 minWidth="300"
                 accessibilityLabel="Choose type statictis"
-                placeholder="Choose type statictis"
+                placeholder="Chọn loại thống kê"
                 _selectedItem={{
                   bg: "teal.600",
                   endIcon: <CheckIcon size="5" />,
