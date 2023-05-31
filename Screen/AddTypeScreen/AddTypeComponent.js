@@ -35,7 +35,7 @@ export default ({ navigation, typeId }) => {
   const [open, setOpen] = useState(false);
   const [errorNameLength, setErrorNameLength] = useState(false);
   const [errorNameDup, setErrorNameDup] = useState(false);
-  const [errorNameSpecial, setErrorNameSpecial] = useState(false);
+  // const [errorNameSpecial, setErrorNameSpecial] = useState(false);
   const [errorNameRequired, setErrorNameRequired] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -56,7 +56,8 @@ export default ({ navigation, typeId }) => {
 
   const isInvalidName = () => {
     return (
-      errorNameDup || errorNameLength || errorNameRequired || errorNameSpecial
+      // errorNameDup || errorNameLength || errorNameRequired || errorNameSpecial
+      errorNameDup || errorNameLength || errorNameRequired
     );
   };
 
@@ -178,13 +179,13 @@ export default ({ navigation, typeId }) => {
       } else {
         setErrorNameLength(false);
       }
-      // Check Special Character
-      if (/[^a-zA-Z0-9 ]/.test(name)) {
-        setErrorNameSpecial(true);
-        result = true;
-      } else {
-        setErrorNameSpecial(false);
-      }
+      // // Check Special Character
+      // if (/[^a-zA-Z0-9 ]/.test(name)) {
+      //   setErrorNameSpecial(true);
+      //   result = true;
+      // } else {
+      //   setErrorNameSpecial(false);
+      // }
       // Check duplicate type
       let list = [];
       if (typeId) {
@@ -212,20 +213,20 @@ export default ({ navigation, typeId }) => {
 
   const showMessageErrorName = () => {
     if (errorNameLength) {
-      return "Must be at least 30 characters";
+      return "Tên ít nhất có 30 ký tự";
     }
 
     if (errorNameRequired) {
-      return "Name is required";
+      return "Bắt buộc nhập tên";
     }
 
     if (errorNameDup) {
-      return "Name is existed";
+      return "Tên đã tồn tại";
     }
 
-    if (errorNameSpecial) {
-      return "Name does not include special";
-    }
+    // if (errorNameSpecial) {
+    //   return "Tên không được chứa ký tự đặt biệt";
+    // }
 
     return "";
   };
@@ -240,7 +241,7 @@ export default ({ navigation, typeId }) => {
             <HStack>
               <Icon name="angle-left" size={25} style={styles.icon} />
               <Text paddingLeft={2} fontSize={18} style={styles.textBack}>
-                Tasks List
+                Danh sách công việc
               </Text>
             </HStack>
           </TouchableOpacity>
@@ -255,7 +256,7 @@ export default ({ navigation, typeId }) => {
                     color="red.500"
                     fontWeight={500}
                   >
-                    Delete
+                    Xóa
                   </Text>
                 </HStack>
               </TouchableOpacity>
@@ -271,7 +272,7 @@ export default ({ navigation, typeId }) => {
                   disabled={isInvalidName()}
                   style={isInvalidName() && styles.saveButtonDisable}
                 >
-                  Save
+                  Lưu
                 </Text>
               </HStack>
             </TouchableOpacity>
@@ -284,12 +285,12 @@ export default ({ navigation, typeId }) => {
               <FormControl.Label
                 _text={{ fontSize: 16, color: Color.Input().label }}
               >
-                Name
+                Tên loại công việc
               </FormControl.Label>
               <Input
                 variant="outline"
                 p={2}
-                placeholder="Type Name"
+                placeholder="Tên loại công việc"
                 fontSize={16}
                 value={name}
                 onChange={(v) => onChangeName(v.nativeEvent.text)}
@@ -307,12 +308,12 @@ export default ({ navigation, typeId }) => {
               <FormControl.Label
                 _text={{ fontSize: 16, color: Color.Input().label }}
               >
-                Description
+                Mô Tả
               </FormControl.Label>
               <Input
                 variant="outline"
                 p={2}
-                placeholder="Description"
+                placeholder="Mô tả"
                 fontSize={16}
                 value={description}
                 onChange={(v) => setDescription(v.nativeEvent.text)}
@@ -322,8 +323,8 @@ export default ({ navigation, typeId }) => {
         </FormControl>
 
         <PopupComponent
-          title={"Delete"}
-          content={"Are you sure to delete this type?"}
+          title={"Xóa"}
+          content={"Bạn có chắc muốn xóa loại công việc này không?"}
           closeFunction={closeModal}
           isOpen={open}
           actionFunction={deleteType}

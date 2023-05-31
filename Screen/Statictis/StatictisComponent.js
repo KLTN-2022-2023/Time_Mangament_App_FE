@@ -68,18 +68,18 @@ const StatictisComponent = ({ navigation }) => {
     moment(new Date()).format("YYYY-MM-DD").toString().substring(0, 4)
   );
   const horizontalData = [
-    "Jan",
-    "Jeb",
-    "Mar",
-    "Apr",
-    "May",
-    "June",
-    "July",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
+    "Th1",
+    "Th2",
+    "Th3",
+    "Th4",
+    "Th5",
+    "Th6",
+    "Th7",
+    "Th8",
+    "Th9",
+    "Th10",
+    "Th11",
+    "Th12",
   ];
   const arrayMonth = [
     { month: "01" },
@@ -585,7 +585,7 @@ const StatictisComponent = ({ navigation }) => {
         <Spinner visible={isLoading}></Spinner>
         <Box safeArea py="2" w="100%" maxW="350">
           <ScrollView width={350}>
-            <HStack w={"100%"}>
+            <HStack w={"100%"} marginBottom={5}>
               <Select
                 selectedValue={selectStatictis}
                 minWidth="300"
@@ -599,18 +599,15 @@ const StatictisComponent = ({ navigation }) => {
                 onValueChange={(itemValue) => setSelectStatistic(itemValue)}
               >
                 <Select.Item
-                  label={"Statistic tasks global"}
+                  label={"Thống kê tổng quát"}
                   value={"currentMonth"}
                 />
                 <Select.Item
-                  label={"Statistic tasks by type work"}
+                  label={"Thống kê theo loại công việc"}
                   value={"typework"}
                 />
-                <Select.Item label={"Statictis tasks by year"} value={"year"} />
-                <Select.Item
-                  label={"Statictis tasks by month"}
-                  value={"month"}
-                />
+                <Select.Item label={"Thống kê theo năm"} value={"year"} />
+                <Select.Item label={"Thống kê theo tháng"} value={"month"} />
               </Select>
               <Button marginLeft={2} onPress={xyz} marginTop={1}>
                 OK
@@ -620,15 +617,16 @@ const StatictisComponent = ({ navigation }) => {
               <View>
                 {pieChart ? (
                   <View>
-                    <Text fontSize={18} fontWeight={500} color={"#00BFFF"}>
+                    {/* <Text fontSize={18} fontWeight={500} color={"#00BFFF"}>
                       Statistics of jobs global{" "}
-                    </Text>
+                    </Text> */}
                     <HStack
                       alignItems={"center"}
                       paddingBottom={5}
                       justifyContent={"space-between"}
+                      w={"100%"}
                     >
-                      <Text fontWeight={500}>Month</Text>
+                      <Text fontWeight={500}>Tháng</Text>
                       <Select
                         selectedValue={pieMonth}
                         minWidth="100"
@@ -645,7 +643,7 @@ const StatictisComponent = ({ navigation }) => {
                           <Select.Item label={e.month} value={e.month} />
                         ))}
                       </Select>
-                      <Text fontWeight={500}>Year</Text>
+                      <Text fontWeight={500}>Năm</Text>
                       <Select
                         selectedValue={pieYear}
                         minWidth="100"
@@ -673,14 +671,14 @@ const StatictisComponent = ({ navigation }) => {
                           series={[uncompleteTask, completeTask]}
                           sliceColor={["#FFCC00", "#FF0000"]}
                         />
-                        <TouchableOpacity>
+                        <TouchableOpacity style={{ marginTop: 20 }}>
                           <HStack>
                             <Button
                               backgroundColor={"#FFCC00"}
                               disabled={true}
                             ></Button>
                             <Text paddingLeft={5}>
-                              {uncompleteTask} Task incomplete
+                              {uncompleteTask} Công việc chưa hoàn thành
                             </Text>
                           </HStack>
                           <HStack paddingTop={2}>
@@ -689,7 +687,7 @@ const StatictisComponent = ({ navigation }) => {
                               disabled={true}
                             ></Button>
                             <Text paddingLeft={5}>
-                              {completeTask} Task complete
+                              {completeTask} Công việc đã hoàn thành
                             </Text>
                           </HStack>
                         </TouchableOpacity>
@@ -706,7 +704,7 @@ const StatictisComponent = ({ navigation }) => {
                 ) : null}
                 {barChart ? (
                   <View>
-                    <Text
+                    {/* <Text
                       alignItems={"center"}
                       paddingTop={5}
                       fontSize={18}
@@ -714,13 +712,13 @@ const StatictisComponent = ({ navigation }) => {
                       color={"#00BFFF"}
                     >
                       Statictis task by type work
-                    </Text>
+                    </Text> */}
                     <HStack
                       alignItems={"center"}
                       paddingBottom={5}
                       justifyContent={"space-between"}
                     >
-                      <Text fontWeight={500}>Month</Text>
+                      <Text fontWeight={500}>Tháng</Text>
                       <Select
                         selectedValue={typeMonth}
                         minWidth="100"
@@ -737,7 +735,7 @@ const StatictisComponent = ({ navigation }) => {
                           <Select.Item label={e.month} value={e.month} />
                         ))}
                       </Select>
-                      <Text fontWeight={500}>Year</Text>
+                      <Text fontWeight={500}>Năm</Text>
                       <Select
                         selectedValue={typeYear}
                         minWidth="100"
@@ -771,15 +769,15 @@ const StatictisComponent = ({ navigation }) => {
                 ) : null}
                 {chartByMonth ? (
                   <View>
-                    <Text fontSize={18} fontWeight={500} color={"#00BFFF"}>
+                    {/* <Text fontSize={18} fontWeight={500} color={"#00BFFF"}>
                       {" "}
                       Statictis task by month in 2023
-                    </Text>
+                    </Text> */}
                     <HStack
                       alignItems={"center"}
                       justifyContent={"space-between"}
                     >
-                      <Text fontWeight={500}>Month</Text>
+                      <Text fontWeight={500}>Tháng</Text>
                       <Select
                         selectedValue={selectMonth}
                         minWidth="100"
@@ -796,7 +794,7 @@ const StatictisComponent = ({ navigation }) => {
                           <Select.Item label={e.month} value={e.month} />
                         ))}
                       </Select>
-                      <Text fontWeight={500}>Year</Text>
+                      <Text fontWeight={500}>Năm</Text>
                       <Select
                         selectedValue={yearByMonth}
                         minWidth="100"
@@ -828,20 +826,22 @@ const StatictisComponent = ({ navigation }) => {
                             />
                           </View>
                         </ScrollView>
-                        <TouchableOpacity>
+                        <TouchableOpacity style={{ marginTop: 10 }}>
                           <HStack>
                             <Button
                               backgroundColor={"#FFCC00"}
                               disabled={true}
                             ></Button>
-                            <Text paddingLeft={5}>Task incomplete</Text>
+                            <Text paddingLeft={5}>
+                              Công việc chưa hoàn thành
+                            </Text>
                           </HStack>
                           <HStack paddingTop={2}>
                             <Button
                               backgroundColor={"#FF0000"}
                               disabled={true}
                             ></Button>
-                            <Text paddingLeft={5}>Task complete</Text>
+                            <Text paddingLeft={5}>Công việc đã hoàn thành</Text>
                           </HStack>
                         </TouchableOpacity>
                       </View>
@@ -850,9 +850,9 @@ const StatictisComponent = ({ navigation }) => {
                 ) : null}
                 {chartByYear ? (
                   <View>
-                    <Text fontSize={20} fontWeight={500} color={"#00BFFF"}>
+                    {/* <Text fontSize={20} fontWeight={500} color={"#00BFFF"}>
                       Year Statictis{" "}
-                    </Text>
+                    </Text> */}
                     <HStack>
                       <Select
                         selectedValue={selectYear}
@@ -893,10 +893,31 @@ const StatictisComponent = ({ navigation }) => {
                 ) : null}
               </View>
             ) : null}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Button
+                marginTop={10}
+                width={100}
+                onPress={() => {
+                  navigation.navigate("StatisticDetail", {
+                    month: "05",
+                    year: "2023",
+                  });
+                }}
+              >
+                Xem chi tiết
+              </Button>
+            </View>
           </ScrollView>
         </Box>
       </Center>
     </NativeBaseProvider>
   );
 };
+
 export default memo(StatictisComponent);

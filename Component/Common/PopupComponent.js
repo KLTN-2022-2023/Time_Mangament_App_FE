@@ -20,7 +20,7 @@ export default ({
             <TouchableOpacity onPress={() => actionFunction()}>
               <HStack>
                 <Text fontWeight={500} color={update ? "blue.600" : "red.600"}>
-                  YES
+                  ĐỒNG Ý
                 </Text>
               </HStack>
             </TouchableOpacity>
@@ -28,7 +28,7 @@ export default ({
             <TouchableOpacity onPress={() => closeFunction()}>
               <HStack>
                 <Text fontWeight={500} color={"gray.900"}>
-                  CANCEL
+                  HỦY
                 </Text>
               </HStack>
             </TouchableOpacity>

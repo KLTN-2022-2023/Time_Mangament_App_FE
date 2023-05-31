@@ -5,7 +5,7 @@ import Color from "../../Style/Color";
 export default ({ message }) => {
   return (
     <View style={styles.Root}>
-      <Text style={styles.Text}> {message || "No data"}</Text>
+      <Text style={styles.Text}> {message || "Không có dữ liệu"}</Text>
     </View>
   );
 };

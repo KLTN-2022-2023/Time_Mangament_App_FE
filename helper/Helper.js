@@ -1,6 +1,7 @@
 import { formatInTimeZone } from "date-fns-tz";
 import CommonData from "../CommonData/CommonData";
 import { format } from "date-fns";
+import viLocale from "date-fns/locale/vi";
 
 export const convertDateTime = (date) => {
   if (!date) {
@@ -17,7 +18,9 @@ export const convertDateTime = (date) => {
 
 export const convertMonthYear = (date) => {
   if (date) {
-    return format(date, "MMMM yyyy");
+    let result = format(date, "MMMM, yyyy", { locale: viLocale }).toLowerCase();
+    let withoutMonth = result.split("tháng")[1];
+    return "Tháng" + withoutMonth;
   }
   return "";
 };
@@ -28,6 +31,17 @@ export const formatDateUI = (dateString) => {
   }
   let list = dateString.split("-");
   return list[2] + "-" + list[1] + "-" + list[0];
+};
+
+export const formatDateTask = (showDate) => {
+  if (showDate) {
+    return (
+      format(new Date(showDate), "EE", { locale: viLocale }) +
+      ", " +
+      format(new Date(showDate), "dd MMMM yyyy", { locale: viLocale })
+    );
+  }
+  return "";
 };
 
 export const getMonDaySunDay = (date) => {

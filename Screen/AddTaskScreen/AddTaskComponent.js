@@ -68,7 +68,6 @@ export default ({ navigation, taskId, selectedDate }) => {
   const [note, setNote] = useState("");
   const [isDone, setIsDone] = useState(false);
   const [isImportant, setIsImportant] = useState(false);
-  const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [remind, setRemind] = useState(null);
   const [remindTime, setRemindTime] = useState(null);
@@ -290,7 +289,12 @@ export default ({ navigation, taskId, selectedDate }) => {
         },
         trigger: { seconds: secs },
       });
-      list.push({ taskId: idTask, trigger: identifier });
+      list.push({
+        taskId: idTask,
+        trigger: identifier,
+        isSeen: false,
+        content: content,
+      });
     }
 
     dispatch(SetNotificationTriggerList(list));
@@ -419,8 +423,8 @@ export default ({ navigation, taskId, selectedDate }) => {
         let secsBefore =
           (request.startTime.getTime() - new Date().getTime()) / 1000;
         await schedulePushNotification(
-          "Remind",
-          request.name + ", start time: " + startTimeString,
+          "Nhắc nhở",
+          request.name + ". Bắt đầu vào ngày: " + startTimeString,
           secsBefore - 5 * 60,
           mode,
           response.data._id
@@ -429,8 +433,8 @@ export default ({ navigation, taskId, selectedDate }) => {
         let secsBefore =
           (request.startTime.getTime() - new Date().getTime()) / 1000;
         await schedulePushNotification(
-          "Remind",
-          request.name + ", start Time: " + startTimeString,
+          "Nhắc nhở",
+          request.name + ". Bắt đầu vào ngày: " + startTimeString,
           secsBefore,
           mode,
           response.data._id
@@ -439,8 +443,8 @@ export default ({ navigation, taskId, selectedDate }) => {
         let secsBefore =
           (request.startTime.getTime() - new Date().getTime()) / 1000;
         await schedulePushNotification(
-          "Remind",
-          request.name + ", start time: " + startTimeString,
+          "Nhắc nhở",
+          request.name + ". Bắt đầu vào ngày: " + startTimeString,
           secsBefore - 24 * 60 * 60,
           mode,
           response.data._id
@@ -451,8 +455,8 @@ export default ({ navigation, taskId, selectedDate }) => {
         let secsBefore =
           (request.remindTime.getTime() - new Date().getTime()) / 1000;
         await schedulePushNotification(
-          "Remind",
-          request.name + ", start time: " + startTimeString,
+          "Nhắc nhở",
+          request.name + ". Bắt đầu vào ngày: " + startTimeString,
           secsBefore,
           mode,
           response.data._id
@@ -967,34 +971,34 @@ export default ({ navigation, taskId, selectedDate }) => {
           let s = new Date(monStart.getTime());
           let e = new Date(monEnd.getTime());
 
-          if (x === "Mon") {
+          if (x === "T2") {
             listDefault.push({ start: monStart, end: monEnd });
-          } else if (x === "Tue") {
+          } else if (x === "T3") {
             listDefault.push({
               start: new Date(s.setDate(s.getDate() + 1)),
               end: new Date(e.setDate(e.getDate() + 1)),
             });
-          } else if (x === "Wed") {
+          } else if (x === "T4") {
             listDefault.push({
               start: new Date(s.setDate(s.getDate() + 2)),
               end: new Date(e.setDate(e.getDate() + 2)),
             });
-          } else if (x === "Thu") {
+          } else if (x === "T5") {
             listDefault.push({
               start: new Date(s.setDate(s.getDate() + 3)),
               end: new Date(e.setDate(e.getDate() + 3)),
             });
-          } else if (x === "Fri") {
+          } else if (x === "T6") {
             listDefault.push({
               start: new Date(s.setDate(s.getDate() + 4)),
               end: new Date(e.setDate(e.getDate() + 4)),
             });
-          } else if (x === "Sat") {
+          } else if (x === "T7") {
             listDefault.push({
               start: new Date(s.setDate(s.getDate() + 5)),
               end: new Date(e.setDate(e.getDate() + 5)),
             });
-          } else if (x === "Sun") {
+          } else if (x === "CN") {
             listDefault.push({
               start: new Date(s.setDate(s.getDate() + 6)),
               end: new Date(e.setDate(e.getDate() + 6)),
@@ -1033,13 +1037,13 @@ export default ({ navigation, taskId, selectedDate }) => {
             return startStr <= str && str <= endRepeatStr;
           });
         } else {
-          let list = mode.split("Every ");
+          let list = mode.split("Mỗi ");
           let list2 = list[1].split(" ");
           let num = parseInt(list2[0]);
           let finalMode = list2[1];
 
           // Weeks
-          if (finalMode === "Weeks") {
+          if (finalMode === "Tuần") {
             let i = 0;
             for (
               var d = new Date(monStart.getTime());
@@ -1065,13 +1069,13 @@ export default ({ navigation, taskId, selectedDate }) => {
           }
         }
       } else {
-        let list = repeat.split("Every ");
+        let list = repeat.split("Mỗi ");
         let list2 = list[1].split(" ");
         let num = parseInt(list2[0]);
         let finalMode = list2[1];
 
         // Days
-        if (finalMode === "Days") {
+        if (finalMode === "Ngày") {
           let i = 0;
           for (
             var d = new Date(start.getTime());
@@ -1087,7 +1091,7 @@ export default ({ navigation, taskId, selectedDate }) => {
           }
         }
         // Weeks
-        else if (finalMode === "Weeks") {
+        else if (finalMode === "Tuần") {
           let i = 0;
           for (
             var d = new Date(start.getTime());
@@ -1103,7 +1107,7 @@ export default ({ navigation, taskId, selectedDate }) => {
           }
         }
         // Months
-        else if (finalMode === "Months") {
+        else if (finalMode === "Tháng") {
           let i = 0;
           for (
             var d = new Date(start.getTime());
@@ -1119,7 +1123,7 @@ export default ({ navigation, taskId, selectedDate }) => {
           }
         }
         // Years
-        else if (finalMode === "Years") {
+        else if (finalMode === "Năm") {
           let i = 0;
           for (
             var d = new Date(start.getTime());
@@ -1180,7 +1184,7 @@ export default ({ navigation, taskId, selectedDate }) => {
           setRemindTime(startDate + " " + hourRemind + ":" + minuteRemind);
         } else {
           let l1 = dayRemind.split(" ");
-          let num = parseInt(l1[0]);
+          let num = parseInt(l1[1]);
 
           let date = new Date(startDate);
           date.setTime(date.getTime() - num * 24 * 60 * 60 * 1000);
@@ -1392,19 +1396,19 @@ export default ({ navigation, taskId, selectedDate }) => {
           result = true;
         } else {
           if (indexItem === 0) {
-            dayWeek = "Mon";
+            dayWeek = "T2";
           } else if (indexItem === 1) {
-            dayWeek = "Tue";
+            dayWeek = "T3";
           } else if (indexItem === 2) {
-            dayWeek = "Wed";
+            dayWeek = "T4";
           } else if (indexItem === 3) {
-            dayWeek = "Thu";
+            dayWeek = "T5";
           } else if (indexItem === 4) {
-            dayWeek = "Fri";
+            dayWeek = "T6";
           } else if (indexItem === 5) {
-            dayWeek = "Sat";
+            dayWeek = "T7";
           } else if (indexItem === 6) {
-            dayWeek = "Sun";
+            dayWeek = "CN";
           }
 
           let find = splitList2.find((x) => x === dayWeek);
@@ -1663,7 +1667,6 @@ export default ({ navigation, taskId, selectedDate }) => {
 
           if (!isError) {
             await handleGetAllTasks();
-            // navigation.navigate("HomeTab", { screen: "Tasks" });
             navigation.goBack();
             setIsLoading(false);
           }
@@ -1686,9 +1689,9 @@ export default ({ navigation, taskId, selectedDate }) => {
 
       {dataBackup && dataBackup.isRepeatedById ? (
         <PopupDeleteMany
-          title={"Delete"}
+          title={"Xóa"}
           content={
-            "Are you sure to delete this task? This is a repeating task."
+            "Bạn có chắc muốn xóa công việc này không? Đây là công việc lặp lại."
           }
           closeFunction={closeModal}
           isOpen={open}
@@ -1696,8 +1699,8 @@ export default ({ navigation, taskId, selectedDate }) => {
         ></PopupDeleteMany>
       ) : (
         <PopupComponent
-          title={"Delete"}
-          content={"Are you sure to delete this task?"}
+          title={"Xóa"}
+          content={"Bạn có chắc muốn xóa công việc này không?"}
           closeFunction={closeModal}
           isOpen={open}
           actionFunction={deleteTask.bind(false)}
@@ -1707,9 +1710,9 @@ export default ({ navigation, taskId, selectedDate }) => {
 
       {dataBackup && dataBackup.isRepeatedById && (
         <PopupUpdateMany
-          title={"Update"}
+          title={"Cập nhật"}
           content={
-            "Are you sure to update this task? This is a repeating task."
+            "Bạn có chắc muốn cập nhật công việc này không? Đây là công việc lập lại."
           }
           closeFunction={closeModalUpdateMany}
           isOpen={updateMany}
@@ -1717,8 +1720,10 @@ export default ({ navigation, taskId, selectedDate }) => {
         ></PopupUpdateMany>
       )}
       <PopupComponent
-        title={"Warning"}
-        content={"All unsaved progress will be lost. Are you sure to go back?"}
+        title={"Cảnh báo"}
+        content={
+          "Tất cả dữ liệu chưa được lưu sẽ bị mất. Bạn có chắc muốn tiếp tục?"
+        }
         closeFunction={closeWarning}
         isOpen={warn}
         actionFunction={handleGoBack}
@@ -1731,7 +1736,7 @@ export default ({ navigation, taskId, selectedDate }) => {
             <HStack>
               <Icon name="angle-left" size={25} style={styles.icon} />
               <Text paddingLeft={2} fontSize={18} style={styles.textBack}>
-                Go back
+                Quay lại
               </Text>
             </HStack>
           </TouchableOpacity>
@@ -1746,7 +1751,7 @@ export default ({ navigation, taskId, selectedDate }) => {
                     color="red.500"
                     fontWeight={500}
                   >
-                    Delete
+                    Xóa
                   </Text>
                 </HStack>
               </TouchableOpacity>
@@ -1764,27 +1769,14 @@ export default ({ navigation, taskId, selectedDate }) => {
                   fontWeight={500}
                   style={isInValidModel() && styles.saveButtonDisable}
                 >
-                  Save
+                  Lưu
                 </Text>
               </HStack>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Checkbox */}
         <HStack style={styles.title}>
-          {taskId && (
-            <Checkbox
-              colorScheme="indigo"
-              borderRadius={20}
-              size="lg"
-              accessibilityLabel="Tap me!"
-              my={2}
-              isChecked={isDone}
-              onChange={() => setIsDone((prevState) => !prevState)}
-            ></Checkbox>
-          )}
-
           {/* Name */}
           <View style={styles.textContainer}>
             <TextInput
@@ -1802,7 +1794,52 @@ export default ({ navigation, taskId, selectedDate }) => {
               <IconMaterial name="cancel" color={"gray"} size={25} />
             </TouchableOpacity>
           </View>
+        </HStack>
 
+        {/* Validate Name */}
+        {errorNameRequired && (
+          <View style={taskId && styles.errorContainer}>
+            <Text style={styles.errorText}>
+              {CommonData.ErrorTaskName().Required}
+            </Text>
+          </View>
+        )}
+
+        {/* Is completed */}
+        {taskId && (
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              gap: 10,
+              marginTop: 5,
+              marginLeft: 5,
+            }}
+          >
+            <Checkbox
+              colorScheme="indigo"
+              borderRadius={20}
+              size="lg"
+              accessibilityLabel="Tap me!"
+              my={2}
+              isChecked={isDone}
+              onChange={() => setIsDone((prevState) => !prevState)}
+            ></Checkbox>
+            <Text style={{ fontSize: 16, marginTop: 10 }}>Đã hoàn thành</Text>
+          </View>
+        )}
+
+        {/* Is Important */}
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            gap: 10,
+            marginBottom: 5,
+            marginTop: 5,
+            marginLeft: 5,
+          }}
+        >
           {isImportant ? (
             <Icon
               name="star"
@@ -1818,21 +1855,15 @@ export default ({ navigation, taskId, selectedDate }) => {
               onPress={handlePressStar}
             />
           )}
-        </HStack>
-
-        {/* Validate Name */}
-        {errorNameRequired && (
-          <View style={taskId && styles.errorContainer}>
-            <Text style={styles.errorText}>
-              {CommonData.ErrorTaskName().Required}
-            </Text>
-          </View>
-        )}
+          <Text style={{ fontSize: 16, marginTop: 10 }}>
+            Công việc quan trọng
+          </Text>
+        </View>
 
         <View style={styles.viewGroup}>
           {/* Type */}
           <View style={styles.viewOnGroup}>
-            <Text style={styles.iconOld}>{"Type              "}</Text>
+            <Text style={styles.iconOld}>{"Loại                    "}</Text>
             <View style={styles.typeContainer}>
               <TouchableOpacity onPress={() => setModalType(true)}>
                 <View style={styles.remindContainer}>
@@ -1874,7 +1905,7 @@ export default ({ navigation, taskId, selectedDate }) => {
 
           {/* Start time */}
           <View style={styles.viewOnGroup}>
-            <Text style={styles.iconOld}>{"Start time    "}</Text>
+            <Text style={styles.iconOld}>{"Bắt đầu             "}</Text>
             <View style={styles.dateTimeContainer}>
               {/* Date */}
               <TouchableOpacity onPress={() => setCalendarStartDate(true)}>
@@ -1917,7 +1948,7 @@ export default ({ navigation, taskId, selectedDate }) => {
 
           {/* Due time */}
           <View style={styles.viewOnGroup}>
-            <Text style={styles.iconOld}>{"Due time      "}</Text>
+            <Text style={styles.iconOld}>{"Hoàn thành      "}</Text>
             <View style={styles.dateTimeContainer}>
               {/* Date */}
               <TouchableOpacity onPress={() => setCalendarDueDate(true)}>
@@ -1968,13 +1999,13 @@ export default ({ navigation, taskId, selectedDate }) => {
 
           {/* Remind */}
           <View style={styles.viewOnGroup}>
-            <Text style={styles.iconOld}>{"Remind         "}</Text>
+            <Text style={styles.iconOld}>{"Nhắc nhở          "}</Text>
             <View style={styles.dateTimeContainer}>
               {/* Date */}
               <TouchableOpacity onPress={() => setModalRemind(true)}>
                 <View style={styles.remindContainer}>
                   <Text style={styles.fieldText}>
-                    {remind && remind != "" ? remind : "Never"}
+                    {remind && remind != "" ? remind : "Không"}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -1999,12 +2030,12 @@ export default ({ navigation, taskId, selectedDate }) => {
 
           {/* Repeat */}
           <View style={styles.viewOnGroup}>
-            <Text style={styles.iconOld}>{"Repeat          "}</Text>
+            <Text style={styles.iconOld}>{"Lặp lại               "}</Text>
             <View style={styles.dateTimeContainer}>
               <TouchableOpacity onPress={() => setModalRepeat(true)}>
                 <View style={styles.remindContainer}>
                   <Text style={styles.fieldText}>
-                    {repeat && repeat != "" ? repeat : "Never"}
+                    {repeat && repeat != "" ? repeat : "Không"}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -2038,7 +2069,7 @@ export default ({ navigation, taskId, selectedDate }) => {
 
           {/* End Repeat */}
           <View style={styles.viewOnGroup}>
-            <Text style={styles.iconOld}>{"End repeat   "}</Text>
+            <Text style={styles.iconOld}>{"Ngừng lặp        "}</Text>
             <View style={styles.dateTimeContainer}>
               {repeat && (
                 <TouchableOpacity onPress={() => setCalendarEndRepeat(true)}>
@@ -2075,7 +2106,7 @@ export default ({ navigation, taskId, selectedDate }) => {
             value={note}
             fontSize={16}
             h={200}
-            placeholder="Add note"
+            placeholder="Thêm ghi chú"
             w="100%"
             maxW="400"
             style={styles.textArea}
@@ -2153,7 +2184,7 @@ const styles = StyleSheet.create({
     paddingLeft: 45,
   },
   errorDateContainer: {
-    paddingLeft: 117,
+    paddingLeft: 135,
     marginBottom: 5,
   },
   errorText: {

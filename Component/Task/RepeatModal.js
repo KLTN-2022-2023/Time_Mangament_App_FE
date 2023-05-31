@@ -18,9 +18,9 @@ export default ({ isOpen, actionFunction, closeFunction, selected }) => {
 
   // Dropdown
   const [selectedNum, setSelectedNum] = useState(1);
-  const [selectedRepeatType, setSelectedRepeatType] = useState("Days");
+  const [selectedRepeatType, setSelectedRepeatType] = useState("Ngày");
 
-  const dataTypeRepeat = ["Days", "Weeks", "Months", "Years"];
+  const dataTypeRepeat = ["Ngày", "Tuần", "Tháng", "Năm"];
   const dataNum = [
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
   ];
@@ -53,16 +53,16 @@ export default ({ isOpen, actionFunction, closeFunction, selected }) => {
   };
 
   const clickSet = () => {
-    let result = "Every " + selectedNum.toString() + " " + selectedRepeatType;
+    let result = "Mỗi " + selectedNum.toString() + " " + selectedRepeatType;
     if (selectedRepeatType === "Weeks") {
       let listDay = [];
-      if (mon) listDay.push("Mon");
-      if (tue) listDay.push("Tue");
-      if (wed) listDay.push("Wed");
-      if (thu) listDay.push("Thu");
-      if (fri) listDay.push("Fri");
-      if (sat) listDay.push("Sat");
-      if (sun) listDay.push("Sun");
+      if (mon) listDay.push("T2");
+      if (tue) listDay.push("T3");
+      if (wed) listDay.push("T4");
+      if (thu) listDay.push("T5");
+      if (fri) listDay.push("T6");
+      if (sat) listDay.push("T7");
+      if (sun) listDay.push("CN");
 
       if (listDay.length > 0) {
         listDay.forEach((x, index) =>
@@ -71,18 +71,17 @@ export default ({ isOpen, actionFunction, closeFunction, selected }) => {
       }
     }
 
-    if (result.includes("Every 1 Days")) {
+    if (result.includes("Mỗi 1 Ngày")) {
       result = CommonData.RepeatType().Daily;
-    } else if (result.includes("Every 1 Weeks")) {
-      if (result === "Every 1 Weeks") {
+    } else if (result.includes("Mỗi 1 Tuần")) {
+      if (result === "Mỗi 1 Tuần") {
         result = CommonData.RepeatType().Weekly;
       } else {
-        result =
-          CommonData.RepeatType().Weekly + result.split("Every 1 Weeks")[1];
+        result = CommonData.RepeatType().Weekly + result.split("Mỗi 1 Tuần")[1];
       }
-    } else if (result.includes("Every 1 Months")) {
+    } else if (result.includes("Mỗi 1 Tháng")) {
       result = CommonData.RepeatType().Monthly;
-    } else if (result.includes("Every 1 Years")) {
+    } else if (result.includes("Mỗi 1 Năm")) {
       result = CommonData.RepeatType().Yearly;
     }
 
@@ -101,7 +100,7 @@ export default ({ isOpen, actionFunction, closeFunction, selected }) => {
     <Modal isOpen={isOpen} onClose={closeFunction} size="lg">
       <Modal.Content maxWidth="350">
         <Modal.CloseButton />
-        <Modal.Header>Repeat</Modal.Header>
+        <Modal.Header>Lặp lại</Modal.Header>
         <Modal.Body>
           {isCustom ? (
             // Modal Custom
@@ -111,9 +110,9 @@ export default ({ isOpen, actionFunction, closeFunction, selected }) => {
                 <TouchableOpacity onPress={() => clickBack()}>
                   <Icon name="angle-left" size={25} style={styles.icon} />
                 </TouchableOpacity>
-                <Text style={styles.customHeaderText}>Repeat every ...</Text>
+                <Text style={styles.customHeaderText}>Lặp lại mỗi ...</Text>
                 <TouchableOpacity onPress={() => clickSet()}>
-                  <Text style={styles.customText}>Set</Text>
+                  <Text style={styles.customText}>Đặt</Text>
                 </TouchableOpacity>
               </View>
               {/* Input */}
@@ -165,7 +164,7 @@ export default ({ isOpen, actionFunction, closeFunction, selected }) => {
                 </View>
               </View>
               {/* Select Day */}
-              {selectedRepeatType === "Weeks" && (
+              {selectedRepeatType === "Tuần" && (
                 <View style={styles.selectDayContainer}>
                   {/* Mon */}
                   <TouchableOpacity onPress={() => setMon((prev) => !prev)}>
@@ -181,7 +180,7 @@ export default ({ isOpen, actionFunction, closeFunction, selected }) => {
                             : styles.selectDayItemText
                         }
                       >
-                        {"Mon"}
+                        {"T2"}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -199,7 +198,7 @@ export default ({ isOpen, actionFunction, closeFunction, selected }) => {
                             : styles.selectDayItemText
                         }
                       >
-                        {"Tue"}
+                        {"T3"}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -217,7 +216,7 @@ export default ({ isOpen, actionFunction, closeFunction, selected }) => {
                             : styles.selectDayItemText
                         }
                       >
-                        {"Wed"}
+                        {"T4"}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -235,7 +234,7 @@ export default ({ isOpen, actionFunction, closeFunction, selected }) => {
                             : styles.selectDayItemText
                         }
                       >
-                        {"Thu"}
+                        {"T5"}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -253,7 +252,7 @@ export default ({ isOpen, actionFunction, closeFunction, selected }) => {
                             : styles.selectDayItemText
                         }
                       >
-                        {"Fri"}
+                        {"T6"}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -271,7 +270,7 @@ export default ({ isOpen, actionFunction, closeFunction, selected }) => {
                             : styles.selectDayItemText
                         }
                       >
-                        {"Sat"}
+                        {"T7"}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -289,7 +288,7 @@ export default ({ isOpen, actionFunction, closeFunction, selected }) => {
                             : styles.selectDayItemText
                         }
                       >
-                        {"Sun"}
+                        {"CN"}
                       </Text>
                     </View>
                   </TouchableOpacity>

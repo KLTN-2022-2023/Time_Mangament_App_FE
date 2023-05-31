@@ -1,41 +1,16 @@
 import * as React from "react";
 import { Center, NativeBaseProvider } from "native-base";
-import TaskListComponent from "./TaskListComponent";
-import { FloatingAction } from "react-native-floating-action";
-import Color from "../../Style/Color";
+import StatisticDetailComponent from "./StatisticDetailComponent";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { useState, useEffect, useRef } from "react";
 
-export default ({ navigation }) => {
+export default ({ route, navigation }) => {
   // Notification
   const [expoPushToken, setExpoPushToken] = useState("");
   const [notification, setNotification] = useState(false);
   const notificationListener = useRef();
   const responseListener = useRef();
-
-  const actions = [
-    {
-      text: "Thêm công việc mới",
-      name: "Thêm công việc mới",
-      position: 2,
-      color: Color.Button().ButtonActive,
-    },
-    {
-      text: "Thêm loại mới",
-      name: "Thêm loại mới",
-      position: 1,
-      color: Color.Button().ButtonActive,
-    },
-  ];
-
-  const doAction = (name) => {
-    if (name === "Thêm công việc mới") {
-      navigation.navigate("AddTaskScreen", { taskId: null });
-    } else if (name === "Thêm loại mới") {
-      navigation.navigate("AddTypeScreen", { typeId: null });
-    }
-  };
 
   // Notification
   useEffect(() => {
@@ -99,17 +74,9 @@ export default ({ navigation }) => {
 
   return (
     <NativeBaseProvider>
-      <Center flex={1} px="3" backgroundColor={"#fff"}>
-        <TaskListComponent navigation={navigation} />
+      <Center flex={1} backgroundColor={"#fff"}>
+        <StatisticDetailComponent navigation={navigation} route={route} />
       </Center>
-      <FloatingAction
-        distanceToEdge={{ vertical: 10, horizontal: 17 }}
-        actions={actions}
-        onPressItem={(name) => {
-          doAction(name);
-        }}
-        color={Color.Button().ButtonActive}
-      />
     </NativeBaseProvider>
   );
 };

@@ -17,6 +17,9 @@ import AddTypeScreen from "./Screen/AddTypeScreen/AddTypeScreen";
 import SettingScreen from "./Screen/SettingScreen/SettingScreen";
 import StatictisScreen from "./Screen/Statictis/StatictisScreen";
 import ForgotPasswordScreen from "./Screen/ForgotPasswordScreen/ForgotPasswordScreen";
+import StatisticDetailScreen from "./Screen/StatisticDetail/StatisticDetailScreen";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect, useState, useRef } from "react";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -61,28 +64,31 @@ function HomeTab() {
       <Tab.Screen
         name="Calendar"
         component={CalendarScreen}
-        options={{ title: "Calendar" }}
+        options={{ title: "Lịch" }}
       />
       <Tab.Screen
         name="Tasks"
         component={TaskListScreen}
-        options={{ title: "Tasks List" }}
+        options={{ title: "Danh sách công việc" }}
       />
       <Tab.Screen
         name="Statistics"
         component={StatictisScreen}
-        options={{ title: "Statistics" }}
+        options={{ title: "Thống kê" }}
       />
       <Tab.Screen
         name="Settings"
         component={SettingScreen}
-        options={{ title: "Settings" }}
+        options={{ title: "Cài đặt" }}
       />
     </Tab.Navigator>
   );
 }
 
 export default function App() {
+  // read notifications after 3 minutes
+  useEffect(() => {}, []);
+
   return (
     <Provider store={Store}>
       <NavigationContainer>
@@ -94,12 +100,9 @@ export default function App() {
         >
           <Stack.Screen name="LoginScreen" component={LoginScreen} />
           <Stack.Screen name="Statictis" component={StatictisScreen} />
-          {/* <Stack.Screen name="TaskListScreen" component={TaskListScreen} /> */}
-
           <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
           <Stack.Screen name="HomeTab" component={HomeTab} />
           <Stack.Screen name="UserDetailScreen" component={UserDetailScreen} />
-          {/* <Stack.Screen name="SettingScreen" component={SettingScreen} /> */}
           <Stack.Screen
             name="ForgotPasswordScreen"
             component={ForgotPasswordScreen}
@@ -110,22 +113,12 @@ export default function App() {
           />
           <Stack.Screen name="AddTaskScreen" component={AddTaskScreen} />
           <Stack.Screen name="AddTypeScreen" component={AddTypeScreen} />
+          <Stack.Screen
+            name="StatisticDetail"
+            component={StatisticDetailScreen}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  icon: {
-    paddingLeft: 10,
-  },
-  iconContainer: {
-    flexDirection: "row",
-    justifyContent: "space-evenly",
-    width: 120,
-  },
-});

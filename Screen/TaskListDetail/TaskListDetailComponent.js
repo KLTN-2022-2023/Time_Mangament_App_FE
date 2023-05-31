@@ -30,22 +30,20 @@ export default ({ route, navigation }) => {
     data: null,
     isShow: false,
   });
-  const { showDate, typeId } = route.params;
+  const { showDate, typeId, selectedDate: dateChoose } = route.params;
   const dispatch = useDispatch();
   const allTasks = useSelector((state) => state.task.allTasks);
   const allTypes = useSelector((state) => state.type.allTypes);
   const [showWeek, setShowWeek] = useState(false);
   const [daysRange, setDaysRange] = useState([]);
-  const [selectedDay, setSelectedDay] = useState(new Date());
 
   // set default
   useEffect(() => {
-    // let days = getMonDaySunDay(new Date());
-    // setDaysRange([
-    //   convertDateTime(days.monday).split(" ")[0],
-    //   convertDateTime(days.sunday).split(" ")[0],
-    // ]);
-    setDaysRange([convertDateTime(new Date()).split(" ")[0]]);
+    if (dateChoose) {
+      setDaysRange([dateChoose.split(" ")[0]]);
+    } else {
+      setDaysRange([convertDateTime(new Date()).split(" ")[0]]);
+    }
   }, []);
 
   const getDateTitle = () => {
@@ -59,19 +57,11 @@ export default ({ route, navigation }) => {
 
     if (typeId) {
       if (typeId == CommonData.TaskType().AllTask) {
-        return "All Tasks";
-      }
-
-      if (typeId == CommonData.TaskType().InComplete) {
-        return "InComplete";
-      }
-
-      if (typeId == CommonData.TaskType().Completed) {
-        return "Completed";
+        return "Tất cả công việc";
       }
 
       if (typeId == CommonData.TaskType().Important) {
-        return "Important";
+        return "Quan trọng";
       }
 
       let foundItem = allTypes.find((x) => x._id === typeId && !x.isDeleted);
@@ -118,15 +108,7 @@ export default ({ route, navigation }) => {
   };
 
   const confirmDate = (date) => {
-    setSelectedDay(date);
-    // let days = getMonDaySunDay(date);
-    // setDaysRange([
-    //   convertDateTime(days.monday).split(" ")[0],
-    //   convertDateTime(days.sunday).split(" ")[0],
-    // ]);
-
     setDaysRange([convertDateTime(date).split(" ")[0]]);
-
     setShowWeek(false);
   };
 
@@ -208,7 +190,7 @@ export default ({ route, navigation }) => {
                   >
                     <HStack>
                       <Icon name="sort-alpha-asc" size={20} />
-                      <Text style={{ paddingLeft: 10 }}>Sort By</Text>
+                      <Text style={{ paddingLeft: 10 }}>Sắp xếp</Text>
                     </HStack>
                   </TouchableOpacity>
                 </Popover.Body>
@@ -257,7 +239,6 @@ export default ({ route, navigation }) => {
           <View style={styles.weekContainer}>
             <Button
               colorScheme={"indigo"}
-              size={8}
               onPress={() => {
                 setDiffWeek(false);
               }}
@@ -265,7 +246,7 @@ export default ({ route, navigation }) => {
               <Icon name={"caret-left"} size={20} as="Ionicons" color="white" />
             </Button>
 
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowWeek(true)}>
               <View style={styles.monthFilter}>
                 <Text style={styles.monthFilterText}>{showDaysRange()}</Text>
               </View>
@@ -273,7 +254,6 @@ export default ({ route, navigation }) => {
 
             <Button
               colorScheme={"indigo"}
-              size={8}
               onPress={() => {
                 setDiffWeek(true);
               }}
@@ -336,48 +316,50 @@ export default ({ route, navigation }) => {
         >
           <Modal.Content maxWidth="350">
             <Modal.CloseButton />
-            <Modal.Header>Sort By</Modal.Header>
+            <Modal.Header>Sắp xếp</Modal.Header>
             <Modal.Body>
               <TouchableOpacity
                 style={styles.sort}
                 onPress={() =>
                   setShowModalSort({
-                    data: { name: "Is Important", acs: true },
+                    data: { name: "Độ quan trọng", acs: true },
                     isShow: false,
                   })
                 }
               >
                 <HStack space={3}>
                   <Icon style={styles.iconModal} name="star-o" size={15} />
-                  <Text>Is Important</Text>
+                  <Text>Độ quan trọng</Text>
                 </HStack>
               </TouchableOpacity>
+
               <TouchableOpacity
                 style={styles.sort}
                 onPress={() =>
                   setShowModalSort({
-                    data: { name: "Due Date", acs: true },
+                    data: { name: "Thời gian hoàn thành", acs: true },
                     isShow: false,
                   })
                 }
               >
                 <HStack space={3}>
                   <Icon style={styles.iconModal} name="calendar" size={15} />
-                  <Text>Due Date</Text>
+                  <Text>Ngày hoàn thành</Text>
                 </HStack>
               </TouchableOpacity>
+
               <TouchableOpacity
                 style={styles.sort}
                 onPress={() =>
                   setShowModalSort({
-                    data: { name: "Alphabetically", acs: true },
+                    data: { name: "Bảng chữ cái", acs: true },
                     isShow: false,
                   })
                 }
               >
                 <HStack space={3}>
                   <Icon style={styles.iconModal} name="pencil" size={15} />
-                  <Text>Alphabetically</Text>
+                  <Text>Bảng chữ cái</Text>
                 </HStack>
               </TouchableOpacity>
             </Modal.Body>
@@ -421,14 +403,13 @@ const styles = StyleSheet.create({
   filterContainer: {
     display: "flex",
     flexDirection: "row",
-    paddingBottom: 10,
     gap: 5,
   },
   sortFilterContainer: {
     display: "flex",
-    flexDirection: "column-reverse",
-    justifyContent: "center",
-    alignItems: "flex-end",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     gap: 10,
     marginTop: 5,
     marginBottom: 5,
@@ -443,6 +424,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: "#fff",
     padding: 5,
+    paddingVertical: 10,
     borderRadius: 5,
     display: "flex",
     flexDirection: "row",

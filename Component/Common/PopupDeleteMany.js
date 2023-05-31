@@ -13,7 +13,7 @@ export default ({ isOpen, title, content, deleteTask, closeFunction }) => {
             <TouchableOpacity onPress={() => deleteTask(false)}>
               <HStack>
                 <Text fontWeight={500} color={"red.600"}>
-                  DELETE THIS TASK ONLY
+                  CHỈ XÓA CÔNG VIỆC NÀY
                 </Text>
               </HStack>
             </TouchableOpacity>
@@ -21,7 +21,7 @@ export default ({ isOpen, title, content, deleteTask, closeFunction }) => {
             <TouchableOpacity onPress={() => deleteTask(true)}>
               <HStack>
                 <Text fontWeight={500} color={"red.600"}>
-                  DELETE ALL FUTURE TASKS
+                  XÓA CẢ CÁC CÔNG VIỆC TRONG TƯƠNG LAI
                 </Text>
               </HStack>
             </TouchableOpacity>
@@ -29,7 +29,7 @@ export default ({ isOpen, title, content, deleteTask, closeFunction }) => {
             <TouchableOpacity onPress={() => closeFunction()}>
               <HStack>
                 <Text fontWeight={500} color={"gray.900"}>
-                  CANCEL
+                  HỦY
                 </Text>
               </HStack>
             </TouchableOpacity>

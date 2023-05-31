@@ -92,7 +92,7 @@ export default ({ navigation, listTasks, date, typeId, filter, daysRange }) => {
 
       if (filter) {
         // Is Important
-        if (filter.name == "Is Important") {
+        if (filter.name == "Độ quan trọng") {
           if (filter.asc) {
             dataFilterCon = dataFilter.sort((x, y) =>
               x.isImportant === y.isImportant ? 0 : y.isImportant ? -1 : 1
@@ -110,7 +110,7 @@ export default ({ navigation, listTasks, date, typeId, filter, daysRange }) => {
           }
         }
         // Due Date
-        else if (filter.name == "Due Date") {
+        else if (filter.name == "Thời gian hoàn thành") {
           if (filter.asc) {
             dataFilterCon = dataFilter.sort((x, y) =>
               compareString(x.dueTime, y.dueTime)
@@ -128,7 +128,7 @@ export default ({ navigation, listTasks, date, typeId, filter, daysRange }) => {
           }
         }
         // Alphabetically
-        else if (filter.name == "Alphabetically") {
+        else if (filter.name == "Bảng chữ cái") {
           if (filter.asc) {
             dataFilterCon = dataFilter.sort((x, y) =>
               compareString(x.name.toUpperCase(), y.name.toUpperCase())
@@ -142,24 +142,6 @@ export default ({ navigation, listTasks, date, typeId, filter, daysRange }) => {
             );
             dataImportantFilterCon = dataImportantFilter.sort((x, y) =>
               compareString(y.name.toUpperCase(), x.name.toUpperCase())
-            );
-          }
-        }
-        // Created Date
-        else if (filter.name == "Created Date") {
-          if (filter.asc) {
-            dataFilterCon = dataFilter.sort((x, y) =>
-              compareString(x.createdDate, y.createdDate)
-            );
-            dataImportantFilterCon = dataImportantFilter.sort((x, y) =>
-              compareString(x.createdDate, y.createdDate)
-            );
-          } else {
-            dataFilterCon = dataFilter.sort((x, y) =>
-              compareString(y.createdDate, x.createdDate)
-            );
-            dataImportantFilterCon = dataImportantFilter.sort((x, y) =>
-              compareString(y.createdDate, x.createdDate)
             );
           }
         }
@@ -206,17 +188,17 @@ export default ({ navigation, listTasks, date, typeId, filter, daysRange }) => {
     if (typeId === CommonData.TaskType().Completed) {
       return [
         {
-          title: "Completed",
+          title: "Hoàn thành",
           data: [...tasksImportant],
         },
-        { title: "Incomplete", data: [...tasks] },
+        { title: "Chưa hoàn thành", data: [...tasks] },
       ];
     }
 
     return [
-      { title: "Incomplete", data: [...tasks] },
+      { title: "Hoàn thành", data: [...tasks] },
       {
-        title: "Completed",
+        title: "Chưa hoàn thành",
         data: [...tasksImportant],
       },
     ];

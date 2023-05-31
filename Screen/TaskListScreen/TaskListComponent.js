@@ -1,7 +1,7 @@
 import { Box, Center, Button, Input, Icon, Text, View } from "native-base";
 import IconAw from "react-native-vector-icons/FontAwesome";
 import { useState, useEffect } from "react";
-import { TextInput, StyleSheet, TouchableOpacity } from "react-native";
+import { StyleSheet, TouchableOpacity } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import TaskTypeItem from "./TaskTypeItem";
 import CommonData from "../../CommonData/CommonData";
@@ -13,11 +13,7 @@ import jwt_decode from "jwt-decode";
 import { useSelector, useDispatch } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import NoData from "../../Component/Common/NoData";
-import {
-  convertDateTime,
-  getMonDaySunDay,
-  formatDateUI,
-} from "../../helper/Helper";
+import { convertDateTime, formatDateUI } from "../../helper/Helper";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 export default ({ navigation }) => {
@@ -28,7 +24,7 @@ export default ({ navigation }) => {
   const [keySearch, setKeySearch] = useState("");
   const [showWeek, setShowWeek] = useState(false);
   const [daysRange, setDaysRange] = useState([]);
-  const [selectedDay, setSelectedDay] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   // Load Data
   useEffect(() => {
@@ -38,11 +34,6 @@ export default ({ navigation }) => {
 
   // set default
   useEffect(() => {
-    // let days = getMonDaySunDay(new Date());
-    // setDaysRange([
-    //   convertDateTime(days.monday).split(" ")[0],
-    //   convertDateTime(days.sunday).split(" ")[0],
-    // ]);
     setDaysRange([convertDateTime(new Date()).split(" ")[0]]);
   }, []);
 
@@ -171,41 +162,13 @@ export default ({ navigation }) => {
   };
 
   const confirmDate = (date) => {
-    setSelectedDay(date);
-    // let days = getMonDaySunDay(date);
-    // setDaysRange([
-    //   convertDateTime(days.monday).split(" ")[0],
-    //   convertDateTime(days.sunday).split(" ")[0],
-    // ]);
-
+    setSelectedDate(date);
     setDaysRange([convertDateTime(date).split(" ")[0]]);
-
     setShowWeek(false);
   };
 
   const setDiffWeek = (next) => {
     if (daysRange.length > 0) {
-      // let mon = new Date(daysRange[0]);
-      // let sun = new Date(daysRange[1]);
-      // let monday = "";
-      // let sunday = "";
-      // if (next) {
-      //   monday = convertDateTime(
-      //     new Date(mon.setDate(mon.getDate() + 7))
-      //   ).split(" ")[0];
-      //   sunday = convertDateTime(
-      //     new Date(sun.setDate(sun.getDate() + 7))
-      //   ).split(" ")[0];
-      // } else {
-      //   monday = convertDateTime(
-      //     new Date(mon.setDate(mon.getDate() - 7))
-      //   ).split(" ")[0];
-      //   sunday = convertDateTime(
-      //     new Date(sun.setDate(sun.getDate() - 7))
-      //   ).split(" ")[0];
-      // }
-
-      // setDaysRange([monday, sunday]);
       let select = new Date(daysRange[0]);
       let day = "";
 
@@ -220,6 +183,7 @@ export default ({ navigation }) => {
       }
 
       setDaysRange([day]);
+      setSelectedDate(day);
     }
   };
 
@@ -231,7 +195,7 @@ export default ({ navigation }) => {
           onChange={(v) => {
             setKeySearch(v.nativeEvent.text);
           }}
-          placeholder="Search"
+          placeholder="Tìm kiếm"
           width="100%"
           borderRadius="4"
           py="2"
@@ -303,23 +267,25 @@ export default ({ navigation }) => {
           <View>
             <TaskTypeItem
               type={CommonData.TaskType().Completed}
-              name={"All Tasks"}
+              name={"Tất cả công việc"}
               quantity={showQty(CommonData.TaskType().AllTask)}
               actionFunc={() => {
                 navigation.navigate("TaskListDetail", {
                   showDate: null,
                   typeId: CommonData.TaskType().AllTask,
+                  selectedDate: convertDateTime(selectedDate),
                 });
               }}
             ></TaskTypeItem>
             <TaskTypeItem
               type={CommonData.TaskType().Important}
-              name={"Important"}
+              name={"Quan trọng"}
               quantity={showQty(CommonData.TaskType().Important)}
               actionFunc={() => {
                 navigation.navigate("TaskListDetail", {
                   showDate: null,
                   typeId: CommonData.TaskType().Important,
+                  selectedDate: convertDateTime(selectedDate),
                 });
               }}
             ></TaskTypeItem>
@@ -335,13 +301,17 @@ export default ({ navigation }) => {
                   fontWeight: 500,
                 }}
               >
-                Types
+                Loại công việc
               </Text>
             </View>
 
             {/* List */}
             {items && items.length > 0 ? (
-              <TaskTypeItemList items={items} navigation={navigation} />
+              <TaskTypeItemList
+                items={items}
+                navigation={navigation}
+                selectedDate={selectedDate}
+              />
             ) : (
               <NoData></NoData>
             )}
