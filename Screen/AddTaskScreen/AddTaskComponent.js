@@ -21,7 +21,6 @@ import {
   CreateTask,
   DeleteTask,
   UpdateTask,
-  Upload,
   CreateRepeat,
   CreateRepeatAfterUpdate,
 } from "../../Reducers/TaskReducer";
@@ -514,6 +513,7 @@ export default ({ navigation, taskId, selectedDate, isView }) => {
             let isError = false;
             for (const id of list) {
               const response = await DeleteTask(id, token);
+              await DeleteNotification(id, token);
               if (!response) {
                 isError = true;
                 break;
@@ -530,6 +530,7 @@ export default ({ navigation, taskId, selectedDate, isView }) => {
           }
         } else {
           const response = await DeleteTask(taskId, token);
+          await DeleteNotification(taskId, token);
           if (response) {
             // Clear Remind
             await schedulePushNotification(null, null, null, "delete", null);
@@ -811,6 +812,7 @@ export default ({ navigation, taskId, selectedDate, isView }) => {
                 (x) => x._id !== dataBackup._id
               )) {
                 const response = await DeleteTask(id._id, token);
+                await DeleteNotification(id._id, token);
                 if (!response) {
                   isError = true;
                   break;
@@ -864,6 +866,7 @@ export default ({ navigation, taskId, selectedDate, isView }) => {
           let isError = false;
           for (const id of list) {
             const response = await DeleteTask(id._id, token);
+            await DeleteNotification(id._id, token);
             if (!response) {
               isError = true;
               break;
