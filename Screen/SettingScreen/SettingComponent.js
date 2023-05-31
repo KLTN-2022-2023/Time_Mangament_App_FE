@@ -10,12 +10,14 @@ import {
 } from "native-base";
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet } from "react-native";
-import IconICon from "react-native-vector-icons/Ionicons";
 import IconEntypo from "react-native-vector-icons/Entypo";
 import { useSelector, useDispatch } from "react-redux";
 import jwt_decode from "jwt-decode";
 import { getUserById } from "../../Reducers/UserReducer";
 import { SetNotificationTriggerList } from "../../Reducers/NotificationTriggerReducer";
+import { getTaskList } from "../../Reducers/TaskReducer";
+import { getTypeList } from "../../Reducers/TypeReducer";
+import { getUser } from "../../Reducers/UserReducer";
 
 // Notification
 import * as Device from "expo-device";
@@ -56,10 +58,6 @@ const SettingComponent = ({ route, navigation }) => {
   useEffect(() => {
     HandleGetInfoUser();
   }, []);
-
-  useEffect(() => {
-    console.log(user);
-  }, [user]);
 
   // Notification
   useEffect(() => {
@@ -125,28 +123,11 @@ const SettingComponent = ({ route, navigation }) => {
     await AsyncStorage.removeItem("Token");
     await cancelNotification();
     dispatch(SetNotificationTriggerList([]));
+    dispatch(getTaskList([]));
+    dispatch(getTypeList([]));
+    dispatch(getUser({ _id: null, name: null }));
     navigation.navigate("LoginScreen");
   };
-
-  const style = StyleSheet.create({
-    padding: {
-      paddingBottom: 20,
-      paddingTop: 20,
-    },
-    shadow: {
-      borderBottomColor: "black",
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      shadowColor: "#000000",
-      borderColor: "#000000",
-      shadowOpacity: 1.0,
-      shadowRadius: 0,
-      shadowOffset: {
-        height: 3,
-        width: 5,
-      },
-      elevation: 2,
-    },
-  });
 
   return (
     <NativeBaseProvider>
@@ -205,4 +186,5 @@ const SettingComponent = ({ route, navigation }) => {
     </NativeBaseProvider>
   );
 };
+
 export default SettingComponent;

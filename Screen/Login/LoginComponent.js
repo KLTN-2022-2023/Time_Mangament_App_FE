@@ -36,7 +36,6 @@ export default ({ navigation }) => {
             navigation.navigate("HomeTab");
           }
         } else {
-          console.log("abc");
         }
       } else {
         setValidatePassword(true);

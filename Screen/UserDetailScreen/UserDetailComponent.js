@@ -56,7 +56,6 @@ export default ({ navigation }) => {
       const decoded = jwt_decode(token);
       const userId = decoded._id;
       const response = await UpdateProfile({ userId, name, phone }, token);
-      console.log(response);
       setSnackBar(true);
     } catch (err) {}
   };
