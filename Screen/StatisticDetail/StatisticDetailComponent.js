@@ -5,28 +5,74 @@ import IconICon from "react-native-vector-icons/Ionicons";
 import React from "react";
 import Color from "../../Style/Color";
 import { useSelector, useDispatch } from "react-redux";
-import CommonData from "../../CommonData/CommonData";
 import { convertDateTime, formatDateUI } from "../../helper/Helper";
 import TaskView from "./TaskView";
 import NoData from "../../Component/Common/NoData";
+import TypeModal from "../../Component/Task/TypeModal";
 
 export default ({ route, navigation }) => {
-  const { year, month } = route.params;
+  const { year, month, type } = route.params;
   const dispatch = useDispatch();
   const allTasks = useSelector((state) => state.task.allTasks);
   const allTypes = useSelector((state) => state.type.allTypes);
 
   const [tasks, setTasks] = useState([]);
+  const [taskType, setTaskType] = useState();
+  const [modalType, setModalType] = useState(false);
 
   useEffect(() => {
-    let tasksFilter = allTasks.filter(
-      (x) => convertDateTime(x.startTime).split(" ")[0].split("-")[1] === "05"
-    );
-    setTasks(tasksFilter);
+    if (month && year) {
+      let tasksFilter = [];
+      if (type && allTypes && allTypes.length > 0) {
+        setTaskType(allTypes[0]);
+
+        tasksFilter = allTasks.filter(
+          (x) =>
+            convertDateTime(x.startTime).split(" ")[0].split("-")[1] ===
+              month &&
+            convertDateTime(x.startTime).split(" ")[0].split("-")[0] === year &&
+            x.typeId === allTypes[0]._id
+        );
+      } else {
+        tasksFilter = allTasks.filter(
+          (x) =>
+            convertDateTime(x.startTime).split(" ")[0].split("-")[1] ===
+              month &&
+            convertDateTime(x.startTime).split(" ")[0].split("-")[0] === year
+        );
+      }
+      setTasks(tasksFilter);
+    }
   }, []);
+
+  useEffect(() => {
+    if (month && year && type) {
+      let tasksFilter = [];
+      if (taskType) {
+        tasksFilter = allTasks.filter(
+          (x) =>
+            convertDateTime(x.startTime).split(" ")[0].split("-")[1] ===
+              month &&
+            convertDateTime(x.startTime).split(" ")[0].split("-")[0] === year &&
+            x.typeId === taskType._id
+        );
+      }
+      setTasks(tasksFilter);
+    }
+  }, [taskType]);
 
   const onlyUnique = (value, index, array) => {
     return array.indexOf(value) === index;
+  };
+
+  // Modal Type
+  const handleCloseType = () => {
+    setModalType(false);
+  };
+
+  const handleChooseType = (value) => {
+    setTaskType(value);
+    setModalType(false);
   };
 
   const getSection = () => {
@@ -57,7 +103,48 @@ export default ({ route, navigation }) => {
         </View>
 
         {/* Title */}
-        <Text style={styles.title}>{"Tháng 5, 2023"}</Text>
+        <Text style={styles.title}>{"Tháng " + month + ", " + year}</Text>
+
+        {type && allTypes && allTypes.length > 0 && (
+          <View
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "flex-end",
+            }}
+          >
+            <TouchableOpacity
+              onPress={() => {
+                setModalType(true);
+              }}
+            >
+              <View
+                style={{
+                  padding: 10,
+                  borderColor: Color.Button().ButtonActive,
+                  borderWidth: 1,
+                  borderRadius: 5,
+                  minWidth: 80,
+                }}
+              >
+                <Text
+                  style={{
+                    textAlign: "center",
+                    color: Color.Button().ButtonActive,
+                  }}
+                >
+                  {taskType && taskType.name}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
+        <TypeModal
+          isOpen={modalType}
+          closeFunction={handleCloseType}
+          actionFunction={handleChooseType}
+          selected={taskType}
+        />
 
         {/* Task */}
         {tasks && tasks.length > 0 ? (

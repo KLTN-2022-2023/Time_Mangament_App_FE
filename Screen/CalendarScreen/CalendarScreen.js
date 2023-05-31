@@ -13,23 +13,19 @@ import jwt_decode from "jwt-decode";
 import { useSelector, useDispatch } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { convertDateTime, convertMonthYear } from "../../helper/Helper";
-import * as Device from "expo-device";
-import * as Notifications from "expo-notifications";
 import Color from "../../Style/Color";
 import { Calendar } from "react-native-big-calendar";
 import CommonData from "../../CommonData/CommonData";
 import "dayjs/locale/vi";
+import MainLayout from "../../Layout/MainLayout";
 
 export default ({ route, navigation }) => {
-  // Notification
-  const [expoPushToken, setExpoPushToken] = useState("");
-  const [notification, setNotification] = useState(false);
-  const notificationListener = useRef();
-  const responseListener = useRef();
-
   const dispatch = useDispatch();
   const allTasks = useSelector((state) => state.task.allTasks);
   const allTypes = useSelector((state) => state.type.allTypes);
+  const allTriggers = useSelector(
+    (state) => state.notificationTrigger.allTriggers
+  );
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [dateRange, setDateRange] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -85,66 +81,6 @@ export default ({ route, navigation }) => {
     handleSetDataCalendar();
   }, [route?.params]);
 
-  // Notification
-  useEffect(() => {
-    registerForPushNotificationsAsync().then((token) =>
-      setExpoPushToken(token)
-    );
-
-    notificationListener.current =
-      Notifications.addNotificationReceivedListener((notification) => {
-        setNotification(notification);
-      });
-
-    responseListener.current =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        let d = response.notification.request.content.data;
-        console.log("Received", d);
-        if (d && d.id) {
-          navigation.navigate("AddTaskScreen", { taskId: d.id });
-        }
-      });
-
-    return () => {
-      Notifications.removeNotificationSubscription(
-        notificationListener.current
-      );
-      Notifications.removeNotificationSubscription(responseListener.current);
-    };
-  }, []);
-
-  async function registerForPushNotificationsAsync() {
-    let token;
-
-    if (Platform.OS === "android") {
-      await Notifications.setNotificationChannelAsync("default", {
-        name: "default",
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: "#FF231F7C",
-      });
-    }
-
-    if (Device.isDevice) {
-      const { status: existingStatus } =
-        await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-      if (existingStatus !== "granted") {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-      if (finalStatus !== "granted") {
-        alert("Failed to get push token for push notification!");
-        return;
-      }
-      token = (await Notifications.getExpoPushTokenAsync()).data;
-    } else {
-      alert("Must use physical device for Push Notifications");
-    }
-
-    return token;
-  }
-
   const handleGetAllTasks = async () => {
     const token = await AsyncStorage.getItem("Token");
     if (token) {
@@ -185,6 +121,7 @@ export default ({ route, navigation }) => {
 
   return (
     <SafeAreaView style={styles.safe}>
+      <MainLayout navigation={navigation} />
       <Spinner visible={refreshing}></Spinner>
 
       {/* Header */}

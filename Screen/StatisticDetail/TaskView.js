@@ -74,7 +74,11 @@ export default ({ navigation, item }) => {
   };
 
   return (
-    <TouchableOpacity>
+    <TouchableOpacity
+      onPress={() =>
+        navigation.navigate("AddTaskScreen", { taskId: item._id, isView: true })
+      }
+    >
       <HStack style={styles.root}>
         <HStack>
           {isDone ? (
