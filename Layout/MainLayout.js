@@ -11,7 +11,6 @@ import jwt_decode from "jwt-decode";
 import { convertDateTime } from "../helper/Helper";
 import * as BackgroundFetch from "expo-background-fetch";
 import * as TaskManager from "expo-task-manager";
-import { async } from "q";
 
 const BACKGROUND_FETCH_TASK = "background-fetch";
 
@@ -39,9 +38,9 @@ export default function MainLayout({ navigation, triggers }) {
   // Note: This does NOT need to be in the global scope and CAN be used in your React components!
   async function registerBackgroundFetchAsync() {
     return BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
-      minimumInterval: 30, // 30s
-      // stopOnTerminate: false, // android only,
-      // startOnBoot: true, // android only
+      minimumInterval: 60, // 1 min
+      stopOnTerminate: false, // android only,
+      startOnBoot: true, // android only
     });
   }
 
@@ -90,7 +89,7 @@ export default function MainLayout({ navigation, triggers }) {
     };
   }, []);
 
-  // read notifications after 1 minutes foreground
+  // read notifications after 1 minute foreground
   useEffect(() => {
     const interval = setInterval(async () => {
       console.log("Job Foreground: " + new Date().toString());
@@ -99,8 +98,9 @@ export default function MainLayout({ navigation, triggers }) {
     return () => clearInterval(interval);
   }, []);
 
-  // read notifications after 1 minutes background
+  // read notifications after 1 minute background
   useEffect(() => {
+    console.log(isRegistered);
     if (!isRegistered) {
       registerBackgroundFetchAsync();
       checkStatusAsync();

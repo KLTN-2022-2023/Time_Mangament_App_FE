@@ -28,7 +28,7 @@ export default ({ isOpen, actionFunction, closeFunction, selected }) => {
   useEffect(() => {
     if (selected && selected.includes(":")) {
       setIsCustom(true);
-    } else if (selected && selected.includes("Every ")) {
+    } else if (selected && selected.includes("Mỗi ")) {
       setIsCustom(true);
     } else {
       setIsCustom(false);
@@ -39,7 +39,7 @@ export default ({ isOpen, actionFunction, closeFunction, selected }) => {
       setFri(false);
       setSat(false);
       setSun(false);
-      setSelectedRepeatType("Days");
+      setSelectedRepeatType("Ngày");
       setSelectedNum(1);
     }
   }, [selected, isOpen]);
@@ -54,7 +54,7 @@ export default ({ isOpen, actionFunction, closeFunction, selected }) => {
 
   const clickSet = () => {
     let result = "Mỗi " + selectedNum.toString() + " " + selectedRepeatType;
-    if (selectedRepeatType === "Weeks") {
+    if (selectedRepeatType === "Tuần") {
       let listDay = [];
       if (mon) listDay.push("T2");
       if (tue) listDay.push("T3");
