@@ -18,11 +18,11 @@ import { Calendar } from "react-native-big-calendar";
 import CommonData from "../../CommonData/CommonData";
 import "dayjs/locale/vi";
 import MainLayout from "../../Layout/MainLayout";
+import { SetNotificationTriggerList } from "../../Reducers/NotificationTriggerReducer";
 
 export default ({ route, navigation }) => {
   const dispatch = useDispatch();
   const allTasks = useSelector((state) => state.task.allTasks);
-  const allTypes = useSelector((state) => state.type.allTypes);
   const allTriggers = useSelector(
     (state) => state.notificationTrigger.allTriggers
   );
@@ -43,18 +43,6 @@ export default ({ route, navigation }) => {
     handleSetDataCalendar();
     handleGetAllTypes();
   }, [allTasks]);
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    console.log("refresh");
-
-    handleGetAllTypes();
-    handleGetAllTasks();
-    handleSetDataCalendar();
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 4000);
-  };
 
   const handleGetAllTypes = async () => {
     const token = await AsyncStorage.getItem("Token");
@@ -122,7 +110,7 @@ export default ({ route, navigation }) => {
   return (
     <SafeAreaView style={styles.safe}>
       <MainLayout navigation={navigation} />
-      <Spinner visible={refreshing}></Spinner>
+      <Spinner overlayColor="red" visible={refreshing}></Spinner>
 
       {/* Header */}
       <View style={styles.header}>

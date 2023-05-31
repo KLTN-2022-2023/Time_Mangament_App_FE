@@ -27,7 +27,7 @@ export default function MainLayout({ navigation, triggers }) {
   // Note: This needs to be called in the global scope (e.g outside of your React components)
   TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
     console.log("Job Background: " + new Date().toString());
-    await resendNotification();
+    // await resendNotification();
 
     // Be sure to return the successful result type!
     return BackgroundFetch.BackgroundFetchResult.NewData;
@@ -38,7 +38,7 @@ export default function MainLayout({ navigation, triggers }) {
   // Note: This does NOT need to be in the global scope and CAN be used in your React components!
   async function registerBackgroundFetchAsync() {
     return BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
-      minimumInterval: 60 * 15, // 1 min
+      minimumInterval: 60 * 1, // 1 min
       stopOnTerminate: false, // android only,
       startOnBoot: true, // android only
     });
