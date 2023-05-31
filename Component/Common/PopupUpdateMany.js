@@ -13,7 +13,7 @@ export default ({ isOpen, title, content, updateTask, closeFunction }) => {
             <TouchableOpacity onPress={() => updateTask(false)}>
               <HStack>
                 <Text fontWeight={500} color={"red.600"}>
-                  UPDATE THIS TASK ONLY
+                  CHỈ CẬP NHẬT CÔNG VIỆC NÀY
                 </Text>
               </HStack>
             </TouchableOpacity>
@@ -21,7 +21,7 @@ export default ({ isOpen, title, content, updateTask, closeFunction }) => {
             <TouchableOpacity onPress={() => updateTask(true)}>
               <HStack>
                 <Text fontWeight={500} color={"red.600"}>
-                  UPDATE ALL FUTURE TASKS
+                  CẬP NHẬT CẢ CÔNG VIỆC TRONG TƯƠNG LAI
                 </Text>
               </HStack>
             </TouchableOpacity>
@@ -29,7 +29,7 @@ export default ({ isOpen, title, content, updateTask, closeFunction }) => {
             <TouchableOpacity onPress={() => closeFunction()}>
               <HStack>
                 <Text fontWeight={500} color={"gray.900"}>
-                  CANCEL
+                  HỦY
                 </Text>
               </HStack>
             </TouchableOpacity>

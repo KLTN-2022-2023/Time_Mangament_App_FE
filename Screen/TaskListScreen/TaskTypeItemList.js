@@ -20,8 +20,9 @@ import {
 import { getListAllTasksByUserId } from "../../Reducers/TaskReducer";
 import Spinner from "react-native-loading-spinner-overlay";
 import PopupComponent from "../../Component/Common/PopupComponent";
+import { convertDateTime } from "../../helper/Helper";
 
-export default ({ items, navigation }) => {
+export default ({ items, navigation, selectedDate }) => {
   const allTypes = useSelector((state) => state.type.allTypes);
   const allTasks = useSelector((state) => state.task.allTasks);
   const dispatch = useDispatch();
@@ -132,8 +133,8 @@ export default ({ items, navigation }) => {
         <Spinner visible={isLoading}></Spinner>
 
         <PopupComponent
-          title={"Delete"}
-          content={"Do you want to delete this type?"}
+          title={"Xóa"}
+          content={"Bạn có muốn xóa loại công việc này không"}
           closeFunction={closeModal}
           isOpen={open}
           actionFunction={deleteType.bind(this, item._id)}
@@ -156,6 +157,7 @@ export default ({ items, navigation }) => {
               navigation.navigate("TaskListDetail", {
                 showDate: null,
                 typeId: item._id,
+                selectedDate: convertDateTime(selectedDate),
               });
             }}
           ></TaskTypeItem>

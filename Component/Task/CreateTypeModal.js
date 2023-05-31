@@ -21,7 +21,7 @@ export default ({ isOpen, actionFunction, closeFunction }) => {
   const [description, setDescription] = useState("");
   const [errorNameLength, setErrorNameLength] = useState(false);
   const [errorNameDup, setErrorNameDup] = useState(false);
-  const [errorNameSpecial, setErrorNameSpecial] = useState(false);
+  // const [errorNameSpecial, setErrorNameSpecial] = useState(false);
   const [errorNameRequired, setErrorNameRequired] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -31,7 +31,7 @@ export default ({ isOpen, actionFunction, closeFunction }) => {
       setDescription("");
       setErrorNameLength(false);
       setErrorNameDup(false);
-      setErrorNameSpecial(false);
+      // setErrorNameSpecial(false);
       setErrorNameRequired(false);
       setData(null);
     }
@@ -39,7 +39,8 @@ export default ({ isOpen, actionFunction, closeFunction }) => {
 
   const isInvalidName = () => {
     return (
-      errorNameDup || errorNameLength || errorNameRequired || errorNameSpecial
+      // errorNameDup || errorNameLength || errorNameRequired || errorNameSpecial
+      errorNameDup || errorNameLength || errorNameRequired
     );
   };
 
@@ -71,9 +72,9 @@ export default ({ isOpen, actionFunction, closeFunction }) => {
       return CommonData.ErrorTypeName().Duplicated;
     }
 
-    if (errorNameSpecial) {
-      return CommonData.ErrorTypeName().SpecialCharacter;
-    }
+    // if (errorNameSpecial) {
+    //   return CommonData.ErrorTypeName().SpecialCharacter;
+    // }
 
     return "";
   };
@@ -94,13 +95,13 @@ export default ({ isOpen, actionFunction, closeFunction }) => {
       } else {
         setErrorNameLength(false);
       }
-      // Check Special Character
-      if (/[^a-zA-Z0-9 ]/.test(name)) {
-        setErrorNameSpecial(true);
-        result = true;
-      } else {
-        setErrorNameSpecial(false);
-      }
+      // // Check Special Character
+      // if (/[^a-zA-Z0-9 ]/.test(name)) {
+      //   setErrorNameSpecial(true);
+      //   result = true;
+      // } else {
+      //   setErrorNameSpecial(false);
+      // }
       // Check duplicate type
       let list = [];
       list = allTypes.filter((x) => !x.isDeleted && x.name === name);
@@ -153,7 +154,7 @@ export default ({ isOpen, actionFunction, closeFunction }) => {
     <Modal isOpen={isOpen} onClose={() => closeFunction()} size="lg">
       <Modal.Content maxWidth="350">
         <Modal.CloseButton />
-        <Modal.Header>Create type</Modal.Header>
+        <Modal.Header>Tạo loại công việc</Modal.Header>
         <Modal.Body>
           <Spinner visible={isLoading}></Spinner>
 
@@ -178,21 +179,21 @@ export default ({ isOpen, actionFunction, closeFunction }) => {
               </TouchableOpacity>
             </View>
             {/* Body */}
-            <Text style={styles.label}>Name</Text>
+            <Text style={styles.label}>Tên loại công việc</Text>
             <Input
               variant="outline"
               p={2}
-              placeholder="Type Name"
+              placeholder="Tên loại công việc"
               fontSize={16}
               value={name}
               onChange={(v) => onChangeName(v.nativeEvent.text)}
             />
             <Text style={styles.error}>{showMessageErrorName()}</Text>
-            <Text style={styles.label}>Description</Text>
+            <Text style={styles.label}>Mô tả</Text>
             <Input
               variant="outline"
               p={2}
-              placeholder="Type Description"
+              placeholder="Mô tả"
               fontSize={16}
               value={description}
               onChange={(v) => setDescription(v.nativeEvent.text)}

@@ -68,7 +68,7 @@ export default ({ isOpen, actionFunction, closeFunction, selected }) => {
     <Modal isOpen={isOpen} onClose={() => closeFunction()} size="lg">
       <Modal.Content maxWidth="400">
         <Modal.CloseButton />
-        <Modal.Header>Remind</Modal.Header>
+        <Modal.Header>Nhắc nhở</Modal.Header>
         <Modal.Body>
           {isCustom ? ( // Modal Custom
             <View style={styles.customModal}>
@@ -77,9 +77,9 @@ export default ({ isOpen, actionFunction, closeFunction, selected }) => {
                 <TouchableOpacity onPress={() => clickBack()}>
                   <Icon name="angle-left" size={25} style={styles.icon} />
                 </TouchableOpacity>
-                <Text style={styles.customHeaderText}>Remind...</Text>
+                <Text style={styles.customHeaderText}>Nhắc nhở vào...</Text>
                 <TouchableOpacity onPress={() => clickSet()}>
-                  <Text style={styles.customText}>Save</Text>
+                  <Text style={styles.customText}>Đặt</Text>
                 </TouchableOpacity>
               </View>
               {/* Input */}
@@ -175,7 +175,7 @@ export default ({ isOpen, actionFunction, closeFunction, selected }) => {
                   <Text
                     style={isSelected(null) ? styles.textSelected : styles.text}
                   >
-                    Never
+                    Không
                   </Text>
                 </HStack>
               </TouchableOpacity>

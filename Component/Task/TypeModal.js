@@ -17,7 +17,7 @@ export default ({ isOpen, actionFunction, closeFunction, selected }) => {
     <Modal isOpen={isOpen} onClose={() => closeFunction()} size="lg">
       <Modal.Content maxWidth="400">
         <Modal.CloseButton />
-        <Modal.Header>Type</Modal.Header>
+        <Modal.Header>Loại</Modal.Header>
         <Modal.Body>
           {allTypes.map(
             (x) =>

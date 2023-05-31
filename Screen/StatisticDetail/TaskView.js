@@ -1,37 +1,18 @@
-import {
-  ArrowForwardIcon,
-  Checkbox,
-  HStack,
-  Text,
-  VStack,
-  View,
-} from "native-base";
+import { Checkbox, HStack, Text, VStack, View } from "native-base";
 import React, { useEffect, useState } from "react";
 import { StyleSheet, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
-import { format } from "date-fns";
 import CommonData from "../../CommonData/CommonData";
 import Color from "../../Style/Color";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useSelector, useDispatch } from "react-redux";
-import {
-  getListAllTasksByUserId,
-  markImportant,
-  updateStatus,
-} from "../../Reducers/TaskReducer";
-import jwt_decode from "jwt-decode";
 import { convertDateTime, formatDateTask } from "../../helper/Helper";
-import PopupComponent from "../Common/PopupComponent";
 
 export default ({ navigation, item }) => {
-  const dispatch = useDispatch();
   const [isImportant, setIsImportant] = useState(
     item && item.isImportant ? true : false
   );
   const [isDone, setIsDone] = useState(
     item && item.status === CommonData.TaskStatus().Done ? true : false
   );
-  const [isShow, setIsShow] = useState(false);
 
   useEffect(() => {
     setIsImportant(item && item.isImportant ? true : false);
@@ -39,53 +20,6 @@ export default ({ navigation, item }) => {
       item && item.status === CommonData.TaskStatus().Done ? true : false
     );
   }, [item]);
-
-  const handlePressStar = async () => {
-    setIsImportant((prevState) => !prevState);
-    await handleMarkImportant();
-  };
-
-  const handlePressCheck = async () => {
-    setIsDone((prevState) => !prevState);
-    setIsShow(false);
-    await handleUpdateStatus();
-  };
-
-  const handleMarkImportant = async () => {
-    try {
-      const token = await AsyncStorage.getItem("Token");
-      if (token && item && item._id) {
-        let response = await markImportant(item._id, token);
-        if (response) {
-          await handleGetAllTasks();
-        }
-      }
-    } catch (err) {
-      console.log(err.message);
-    }
-  };
-
-  const handleUpdateStatus = async () => {
-    try {
-      const token = await AsyncStorage.getItem("Token");
-      if (token && item && item._id) {
-        let response = await updateStatus(item._id, token);
-        if (response) {
-          await handleGetAllTasks();
-        }
-      }
-    } catch (err) {
-      console.log(err.message);
-    }
-  };
-
-  const handleGetAllTasks = async () => {
-    const token = await AsyncStorage.getItem("Token");
-    if (token) {
-      const decoded = jwt_decode(token);
-      dispatch(getListAllTasksByUserId({ userId: decoded._id }, token));
-    }
-  };
 
   const showItemName = () => {
     if (item) {
@@ -139,47 +73,15 @@ export default ({ navigation, item }) => {
     return "";
   };
 
-  const closePopup = () => {
-    setIsShow(false);
-  };
-
-  const openPopup = async () => {
-    let startString = convertDateTime(item.startTime);
-    let dateNowString = convertDateTime(new Date());
-
-    if (!isDone && startString > dateNowString) {
-      setIsShow(true);
-    } else {
-      await handlePressCheck();
-    }
-  };
-
   return (
-    <TouchableOpacity
-      onPress={() => navigation.navigate("AddTaskScreen", { taskId: item._id })}
-    >
-      <PopupComponent
-        title={"Cảnh báo"}
-        content={
-          "Công việc này vẫn chưa tới thời gian bắt đầu, bạn có chắc muốn hoàn thành nó?"
-        }
-        update={true}
-        isOpen={isShow}
-        actionFunction={handlePressCheck}
-        closeFunction={closePopup}
-      />
-
+    <TouchableOpacity>
       <HStack style={styles.root}>
         <HStack>
-          <Checkbox
-            style={styles.checkbox}
-            colorScheme="indigo"
-            borderRadius={20}
-            size="lg"
-            isChecked={isDone}
-            accessibilityLabel="Tap me!"
-            onChange={openPopup}
-          ></Checkbox>
+          {isDone ? (
+            <Icon name="check" size={30} style={styles.iconStarCheck} />
+          ) : (
+            <View style={{ marginRight: 30 }}></View>
+          )}
           <VStack paddingLeft={3}>
             <Text
               style={isDone ? styles.nameTaskDone : styles.nameTask}
@@ -209,19 +111,9 @@ export default ({ navigation, item }) => {
           </VStack>
         </HStack>
         {isImportant ? (
-          <Icon
-            name="star"
-            size={30}
-            style={styles.iconStarCheck}
-            onPress={handlePressStar}
-          />
+          <Icon name="star" size={30} style={styles.iconStarCheck} />
         ) : (
-          <Icon
-            name="star-o"
-            size={30}
-            style={styles.iconStarUnCheck}
-            onPress={handlePressStar}
-          />
+          <Icon name="star-o" size={30} style={styles.iconStarUnCheck} />
         )}
       </HStack>
     </TouchableOpacity>
@@ -252,6 +144,7 @@ const styles = StyleSheet.create({
   },
   iconStarUnCheck: {
     marginTop: 5,
+    color: "#fff",
   },
   invalidText: {
     color: Color.Task().inValid,

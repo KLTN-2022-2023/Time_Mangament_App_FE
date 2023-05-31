@@ -27,58 +27,59 @@ export default {
   },
   RepeatType() {
     return {
-      Daily: "Daily",
-      Weekly: "Weekly",
-      Monthly: "Monthly",
-      Yearly: "Yearly",
-      Custom: "Custom",
-      Never: "Never",
+      Daily: "Hằng ngày",
+      Weekly: "Hăng tuần",
+      Monthly: "Hằng tháng",
+      Yearly: "Hằng năm",
+      Custom: "Tùy chọn",
+      Never: "Không",
     };
   },
   RemindType() {
     return {
-      OnStartTime: "On start time",
-      FiveMinutes: "Before start time 5 minutes",
-      OneDay: "Before start time one day",
-      Never: "Never",
-      Custom: "Custom",
+      OnStartTime: "Khi bắt đầu",
+      FiveMinutes: "Trước khi bắt đầu 5 phút",
+      OneDay: "Trước khi bắt đầu 1 ngày",
+      Never: "Không",
+      Custom: "Tùy chỉnh",
     };
   },
   ErrorTypeName() {
     return {
-      Length: "Name is limited to 30 characters",
-      Required: "Name is required",
-      Duplicated: "Name is existed",
-      SpecialCharacter: "Name cannot contain special characters",
+      Length: "Tên có tối đa 30 ký tự",
+      Required: "Bắt buộc nhập tên",
+      Duplicated: "Tên đã tồn tại",
+      SpecialCharacter: "Tên không được chứa ký tự đặc biệt",
     };
   },
   ErrorTaskName() {
     return {
-      Required: "Name is required",
+      Required: "Bắt buộc nhập tên",
     };
   },
   ErrorTaskType() {
     return {
-      Required: "Type is required",
+      Required: "Bắt buộc chọn loại",
     };
   },
   ErrorRepeat() {
     return {
-      EndRepeatPast: "End repeat time is greater than or equal to start time",
-      InvalidDayWeek: "Repeat days of week must include start date",
-      overlap: "Repeated task is overlapping",
+      EndRepeatPast:
+        "Thời gian ngừng lặp phải lớn hơn hoặc bằng thời gian bắt đầu",
+      InvalidDayWeek: "Ngày lặp trong tuận phải bao gồm ngày bắt đầu",
+      overlap: "Thời gian công việc lặp lại đang bị chồng lên công việc khác",
     };
   },
   ErrorRemind() {
     return {
-      Past: "Remind time is less than start time and in the future",
+      Past: "Thời gian nhắc nhở phải nhỏ hơn thời gian bắt đầu và nằm ở tương lai",
     };
   },
   ErrorCompareDate() {
     return {
-      GreaterOrEqual: "Due time is greater than start time",
-      StartPast: "Start time is greater than or equal to today",
-      Overlap: "Tasks is overlapping",
+      GreaterOrEqual: "Thời gian hoàn thành lớn hơn thời gian bắt đầu",
+      StartPast: "Thời gian bắt đầu lớn hơn hoặc bằng thời gian hiện tại",
+      Overlap: "Thời gian của công việc đang bị chồng lên công việc khác",
     };
   },
 };

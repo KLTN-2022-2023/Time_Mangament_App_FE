@@ -89,17 +89,16 @@ export const Minutes = [
 ];
 
 export const DaysRemind = [
-  "On start date",
-  "1 day early",
-  "2 day early",
-  "3 day early",
-  "4 day early",
-  "5 day early",
-  "6 day early",
-  "7 day early",
-  "8 day early",
-  "9 day early",
-  "10 day early",
+  "Ngày bắt đầu",
+  "Trước 1 ngày",
+  "Trước 2 ngày",
+  "Trước 3 ngày",
+  "Trước 4 ngày",
+  "Trước 5 ngày",
+  "Trước 6 ngày",
+  "Trước 7 ngày",
+  "Trước 8 ngày",
+  "Trước 9 ngày",
 ];
 
 export const MONTHS = [

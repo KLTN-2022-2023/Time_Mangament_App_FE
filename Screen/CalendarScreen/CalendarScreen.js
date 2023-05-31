@@ -18,6 +18,7 @@ import * as Notifications from "expo-notifications";
 import Color from "../../Style/Color";
 import { Calendar } from "react-native-big-calendar";
 import CommonData from "../../CommonData/CommonData";
+import "dayjs/locale/vi";
 
 export default ({ route, navigation }) => {
   // Notification
@@ -175,16 +176,11 @@ export default ({ route, navigation }) => {
     });
   };
 
-  const renderEventSTyle = (e) => {
-    if (e && e.status === CommonData.TaskStatus().Done) {
-      return {
-        backgroundColor: Color.CalendarTask().Done,
-      };
+  const handleShowMode = () => {
+    if (mode === "week") {
+      return "Tuần";
     }
-
-    return {
-      backgroundColor: Color.CalendarTask().Main,
-    };
+    return "Tháng";
   };
 
   return (
@@ -209,24 +205,26 @@ export default ({ route, navigation }) => {
         </TouchableOpacity>
 
         <View style={styles.headerButtons}>
-          <TouchableOpacity style={styles.button} onPress={() => onRefresh()}>
+          {/* <TouchableOpacity style={styles.button} onPress={() => onRefresh()}>
             <View>
               <Text style={styles.buttonText}>Refresh</Text>
             </View>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity
             style={styles.button}
             onPress={() => onSetDateNow()}
           >
             <View>
-              <Text style={styles.buttonText}>Now</Text>
+              <Text style={styles.buttonText}>Hôm nay</Text>
             </View>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.button} onPress={() => onSetMode()}>
             <View>
-              <Text style={styles.buttonText}>{"Mode: " + mode}</Text>
+              <Text style={styles.buttonText}>
+                {"Xem: " + handleShowMode()}
+              </Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -275,6 +273,7 @@ export default ({ route, navigation }) => {
         weekStartsOn={1}
         height={600}
         hideNowIndicator={true}
+        locale="vi"
       />
     </SafeAreaView>
   );
