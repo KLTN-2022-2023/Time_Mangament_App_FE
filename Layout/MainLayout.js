@@ -9,6 +9,11 @@ import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import jwt_decode from "jwt-decode";
 import { convertDateTime } from "../helper/Helper";
+import * as BackgroundFetch from "expo-background-fetch";
+import * as TaskManager from "expo-task-manager";
+import { async } from "q";
+
+const BACKGROUND_FETCH_TASK = "background-fetch";
 
 export default function MainLayout({ navigation, triggers }) {
   // Notification
@@ -16,6 +21,40 @@ export default function MainLayout({ navigation, triggers }) {
   const [notification, setNotification] = useState(false);
   const notificationListener = useRef();
   const responseListener = useRef();
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [status, setStatus] = useState(null);
+
+  // 1. Define the task by providing a name and the function that should be executed
+  // Note: This needs to be called in the global scope (e.g outside of your React components)
+  TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
+    console.log("Job Background: " + new Date().toString());
+    await resendNotification();
+
+    // Be sure to return the successful result type!
+    return BackgroundFetch.BackgroundFetchResult.NewData;
+  });
+
+  // 2. Register the task at some point in your app by providing the same name,
+  // and some configuration options for how the background fetch should behave
+  // Note: This does NOT need to be in the global scope and CAN be used in your React components!
+  async function registerBackgroundFetchAsync() {
+    return BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
+      minimumInterval: 30, // 30s
+      // stopOnTerminate: false, // android only,
+      // startOnBoot: true, // android only
+    });
+  }
+
+  // 3. (Optional) Unregister tasks by specifying the task name
+  // This will cancel any future background fetch calls that match the given name
+  // Note: This does NOT need to be in the global scope and CAN be used in your React components!
+  async function unregisterBackgroundFetchAsync() {
+    return BackgroundFetch.unregisterTaskAsync(BACKGROUND_FETCH_TASK);
+  }
+
+  useEffect(() => {
+    checkStatusAsync();
+  }, []);
 
   // Notification
   useEffect(() => {
@@ -54,38 +93,56 @@ export default function MainLayout({ navigation, triggers }) {
   // read notifications after 1 minutes foreground
   useEffect(() => {
     const interval = setInterval(async () => {
-      const token = await AsyncStorage.getItem("Token");
-      if (token) {
-        console.log("Job: " + new Date().toString());
-
-        const decoded = jwt_decode(token);
-        let listNoti = await getListNotificationByUserId(
-          { userId: decoded._id },
-          token
-        );
-
-        if (listNoti && listNoti.length > 0) {
-          console.log(listNoti);
-          for (let noti of listNoti) {
-            if (!noti.isSeen) {
-              let nowString = convertDateTime(new Date());
-              let remindString = convertDateTime(noti.remindTime);
-              if (nowString > remindString) {
-                await schedulePushNotification(
-                  "Có thể bạn đã bỏ lỡ",
-                  noti.content,
-                  noti.taskId
-                );
-              }
-            }
-          }
-        }
-      }
+      console.log("Job Foreground: " + new Date().toString());
+      await resendNotification();
     }, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  // read notifications after 2 minutes background
+  // read notifications after 1 minutes background
+  useEffect(() => {
+    if (!isRegistered) {
+      registerBackgroundFetchAsync();
+      checkStatusAsync();
+    }
+  }, [isRegistered]);
+
+  const checkStatusAsync = async () => {
+    const status = await BackgroundFetch.getStatusAsync();
+    const isRegistered = await TaskManager.isTaskRegisteredAsync(
+      BACKGROUND_FETCH_TASK
+    );
+    setStatus(status);
+    setIsRegistered(isRegistered);
+  };
+
+  const resendNotification = async () => {
+    const token = await AsyncStorage.getItem("Token");
+    if (token) {
+      const decoded = jwt_decode(token);
+      let listNoti = await getListNotificationByUserId(
+        { userId: decoded._id },
+        token
+      );
+
+      if (listNoti && listNoti.length > 0) {
+        console.log(listNoti);
+        for (let noti of listNoti) {
+          if (!noti.isSeen) {
+            let nowString = convertDateTime(new Date());
+            let remindString = convertDateTime(noti.remindTime);
+            if (nowString > remindString) {
+              await schedulePushNotification(
+                "Có thể bạn đã bỏ lỡ",
+                noti.content,
+                noti.taskId
+              );
+            }
+          }
+        }
+      }
+    }
+  };
 
   async function registerForPushNotificationsAsync() {
     let token;
