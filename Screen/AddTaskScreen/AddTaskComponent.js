@@ -199,6 +199,7 @@ export default ({ navigation, taskId, selectedDate, isView }) => {
       }
     } else {
       setData(null);
+      navigation.navigate("HomeTab", { screen: "Tasks" });
     }
   }, [taskId]);
 

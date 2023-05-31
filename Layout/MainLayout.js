@@ -38,7 +38,7 @@ export default function MainLayout({ navigation, triggers }) {
   // Note: This does NOT need to be in the global scope and CAN be used in your React components!
   async function registerBackgroundFetchAsync() {
     return BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
-      minimumInterval: 60, // 1 min
+      minimumInterval: 60 * 15, // 1 min
       stopOnTerminate: false, // android only,
       startOnBoot: true, // android only
     });
@@ -94,7 +94,7 @@ export default function MainLayout({ navigation, triggers }) {
     const interval = setInterval(async () => {
       console.log("Job Foreground: " + new Date().toString());
       await resendNotification();
-    }, 60000);
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
